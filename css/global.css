@@ -1,0 +1,85 @@
+/* ==========================================
+   1. MAPEANDO AS FONTES LOCAIS
+   ========================================== */
+
+/* Tapoca (Fonte de Destaque - Formato OTF) */
+@font-face {
+    font-family: 'Tapoca';
+    src: url('../assets/fonts/Tapoca-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Onest (Textos) - Peso 400 (Regular) */
+@font-face {
+    font-family: 'Onest';
+    src: url('../assets/fonts/Onest-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* Onest (Textos) - Peso 600 (SemiBold) para botões e destaques */
+@font-face {
+    font-family: 'Onest';
+    src: url('../assets/fonts/Onest-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* Onest (Textos) - Peso 800 (ExtraBold) para os subtítulos (h2, h3) */
+@font-face {
+    font-family: 'Onest';
+    src: url('../assets/fonts/Onest-ExtraBold.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+/* ==========================================
+   2. DEFININDO AS VARIÁVEIS
+   ========================================== */
+:root {
+    /* Tipografia Oficial XVI SEMAU */
+    --fonte-destaque: 'Tapoca', sans-serif;
+    --fonte-textos: 'Onest', sans-serif; 
+    
+    /* Paleta Principal */
+    --cor-fundo-pc: #1f1f1f;    /* Verde escuro para o fundo externo no monitor */
+    --cor-fundo-app: #0d372b;   /* Off-white quentinho para o fundo do app */
+    --cor-primaria: #0d372b;    /* Verde escuro para títulos e botões principais */
+    --cor-secundaria: #f0782c;  /* Laranja vibrante para destaques, links e botões ativos */
+    
+    /* Textos */
+    --cor-texto: #ffffff;       /* Usando o verde escuro como cor de texto para máxima elegância */
+    --cor-texto-claro: #fffbf8; /* Off-white para textos que ficam em cima de botões escuros */
+    --cor-texto-escuro: #383838; /* Off-white para textos que ficam em cima de botões escuros */
+    /* Cores de Apoio (Eixos Temáticos / Tags) */
+    --cor-eixo-corpo: #f0782c;  /* Laranja */
+    --cor-eixo-rua: #b1beaa;    /* Verde Sálvia */
+    --cor-eixo-cidade: #809acd; /* Azul Claro */
+    --cor-eixo-futuro: #0d372b; /* Verde Escuro */
+}
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--cor-fundo-pc); /* Fundo escuro nas laterais do PC */
+    color: var(--cor-texto);
+    display: flex;
+    justify-content: center; /* Centraliza o app no PC */
+    min-height: 100vh;
+}
+
+/* 5. Aplicando a Tapoca APENAS nos títulos de grande impacto (geral) */
+h1 {
+    font-family: var(--fonte-destaque);
+    font-weight: normal; 
+    letter-spacing: 0.02em; 
+    margin-bottom: 20px;
+    font-size: 36px;
+}

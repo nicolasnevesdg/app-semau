@@ -1,0 +1,187 @@
+/* O Container do App (Falso Mobile) */
+#app-container {
+    width: 100%;
+    max-width: 480px; /* Trava a largura máxima igual a de um celular grande */
+    background-color: var(--cor-fundo-app);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5); /* Sombrinha para descolar do fundo no PC */
+}
+
+.logo-topo {
+    position: absolute; /* Tira ele do alinhamento do Flexbox */
+    top: 40px; /* Distância do teto (pode ajustar para mais ou menos) */
+    font-size: 22px;
+    font-family: onest;
+    font-weight: 300;
+    
+    /* Mágica para centralizar perfeitamente na horizontal quando a posição é absoluta */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    margin: 0;
+    z-index: 10; /* Garante que ele fique por cima de tudo */
+}
+
+/* Escondendo e mostrando as telas */
+.view {
+    display: none;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.view.active {
+    display: block;
+}
+
+/* Botões genéricos provisórios */
+button {
+    background-color: var(--cor-secundaria);
+    color: var(--cor-texto-claro);
+    border: none;
+    padding: 15px;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.btn-fase-evento {
+    /* 1. AQUI VOCÊ MUDA A COR! 
+       Pode usar sua var(--cor-secundaria) ou um hexadecimal como #f47920 */
+    background-color: var(--cor-eixo-cidade); 
+    
+    /* 2. O seu SVG vira o "molde de corte" (Máscara) */
+    -webkit-mask-image: url('../assets/svg/bg-credencial.svg');
+    mask-image: url('../assets/svg/bg-credencial.svg');
+    
+    /* 3. Ajusta o tamanho do molde para preencher o botão */
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    
+    -webkit-mask-position: center;
+    mask-position: center;
+
+    /* 4. Remove bordas e fundos nativos do botão */
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
+    /* 5. Estilo do Texto e Tamanho do Botão */
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+    width: 100%; 
+    max-width: 250px; 
+    min-height: 75px; 
+    
+    /* 6. Centraliza o texto no meio do molde */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto 0 auto;
+}
+
+/* Animação suave na troca de telas */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===============================
+   MENU INFERIOR (BOTTOM NAV) - NOVA ESTÉTICA
+   =============================== */
+#bottom-nav {
+    position: fixed; 
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%); 
+    width: 100%;
+    max-width: 480px; 
+    background-color: var(--cor-primaria) !important; /* Força o verde escuro */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0; 
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1); 
+    z-index: 1000; 
+    border-top-left-radius: 20px; 
+    border-top-right-radius: 20px;
+    height: 70px; 
+}
+
+/* Estilização dos itens de navegação (ícones) */
+#bottom-nav .nav-item {
+    background: transparent;
+    color: #ffffff; /* Cor dos ícones inativos (branco) */
+    width: auto;
+    height: 100%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 24px; /* Tamanho do ícone */
+    transition: all 0.2s ease;
+    position: relative; /* Para posicionar a linha do indicador */
+    font-family: inherit;
+    letter-spacing: inherit;
+    box-shadow: none;
+    font-weight: inherit;
+}
+
+/* Comportamento de item ativo */
+#bottom-nav .nav-item:hover {
+    color: var(--cor-secundaria); /* Um brilho sutil ao passar o mouse */
+}
+
+#bottom-nav .nav-item.active {
+    color: var(--cor-secundaria); /* Cor do ícone ativo (laranja) */
+}
+
+/* O indicador (linha ativa) */
+#bottom-nav .active-indicator {
+    display: block;
+    position: absolute;
+    bottom: 4px; /* Distância da borda inferior */
+    width: 24px; /* Largura da linha */
+    height: 3px; /* Espessura da linha */
+    background-color: transparent; /* Invisível por padrão */
+    border-radius: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.2s ease;
+}
+
+/* Quando o item estiver ativo, a linha fica laranja */
+#bottom-nav .nav-item.active .active-indicator {
+    background-color: var(--cor-secundaria);
+}
+
+/* ==========================================
+   ESTILIZAÇÃO DA LOGO NO TOPO
+   ========================================== */
+.logo-container-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 0; /* Dá um respiro excelente em cima e embaixo */
+}
+
+.logo-app {
+    display: block;
+    max-width: 250px; /* Define um tamanho limite elegante para telas de celular */
+    width: 100%;
+    height: auto; /* Mantém a proporção perfeita do arquivo */
+    object-fit: contain;
+}

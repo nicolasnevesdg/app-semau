@@ -1,0 +1,879 @@
+/* ===============================
+   TELA DO QUIZ
+   =============================== */
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+.score-display {
+    background: var(--cor-secundaria);
+    color: #000000;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 800;
+}
+
+#quiz-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+#pergunta-texto {
+    font-size: 18px;
+    margin-bottom: 20px;
+    line-height: 1.4;
+    color: var(--cor-texto-escuro);
+}
+
+.opcoes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-opcao {
+    background: #f8f9fa;
+    color: var(--cor-texto-escuro);
+    border: 2px solid #e9ecef;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0; /* sobrescreve o margin-top do botão genérico */
+}
+
+.btn-opcao:hover {
+    border-color: var(--cor-primaria);
+    background: #eef5ff;
+}
+
+/* Classes para quando o usuário acerta ou erra */
+.btn-opcao.correta {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.btn-opcao.errada {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+/* ===============================
+   TELA HOME (HERO & FEED)
+   =============================== */
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    margin-top: -60px;
+}
+
+.hero-section h1 {
+    font-size: 32px;
+    color: var(--cor-primaria);
+    margin-bottom: 5px;
+}
+
+.hero-section p {
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 25px;
+}
+
+/* Contagem Regressiva */
+#countdown-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.time-box {
+    background: var(--cor-primaria);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    min-width: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.time-box span {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.time-box small {
+    font-size: 12px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+/* Feed Instagram Fake */
+.instagram-feed {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.instagram-feed h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: var(--cor-texto);
+}
+
+.insta-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.insta-post {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.placeholder-img {
+    height: 200px;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.post-legenda {
+    padding: 15px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #444;
+}
+
+/* ===============================
+   TELA SOBRE O EVENTO
+   =============================== */
+.about-header {
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--cor-primaria);
+    padding-bottom: 10px;
+}
+
+.about-header h2 {
+    color: var(--cor-primaria);
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.pallasmaa-quote {
+    background: #f5eedf; /* Um tom de creme bem suave */
+    border-left: 5px solid var(--cor-secundaria);
+    padding: 20px;
+    font-style: italic;
+    margin-bottom: 20px;
+    border-radius: 0 12px 12px 0;
+    color: var(--cor-texto);
+    line-height: 1.5;
+}
+
+.pallasmaa-quote span {
+    display: block;
+    margin-top: 15px;
+    font-weight: 800;
+    font-style: normal;
+    font-size: 14px;
+    color: var(--cor-primaria);
+}
+
+.about-content p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.about-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 25px;
+    margin-bottom: 40px; /* Espaço pro menu inferior não cobrir */
+}
+
+.keyword {
+    background: var(--cor-primaria);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ===============================
+   RANKING (ESTÉTICA SUTIL E PREMIUM)
+   =============================== */
+
+.ranking-container {
+    background: rgba(255, 255, 255, 0.03); /* Fundo super translúcido, quase invisível */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Bordinha de vidro */
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin: 30px 0;
+}
+
+.ranking-container h3 {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 20px;
+    opacity: 0.6; /* Deixa o título mais discreto */
+}
+
+#ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espaço entre os jogadores */
+}
+
+/* Estilo padrão de cada linha (Jogador) */
+#ranking-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.15); /* Fundo escuro sutil */
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* DESTAQUES DO PÓDIO */
+
+/* 1º Lugar - Ganha um brilho e borda na cor secundária (laranja) */
+#ranking-list li:nth-child(1) {
+    background: linear-gradient(135deg, rgba(224, 109, 83, 0.15), rgba(0, 0, 0, 0.2));
+    border: 1px solid rgba(224, 109, 83, 0.4);
+    color: #ffffff;
+    font-weight: 800;
+    transform: scale(1.02); /* Fica um pouquinho maior que os outros */
+}
+
+/* 2º e 3º Lugares - Ficam um pouco mais claros que o resto, mas sem cor extra */
+#ranking-list li:nth-child(2),
+#ranking-list li:nth-child(3) {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+/* ===============================
+   TELA DE LOGIN
+   =============================== */
+
+#view-login {
+    padding: 100px 24px 40px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.login-container {
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.login-header {
+    text-align: center;
+}
+
+.login-header h2, .login-header  span {
+    color: #ffffff;
+    margin: 0 0 40px 0;
+    font-size: 60px;
+    font-weight: 800;
+    line-height: .7;
+    font-family: var(--fonte-destaque);
+    letter-spacing: -1px;
+}
+
+.login-header p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 40px;
+    line-height: 1.4;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    text-align: left;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 12px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
+    margin-left: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.input-group input {
+    padding: 18px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: var(--fonte-textos);
+    background: transparent;
+    color: #ffffff;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--cor-secundaria);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 4px rgba(244, 121, 32, 0.15);
+}
+
+.token-input-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.token-box {
+    flex: 1;
+    height: 60px;
+    text-align: center;
+    font-size: 24px !important;
+    font-weight: 800;
+    padding: 0 !important;
+    color: #ffffff;
+}
+
+.login-form button {
+    margin-top: 16px;
+    background-color: var(--cor-secundaria); 
+    
+    /* Aplicação da máscara SVG (O mesmo molde usado na Home) */
+    -webkit-mask-image: url('../assets/svg/bg-credencial.svg');
+    mask-image: url('../assets/svg/bg-credencial.svg');
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+
+    /* Removemos as bordas padronizadas para o SVG assumir a forma */
+    border: none;
+    border-radius: 0;
+    
+    /* Tipografia e cores mantendo a estética da tela de login */
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+    
+    /* Tamanho e alinhamento */
+    width: 100%; 
+    min-width: 250px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s ease;
+}
+
+.login-form button:active {
+    transform: scale(0.98);
+}
+/* Supondo que essas sejam as classes ou IDs das suas seções. 
+   Substitua pelos nomes exatos que você usou no seu HTML! */
+
+#view-schedule,
+#view-about,
+#view-dashboard {
+    /* Empurra o conteúdo para baixo, abrindo espaço para o "semau.app" respirar */
+    padding: 80px 0 100px 0; 
+    
+    /* Caso já tenha algum padding, você soma! 
+       Ex: se tinha padding: 20px;, o topo vira 80px e o resto continua 20px */
+}
+
+#view-schedule h1{
+    font-size: 60px;
+    color: var(--cor-eixo-corpo);
+    text-align: center;
+}
+
+/* ===============================
+   GRADE DE CONVIDADOS / ANÚNCIOS
+   =============================== */
+
+.grid-convidados {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Cria exatamente 2 colunas com o mesmo tamanho */
+    gap: 40px 35px; /* 20px de espaço na vertical (entre linhas) e 16px na horizontal */
+    width: 100%;
+    padding: 0 40px;
+}
+
+.card-convidado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px; /* Espaço entre a foto, o nome e a descrição */
+}
+
+/* Formatação da Foto/SVG */
+.card-convidado img {
+    width: 100%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+/* Nome do Convidado/Oficina */
+.card-convidado h2 {
+    font-family: var(--fonte-destaque);
+    color: var(--cor-eixo-rua);
+    font-size: 32px;
+    margin: 0;
+    line-height: .8;
+}
+
+/* Descrição (Profissão ou Resumo da Oficina) */
+.card-convidado p {
+    color: var(--cor-texto);
+    font-size: 17px;
+    font-weight: 300;
+    margin: 0;
+    line-height: 1.1;
+}
+
+/* ===============================
+   TELA: SOBRE O EVENTO (ABOUT)
+   =============================== */
+
+#view-about {
+    padding: 100px 24px 100px 24px; /* Espaço pro cabeçalho e menu inferior */
+    text-align: left;
+}
+
+/* Cabeçalho da página (Slogan e subtítulo) */
+.about-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.about-header .sticker {
+    max-width: 220px;
+    margin-bottom: 16px;
+    /* Se quiser dar um efeitinho flutuante no sticker: */
+    filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.2)); 
+}
+
+.about-header p {
+    font-size: 23px;
+    color: var(--cor-texto);
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+/* Container dos textos */
+.about-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px; /* Espaço generoso entre os parágrafos */
+}
+
+/* Citação em destaque (Estilo "Blockquote") */
+.pallasmaa-quote {
+    margin: 0;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.03); /* Um fundo quase invisível */
+    border-left: 4px solid var(--cor-secundaria); /* Linha lateral na cor do evento */
+    border-radius: 0 16px 16px 0;
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.6;
+    color: #ffffff;
+}
+
+.pallasmaa-quote span {
+    display: block;
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 800;
+    font-style: normal; /* Tira o itálico do nome do autor */
+    color: var(--cor-secundaria);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Textos normais */
+.about-content p {
+    font-size: 15px;
+    line-height: 1.6; /* Altura de linha boa para não cansar a vista */
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.about-content strong {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+/* Palavras-chave (Estilo "Pílulas / Tags") */
+.about-keywords {
+    display: flex;
+    flex-wrap: wrap; /* Faz as tags quebrarem de linha sozinhas se faltar espaço */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.keyword {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 10px 18px;
+    border-radius: 30px; /* Bordas bem arredondadas */
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.\.logo-container-header {
+    margin-bottom: 40px;
+}
+
+/* ===============================
+   CARROSSEL DO ABOUT (Efeito Swipe)
+   =============================== */
+
+.carousel-wrapper {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    /* Truque: Margem negativa para ignorar o padding da tela e encostar nas bordas */
+    margin-left: -24px; 
+    margin-right: -24px;
+}
+
+.carousel-track {
+    display: flex;
+    gap: 16px;
+    padding: 10px 24px 30px 24px; /* Padding interno devolve o alinhamento e dá espaço para a sombra */
+    overflow-x: auto;
+    scroll-snap-type: x mandatory; /* Faz o "imã" que puxa o card */
+    scroll-behavior: smooth;
+    
+    /* Esconde a barra de rolagem nativa para ficar igual app nativo */
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.carousel-track::-webkit-scrollbar {
+    display: none; /* Esconde barra no Chrome, Safari e Opera */
+}
+
+.carousel-card {
+    scroll-snap-align: center; /* Puxa sempre para o centro ao soltar o dedo */
+    flex: 0 0 85%; /* Ocupa 85% da tela: a mágica para a pontinha do outro card aparecer */
+    
+    background: rgba(255, 255, 255, 0.05); /* Fundo translúcido elegante */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.carousel-card .card-tag {
+    align-self: flex-start;
+    background: var(--cor-secundaria); /* Usa a sua cor de destaque */
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+}
+
+.carousel-card h3 {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.carousel-card p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Caixa branca para a logo das edições */
+.card-logo-box {
+    background-color: none;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 140px; /* Define um tamanho padrão para todas ficarem alinhadas */
+}
+
+.card-logo-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Garante que a logo não fique esticada */
+}
+
+/* =========================================
+   FASING DA AGENDA: ABAS E TIMELINE (FASE 2)
+   ========================================= */
+
+/* Alinhamento dos botões de dias */
+.cronograma-tabs {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 25px;
+}
+
+#container-fase2 {
+    padding: 0 30px;
+}
+
+.btn-dia-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 10px 4px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    font-family: var(--fonte-textos);
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    margin: 0;
+}
+
+.btn-dia-tab span {
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.7;
+    text-transform: uppercase;
+}
+
+/* Estado ativo do dia selecionado */
+.btn-dia-tab.active {
+    background: var(--cor-secundaria);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Card customizado para a agenda */
+.schedule-card {
+    min-height: 180px;
+    justify-content: flex-start !important;
+}
+
+.card-schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+/* Marcador do Horário */
+.card-schedule-header .time-tag {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+/* Pílulas de categorias dentro do card */
+.type-tag {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.type-tag.palestra { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
+.type-tag.oficina { background: rgba(230, 126, 34, 0.2); color: #e67e22; border: 1px solid rgba(230, 126, 34, 0.3); }
+.type-tag.especial { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+
+/* ===============================
+   TELA DO QUIZ (PREMIUM UI)
+   =============================== */
+
+#view-quiz {
+    padding: 100px 24px 100px 24px; /* Espaço generoso para respirar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Cabeçalho do Quiz (Placar) */
+.quiz-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05); /* Fundo translúcido refinado */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+}
+
+.quiz-header h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+}
+
+.score-display {
+    background: var(--cor-secundaria);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(224, 109, 83, 0.3); /* Sombra na cor da etiqueta */
+}
+
+/* Cartão Branco Central (Pergunta e Opções) */
+#quiz-container {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 30px 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    margin-bottom: 25px;
+}
+
+#pergunta-texto {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--cor-primaria);
+    text-align: center;
+    margin-bottom: 25px;
+    line-height: 1.3;
+}
+
+/* Botões de Resposta */
+.opcoes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.opcoes-grid button {
+    background: #f8f9fa;
+    color: var(--cor-primaria);
+    border: 2px solid #eeeeee;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-family: var(--fonte-textos);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Efeito ao pressionar ou passar o rato numa opção */
+.opcoes-grid button:hover, 
+.opcoes-grid button:active {
+    border-color: var(--cor-secundaria);
+    background: rgba(224, 109, 83, 0.05); /* Fundo muito clarinho da cor secundária */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Botão de Voltar para o Dashboard */
+#btn-voltar-dashboard {
+    width: 100%;
+    background-color: transparent;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 16px;
+    border-radius: 14px;
+    font-family: var(--fonte-textos);
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+#btn-voltar-dashboard:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #ffffff;
+}

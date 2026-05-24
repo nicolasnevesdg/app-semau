@@ -1,0 +1,650 @@
+/* ===============================
+   MENU INFERIOR (Bottom Nav)
+   =============================== */
+#bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 480px; /* Mantém preso no tamanho do app */
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.nav-item {
+    background: transparent;
+    color: var(--cor-texto);
+    border: none;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px;
+    margin: 0;
+    width: auto;
+}
+
+/* ===============================
+   CARDS DE PROGRAMAÇÃO
+   =============================== */
+.card-evento {
+    display: flex;
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-left: 5px solid var(--cor-primaria);
+}
+
+.card-evento.oficina {
+    border-left-color: var(--cor-secundaria);
+}
+
+.card-hora {
+    font-weight: 800;
+    font-size: 18px;
+    padding-right: 15px;
+    border-right: 2px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.card-info {
+    padding-left: 15px;
+}
+
+.tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    background: #eee;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.card-info h3 { font-size: 16px; margin: 5px 0; }
+.card-info p { font-size: 12px; color: #fff; }
+.card-info .local { font-weight: 600; margin-top: 5px; color: var(--cor-primaria); }
+
+/* ===============================
+   INGRESSO DIGITAL (TICKET)
+   =============================== */
+.ticket-digital {
+    background: #fff;
+    color: #000;
+    border-radius: 20px;
+    margin: 30px 0;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito de picote no meio do ingresso */
+.ticket-digital::before, .ticket-digital::after {
+    content: '';
+    position: absolute;
+    top: 192.5px;
+    width: 35px;
+    height: 35px;
+    background-color: #0c3328;
+    border-radius: 50%;
+}
+.ticket-digital::before { left: -20px; }
+.ticket-digital::after { right: -20px; }
+
+.ticket-header {
+    /* Removemos a borda nativa do navegador */
+    border-bottom: none; 
+
+    /* Desenhamos a nossa própria linha tracejada */
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.4) 50%, transparent 50%);
+    background-position: bottom;
+    background-size: 25px 2px; /* O segredo está aqui! */
+    background-repeat: repeat-x;
+    padding: 25px 30px;
+}
+
+/* Atualização do ticket-body para ficar lado a lado */
+.ticket-body {
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px; /* Espaço seguro entre os dados e o QR Code */
+}
+
+/* O texto ocupa o lado esquerdo */
+.ticket-dados {
+    flex: 1;
+}
+
+.ticket-dados h2 {
+    font-size: 21px;
+    margin-bottom: 15px; /* Espaçamento entre Participante e Token */
+}
+
+.ticket-dados h2:last-child {
+    margin-bottom: 0; /* Tira a margem do último para não empurrar o layout */
+}
+
+/* A nova caixinha branca apenas para o QR Code */
+.ticket-qr-box {
+    background: #fff;
+    padding: 8px; /* Esse é o respiro em volta do QR Code */
+    border-radius: 8px;
+    width: 130px;
+    height: 130px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Impede que o QR Code amasse se o nome do aluno for muito grande */
+}
+
+/* Força o QR gerado pelo JavaScript a preencher certinho o espaço */
+.ticket-qr-box img, 
+.ticket-qr-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.ticket-body {
+    padding: 30px;
+}
+
+.ticket-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+.ticket-body h2 {
+    font-size: 21px;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+.ticket-footer {
+    background: #ebebeb;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Banner Superior colado no topo do Ingresso */
+.ticket-banner {
+    width: 100%;
+    height: 120px;/* Substituímos a cor sólida pela imagem SVG que criámos */
+    background-image: url('../assets/svg/ticket-banner.svg');
+    background-color: var(--cor-eixo-cidade); /* Cor de fundo para o caso da imagem não carregar */
+    background-size: cover; /* Garante que a imagem cobre todo o espaço */
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===============================
+   CARDS DE EVENTOS (PROGRAMAÇÃO)
+   =============================== */
+.card-evento {
+    display: flex; /* Isso coloca a hora e o texto lado a lado */
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04); /* Sombra difusa elegante */
+    border-left: 5px solid #ccc; /* A cor muda via HTML */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-evento:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+
+.card-hora {
+    background: #f8f9fa;
+    padding: 20px 15px;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--cor-primaria);
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #eee;
+}
+
+.card-info {
+    padding: 15px;
+    flex: 1; /* Faz a info ocupar o resto do espaço */
+}
+
+.tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+/* ==========================================
+   INPUTS DO TOKEN (ESTILO OTP)
+   ========================================== */
+.token-input-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.token-box {
+    width: 100%; /* O flexbox vai deixar todas com a mesma largura */
+    aspect-ratio: 1 / 1; /* Garante que fiquem quadradas */
+    font-size: 28px;
+    font-family: var(--fonte-textos); /* Usando a Onest */
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase; /* Força visualmente a ficar maiúsculo */
+    border: 2px solid var(--cor-primaria);
+    border-radius: 12px;
+    background-color: var(--cor-fundo-app);
+    color: var(--cor-primaria);
+    transition: all 0.2s ease;
+    padding: 0; /* Remove padding padrão para centralizar certinho */
+}
+
+/* Quando o usuário clica na caixinha, ela brilha em laranja */
+.token-box:focus {
+    outline: none;
+    border-color: var(--cor-secundaria);
+    box-shadow: 0 0 0 3px rgba(240, 120, 44, 0.2);
+    transform: translateY(-2px); /* Dá um pulinho super charmoso */
+}
+
+/* ==========================================
+   BOTÃO DE LOGOUT (DISCRETO)
+   ========================================== */
+.btn-secundario-logout {
+    width: 100%;
+    background-color: transparent;
+    color: var(--cor-secundaria); /* Usa o laranja da identidade */
+    border: 2px solid var(--cor-secundaria);
+    padding: 12px;
+    border-radius: 8px;
+    font-family: var(--fonte-textos);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Efeito sutil ao passar o mouse ou clicar */
+.btn-secundario-logout:hover {
+    background-color: var(--cor-secundaria);
+    color: #ffffff;
+}
+
+/* ==========================================
+   MINI INGRESSOS (OFICINAS)
+   ========================================== */
+.ticket-oficina {
+    display: flex;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    position: relative;
+}
+
+.ticket-oficina-info {
+    flex: 1;
+    padding: 30px 25px;
+    background-color: #ebebeb; /* Verde escuro para combinar com o QR Code */
+}
+
+.tag-oficina {
+    display: inline-block;
+    background-color: var(--cor-secundaria);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.ticket-oficina-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+.ticket-oficina-data {
+    font-size: 12px;
+    color: #000;
+}
+
+.ticket-oficina-qr {
+    width: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: #fff;
+    
+    background-image: linear-gradient(to bottom, rgba(19, 53, 35, 0.4) 50%, transparent 50%);
+    background-position: left;
+    background-size: 2px 25px;
+    background-repeat: repeat-y;
+    position: relative;
+}
+
+.ticket-oficina-qr div {
+    /* Força o QR Code interno a ficar do tamanho certo */
+    width: 80px !important; 
+    height: 80px !important;
+}
+
+.ticket-oficina-qr span {
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--cor-primaria);
+    margin-top: 5px;
+}
+
+/* Efeito de picote no meio do ingresso */
+.ticket-oficina::before, .ticket-oficina::after {
+    content: '';
+    position: absolute;
+    right: 120px;
+    width: 20px;
+    height: 20px;
+    background-color: #0c3328;
+    border-radius: 50%;
+    z-index: 1;
+}
+.ticket-oficina::before {
+    top: -7.5px;
+}
+.ticket-oficina::after {
+    bottom: -7.5px;
+}
+
+.sticker {
+    width: 230px;
+    max-width: 90vw;
+    margin: 0 auto;
+    text-align: center;
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* ==========================================
+   ANIMAÇÃO DOS STICKERS (HOME)
+   ========================================== */
+
+/* Base para todos os stickers */
+.sticker-animado {
+    position: absolute;
+    z-index: 5; /* Fica atrás do texto/logo, mas na frente do fundo */
+    opacity: 0; /* Nasce invisível */
+    pointer-events: none; /* Para o aluno não clicar neles sem querer e atrapalhar os botões */
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2)); /* Sombrinha para dar o efeito de colado */
+}
+
+/* Onde cada sticker vai ficar posicionado */
+.sticker-1 {
+    top: 10%;
+    left: -10px;
+    width: 90px;
+    transform-origin: center right;
+    --rotacao-final: -6deg;
+}
+
+.sticker-2 {
+    top: 7%;
+    right: 1%;
+    width: 110px;
+    transform-origin: center left;
+    --rotacao-final: -12deg; /* Caidinho pra esquerda */
+}
+
+.sticker-3 {
+    bottom: 19%;
+    right: -2%;
+    width: 95px;
+    transform-origin: bottom center;
+    --rotacao-final: 10deg; /* Caidinho pra direita */
+}
+
+.sticker-4 {
+    bottom: 15%;
+    left: 0%;
+    width: 95px;
+    transform-origin: bottom center;
+    --rotacao-final: -6deg; /* Um pouco menos torto */
+}
+
+/* O gatilho! Quando a #view-home estiver aparecendo, 
+   chama a animação 'colarSticker' com o efeito elástico (cubic-bezier) 
+*/
+#view-home .sticker-1 {
+    animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.1s; /* O primeiro entra rápido */
+}
+
+#view-home .sticker-2 {
+    animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.3s; /* O segundo atrasa um pouquinho */
+}
+
+#view-home .sticker-3 {
+    animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.5s; /* O terceiro entra por último */
+}
+
+#view-home .sticker-4 {
+    animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.3s; /* O segundo atrasa um pouquinho */
+}
+
+/* A coreografia da animação atualizada */
+@keyframes colarSticker {
+    0% {
+        opacity: 0;
+        /* Eles nascem bem tortos e vêm girando */
+        transform: scale(0.3) translate(-50px, 50px) rotate(-40deg);
+    }
+    100% {
+        opacity: 1;
+        /* Lê a variável de cada sticker e trava no ângulo escolhido */
+        transform: scale(1) translate(0, 0) rotate(var(--rotacao-final)); 
+    }
+}
+
+/* ===============================
+   SISTEMA DE RECOMPENSAS (HOME)
+   =============================== */
+.rewards-section {
+    margin-top: 50px;
+    padding-bottom: 30px; /* Dá um respiro para o menu inferior não cobrir */
+    text-align: left;
+    width: 100%;
+}
+
+.rewards-title {
+    font-size: 22px;
+    color: #ffffff;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.rewards-subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.reward-tier {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03); /* Fundo vidro super sutil */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+/* Efeitinho bacana se o usuário tentar clicar no card */
+.reward-tier:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.tier-icon {
+    font-size: 28px;
+    margin-right: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    width: 54px;
+    height: 54px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 14px;
+    flex-shrink: 0;
+}
+
+.tier-info h4 {
+    color: var(--cor-secundaria); /* Puxa o seu laranja de destaque */
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+}
+
+.tier-info p {
+    color: #ffffff;
+    font-size: 13px;
+    margin: 0;
+    opacity: 0.9;
+    line-height: 1.3;
+}
+
+#btn-jogar-quiz, #btn-abrir-runner {
+    background-color: var(--cor-secundaria);
+    -webkit-mask-image: url(../assets/svg/bg-credencial.svg);
+    mask-image: url(../assets/svg/bg-credencial.svg);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    border: none;
+    border-radius: 0;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+    width: 100%;
+    min-width: 250px;
+    align-items: center;
+    transition: transform 0.1s ease;
+    margin: 10px 0px;
+}
+
+/* ==========================================
+   MODAL DE QR CODE (POP-UP AMPLIADO)
+   ========================================== */
+.qr-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.85); /* Fundo bem escuro para focar no QR */
+    z-index: 9999; /* Fica por cima de absolutamente tudo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px); /* Efeito de vidro borrado no fundo */
+}
+
+.qr-modal-content {
+    background-color: #ffffff;
+    padding: 30px 24px;
+    border-radius: 24px;
+    position: relative;
+    width: 85%;
+    max-width: 320px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: saltarModal 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animação suave de entrada */
+}
+
+.qr-modal-canvas {
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px dashed var(--cor-secundaria);
+    width: 220px;
+    height: 220px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Força o QR Code a preencher o espaço mantendo a proporção */
+.qr-modal-canvas img, 
+.qr-modal-canvas canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.btn-close-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s;
+    width: auto;
+    padding: initial;
+}
+
+.btn-close-modal:hover {
+    color: var(--cor-secundaria);
+}
+
+/* Deixa uma "mãozinha" ao passar o mouse por cima dos QR Codes pequenos */
+.ticket-qr-box, .ticket-oficina-qr div {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.ticket-qr-box:active, .ticket-oficina-qr div:active {
+    transform: scale(0.95);
+}
+
+@keyframes saltarModal {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XVI SEMAU - UFRRJ</title>
+    
+    <!-- Configuração para PWA (App) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a1a"> <!-- Vamos mudar pra cor oficial depois -->
+
+    <!-- CSS (A ordem importa!) -->
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/views.css">
+
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+</head>
+<body>
+
+    <!-- CONTAINER PRINCIPAL (Aquele que vai travar a largura no PC) -->
+    <main id="app-container">
+        <h1 class="logo-topo" id="logo-principal"><b style="font-weight: 800;">semau</b>.app</h1>
+
+        <!-- ========================================== -->
+        <!-- 1. ÁREA PÚBLICA (Visível sem login)        -->
+        <!-- ========================================== -->
+        
+        <!-- Tela: Home (Contagem Regressiva / Acontecendo Agora) -->
+        <section id="view-home" class="view active">
+            <div class="hero-section">
+
+                <img src="assets/svg/sticker-palmeira.svg" class="sticker-animado sticker-1" alt="Palmeira">
+                <img src="assets/svg/sticker-selo.svg" class="sticker-animado sticker-2" alt="Selo">
+                <img src="assets/svg/sticker-cadeira.svg" class="sticker-animado sticker-3" alt="Cadeira">
+                <img src="assets/svg/sticker-olhos-da-pele.svg" class="sticker-animado sticker-4" alt="Olhos da Pele">
+
+                <div class="logo-container-header">
+                    <img src="assets/svg/logo-cn-02.svg" alt="Logo XVI SEMAU" class="logo-app">
+                </div>
+                <p style="font-weight: 300; font-size: 22px; margin-top: 10px; margin-bottom: 30px;">o <b style="font-weight: 800;">lugar</b> que nos habita</p>
+                <p style="margin-bottom: 15px;">Faltam apenas</p>
+                <div id="countdown-container">
+                    <div class="time-box" style="background: var(--cor-secundaria);"><span id="cd-dias">00</span><small>Dias</small></div>
+                    <div class="time-box" style="background: var(--cor-secundaria);"><span id="cd-horas">00</span><small>Horas</small></div>
+                    <div class="time-box" style="background: var(--cor-secundaria);"><span id="cd-min">00</span><small>Min</small></div>
+                </div>
+
+                <button id="btn-fase-cronograma" class="btn-fase-evento" style="display: none;">Ver Programação</button>
+                
+                <button id="btn-fase-inscricao" class="btn-fase-evento" style="display: none;">Inscrever-se</button>
+                
+                <button id="btn-fase-credencial" class="btn-fase-evento" style="display: none;">Abrir Credencial</button>
+            </div>
+
+            
+        </section>
+
+        <section id="view-schedule" class="view" style="display: none;">
+            
+            <div id="container-fase1">
+                <h1>convidados</h1>
+                <div id="grid-palestrantes" class="grid-convidados"></div>
+
+                <h1 style="color:var(--cor-eixo-cidade); margin-top:20px;">oficinas</h1>
+                <div id="grid-oficinas" class="grid-convidados"></div>
+            </div>
+
+            <div id="container-fase2" style="display: none;">
+                <h1>cronograma</h1>
+                
+                <div class="cronograma-tabs">
+                    <button class="btn-dia-tab active" data-dia="1">21/09<br><span>SEG</span></button>
+                    <button class="btn-dia-tab" data-dia="2">22/09<br><span>TER</span></button>
+                    <button class="btn-dia-tab" data-dia="3">23/09<br><span>QUA</span></button>
+                    <button class="btn-dia-tab" data-dia="4">24/09<br><span>QUI</span></button>
+                    <button class="btn-dia-tab" data-dia="5">25/09<br><span>SEX</span></button>
+                </div>
+
+                <div class="carousel-wrapper" style="margin-top: 20px;">
+                    
+                    <div id="track-dia-1" class="carousel-track cronograma-track">
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">09:00</span>
+                                <span class="type-tag especial">Abertura</span>
+                            </div>
+                            <h3>Mesa de Abertura Oficial</h3>
+                            <p>Credenciamento e recepção dos participantes da semana acadêmica.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">10:30</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 01</h3>
+                            <p>Convidado Especial / Debates sobre espaço urbano.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">14:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 02</h3>
+                            <p>Discussão técnica e metodologias de projeto.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">16:30</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 03</h3>
+                            <p>Encerramento do primeiro ciclo de debates do dia.</p>
+                        </div>
+                    </div>
+
+                    <div id="track-dia-2" class="carousel-track cronograma-track" style="display: none;">
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">09:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 04</h3>
+                            <p>Palestrante Convidado.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">11:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 05</h3>
+                            <p>Palestrante Convidado.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">14:00</span>
+                                <span class="type-tag oficina">Oficina</span>
+                            </div>
+                            <h3>Oficina Prática 01</h3>
+                            <p>Atividade prática em laboratório ou estúdio.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">16:00</span>
+                                <span class="type-tag oficina">Oficina</span>
+                            </div>
+                            <h3>Oficina Prática 02</h3>
+                            <p>Atividade prática em laboratório ou estúdio.</p>
+                        </div>
+                    </div>
+
+                    <div id="track-dia-3" class="carousel-track cronograma-track" style="display: none;">
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">09:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 06</h3>
+                            <p>Apresentação e mesa redonda.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">11:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 07</h3>
+                            <p>Apresentação e mesa redonda.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">14:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 08</h3>
+                            <p>Apresentação e mesa redonda.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">16:00</span>
+                                <span class="type-tag oficina">Oficina</span>
+                            </div>
+                            <h3>Oficina Prática 03</h3>
+                            <p>Desenvolvimento prático supervisionado.</p>
+                        </div>
+                    </div>
+
+                    <div id="track-dia-4" class="carousel-track cronograma-track" style="display: none;">
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">09:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 09</h3>
+                            <p>Discussões finais de planejamento.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">14:00</span>
+                                <span class="type-tag oficina">Oficina</span>
+                            </div>
+                            <h3>Oficina Prática 04</h3>
+                            <p>Último bloco de experimentação em grupo.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">16:30</span>
+                                <span class="type-tag especial">Encerramento</span>
+                            </div>
+                            <h3>Mesa de Encerramento</h3>
+                            <p>Considerações finais e encerramento das atividades do dia.</p>
+                        </div>
+                    </div>
+
+                    <div id="track-dia-5" class="carousel-track cronograma-track" style="display: none;">
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">10:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 10</h3>
+                            <p>Apresentações complementares da semana.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">14:00</span>
+                                <span class="type-tag palestra">Palestra</span>
+                            </div>
+                            <h3>Mesa de Palestra 11</h3>
+                            <p>Última mesa temática de convidados.</p>
+                        </div>
+                        <div class="carousel-card schedule-card">
+                            <div class="card-schedule-header">
+                                <span class="time-tag">16:00</span>
+                                <span class="type-tag oficina">Oficina</span>
+                            </div>
+                            <h3>Oficina Prática 05 & 06</h3>
+                            <p>Mostras e finalizações técnicas dos eixos estruturais.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- 2. ÁREA RESTRITA (Login e Dashboard)       -->
+        <!-- ========================================== -->
+
+        <!-- Tela: Login com Token de 5 dígitos -->
+        <section id="view-login" class="view" style="display: none;">
+            <div class="login-container">
+                <div class="login-header">
+                    <h2>
+                        <span style="color: var(--cor-eixo-cidade);">acesse</span><br>
+                        seu <span style="color: var(--cor-secundaria);">ingresso</span>
+                    </h2>
+                    <p>Insira os dados da sua inscrição para liberar sua credencial, acompanhar oficinas e acumular pontos.</p>
+                </div>
+                
+                <div class="login-form">
+                    <div class="input-group">
+                        <label for="input-email">E-mail da Inscrição</label>
+                        <input type="email" id="input-email" placeholder="exemplo@ufrrj.br">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="input-token">Token de Acesso</label>
+                        <div class="token-input-container">
+                            <input type="text" class="token-box" maxlength="1" id="token-1">
+                            <input type="text" class="token-box" maxlength="1" id="token-2">
+                            <input type="text" class="token-box" maxlength="1" id="token-3">
+                            <input type="text" class="token-box" maxlength="1" id="token-4">
+                            <input type="text" class="token-box" maxlength="1" id="token-5">
+                        </div>
+                    </div>
+
+                    <button id="btn-entrar">Acessar Ingresso</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-quiz-hub" class="view" style="display: none; padding: 100px 30px 100px 30px;">
+            <h1 style="text-align: center; color: var(--cor-eixo-rua); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">
+                Game Zone
+            </h1>
+            
+            <button id="btn-jogar-quiz" style="width: 100%;">Jogar Quiz</button>
+            <button id="btn-abrir-runner" style="width: 100%; margin-bottom: 25px; background-color: var(--cor-primaria); color: #fff; border: 2px solid var(--cor-secundaria);">Jogar Corrida no Eixo</button>
+
+            <div class="ranking-container">
+                <h3>🏆 Top 5 - Ranking</h3>
+                <ul id="ranking-list">
+                    <li style="text-align: center;">Carregando ranking... ⏳</li>
+                </ul>
+            </div>
+
+            <div class="rewards-section">
+                <h2 class="rewards-title">Recompensas 🎁</h2>
+                <p class="rewards-subtitle">Acumule pontos acertando perguntas e troque por prêmios no encerramento do evento!</p>
+                
+                <div class="reward-tier">
+                    <div class="tier-icon">🥉</div>
+                    <div class="tier-info">
+                        <h4>Nível 1 - 200 pts</h4>
+                        <p>Adesivo exclusivo da edição + Copo Eco</p>
+                    </div>
+                </div>
+
+                <div class="reward-tier">
+                    <div class="tier-icon">🥈</div>
+                    <div class="tier-info">
+                        <h4>Nível 2 - 500 pts</h4>
+                        <p>Kit SEMAU (Copo Eco, Cartela de Adesivos e Caderneta)</p>
+                    </div>
+                </div>
+
+                <div class="reward-tier">
+                    <div class="tier-icon">🥇</div>
+                    <div class="tier-info">
+                        <h4>Nível 3 - 1000 pts</h4>
+                        <p>Camiseta Oficial + Kit Completo + Sorteio de Livros</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tela: Dashboard do Participante (Ticket e Quiz) -->
+        <section id="view-dashboard" class="view" style="display: none; position: relative; padding: 80px 30px 100px 30px;">
+            <h3 style="position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 22px; font-weight: 300; color: #fff; margin: 0; white-space: nowrap;">
+                Área do <b style="font-weight: 800;">Inscrito</b>
+            </h3>
+            <h2 id="txt-boas-vindas" style="font-size: 35px; font-weight: 300; color: #fff; margin-top: 15px; margin-bottom: 5px; text-align: left;">
+                Olá, <b style="font-weight: 800;">Aluno</b>
+            </h2>
+            <p> Aqui estão seus ingressos para o evento.</p>
+            
+            <div class="ticket-digital">
+                <div class="ticket-banner"></div>
+                <div class="ticket-header">
+                    <p class="ticket-label">Local</p>
+                    <p>Auditório Gustavão - P1</p>
+                </div>
+                <div class="ticket-body">
+                    <div class="ticket-dados">
+                        <p class="ticket-label">Participante</p>
+                        <h2 id="user-name-display">João Silva</h2>
+                        <p class="ticket-label">Token</p>
+                        <h2 id="user-token-display">-----</h2>
+                    </div>
+                    
+                    <div id="qrcode-ticket" class="ticket-qr-box"></div>
+                </div>
+                <div class="ticket-footer">
+                    
+                    <p>Pontos: <strong id="user-points-display">0</strong> 🌟</p>
+                </div>
+            </div>
+
+            <div id="container-oficinas" style="display: none; margin-bottom: 25px;">
+                <h3 style="font-size: 16px; margin-bottom: 15px; color: var(--cor-texto);">Ingressos das Oficinas</h3>
+                
+                <div id="lista-oficinas" style="display: flex; flex-direction: column; gap: 25px;">
+                    </div>
+            </div>
+
+            <div style="margin-top: 40px; margin-bottom: 100px; padding: 0 24px;">
+                <button id="btn-sair" class="btn-secundario-logout">
+                    Sair da Conta
+                </button>
+            </div>
+        </section>
+
+        <section id="view-quiz" class="view" style="display: none;">
+            <div class="quiz-header">
+                <h2>Quiz SEMAU</h2>
+                <div class="score-display">Pontos: <span id="pontos-atuais">0</span></div>
+            </div>
+
+            <div id="quiz-container">
+                <h3 id="pergunta-texto">Carregando pergunta...</h3>
+                
+                <div id="opcoes-container" class="opcoes-grid">
+                    </div>
+            </div>
+
+            <button id="btn-voltar-dashboard">Voltar para o Perfil</button>
+        </section>
+
+        <section id="view-runner-game" class="view" style="padding:0; display: none; position: relative; overflow: hidden; background: var(--cor-fundo-app);">
+            
+            <canvas id="runner-canvas"></canvas>
+
+            <div style="position: absolute; top: 15%; width: 100%; text-align: center; pointer-events: none;">
+                <h2 id="runner-score" style="font-size: 40px; color: var(--cor-texto); margin: 0; font-family: var(--fonte-textos); font-weight: 900;">0</h2>
+                <p style="color: var(--cor-secundaria); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; margin-top: 5px;">Pontos</p>
+            </div>
+
+            <div id="runner-game-over" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 85%; max-width: 320px;">
+                <h3 style="color: var(--cor-primaria); font-size: 22px; font-weight: 900; margin-bottom: 10px;">Você perdeu o fantasminha! 💥</h3>
+                <p style="color: #666; margin-bottom: 20px;">Você sobreviveu e ganhou <strong id="runner-points-earned" style="color: var(--cor-secundaria); font-size: 22px;">0</strong> pts</p>
+                
+                <button id="btn-runner-restart" style="width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 12px; font-weight: 800; background: var(--cor-secundaria); color: #fff; border: none;">Correr Novamente</button>
+                <button id="btn-runner-quit" class="btn-secundario-logout" style="width: 100%; font-size: 14px;">Voltar para Game Zone</button>
+            </div>
+        </section>
+
+        <section id="view-about" class="view" style="display: none;">
+            <div class="about-header">
+                <div class=".logo-container-header">
+                    <img src="assets/svg/sticker-slogan.svg" alt="Slogan XVI SEMAU" class="logo-app sticker">
+                </div>
+                <p>O tema da 17° Edição</p>
+            </div>
+            
+            <div class="about-content">
+                <blockquote class="pallasmaa-quote">
+                    "A arquitetura não é apenas um cenário para a vida, mas uma extensão do próprio corpo humano. É pelo espaço que sentimos o mundo, e é nele que as nossas memórias, emoções e percepções se enraízam."
+                    <span>— Juhani Pallasmaa</span>
+                </blockquote>
+                
+                <p>Inspirados pelas reflexões de Pallasmaa em <em>"Os Olhos da Pele"</em>, propomos discutir a <strong>arquitetura do sentir</strong>: um olhar que valoriza não apenas a visão, mas todos os sentidos como protagonistas da experiência espacial.</p>
+                
+                <p>Partindo dessa perspectiva, a semana se volta para pensar as extensões do morar e os modos como projetar pode transformar não apenas a paisagem urbana, mas também a vida cotidiana das pessoas. Habitar é um ato que ultrapassa o abrigo físico: é viver, experienciar, sentir e construir identidades no espaço.</p>
+                
+                <div class="about-keywords">
+                    <span class="keyword">Corpo e Mundo</span>
+                    <span class="keyword">Experiência Sensível</span>
+                    <span class="keyword">Interior e Exterior</span>
+                    <span class="keyword">Tempo em Movimento</span>
+                </div>
+            </div>
+            <div class="carousel-wrapper">
+                <div class="carousel-track">
+                    
+                    <div class="carousel-card">
+                        <span class="card-tag" style="background-color: var(--cor-primaria);">O QUE É</span>
+                        <h3>Conheça a SEMAU</h3>
+                        <p>A Semana Acadêmica de Arquitetura e Urbanismo da UFRRJ é um evento organizado por estudantes com apoio do curso. O evento tem como objetivo enriquecer a formação acadêmica por meio de palestras, oficinas, exposições e debates que expandem os horizontes da sala de aula e conectam o aluno à realidade da profissão.</p>
+                        <p>Realizado anualmente no campus Seropédica, o encontro reúne o curso e profissionais convidados para discutir temas atuais, estimulando a criatividade e a integração entre a teoria e a prática.</p>
+                        <p style="color: #fff; font-weight: 800;">Arraste para conhecer outras edições!</p>
+ 
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">VIII SEMAU (2016)</span>
+                        <h3>Luxo ou Necessidade</h3>
+                        <div class="card-logo-box">
+                            <img src="assets/svg/viii-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Uma imersão no papel social do arquiteto, levantando o questionamento crítico de que se o acesso à arquitetura de qualidade no Brasil tem sido tratado como um privilégio de poucos ou como um direito fundamental.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">IX SEMAU (2017)</span>
+                        <h3>Edifícios, cidades e olhares: o que construímos?</h3>
+                        <div class="card-logo-box" style="height: 175px;">
+                            <img src="assets/svg/ix-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Focada nas variações do mercado de trabalho, esta edição mergulhou na prática da arquitetura de interiores e nas diversas possibilidades reais de atuação do jovem profissional que sai da universidade.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">X SEMAU (2018)</span>
+                        <h3>Conexões: O olhar além do projetar</h3>
+                        <div class="card-logo-box" style="height: 175px;">
+                            <img src="assets/svg/x-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Incentivou uma visão interdisciplinar, promovendo debates integrados com diversos campos do conhecimento — como a psicologia, a cenografia e a fotografia. O objetivo foi expandir a visão do estudante para muito além da prancheta e do canteiro de obras.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">XI SEMAU (2019)</span>
+                        <h3>Projetar: dos singulares para o plural</h3>
+                        <div class="card-logo-box">
+                            <img src="assets/svg/xi-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Com um forte debate técnico sobre o papel do arquiteto na sociedade, a edição abordou a ética profissional, o planejamento urbano e o impacto prático das intervenções no espaço público.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">XII SEMAU (2020)</span>
+                        <h3>Arquitetura da Versatilidade: Panoramas para tempos de crise</h3>
+                        <div class="card-logo-box">
+                            <img src="assets/svg/xii-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Realizada de forma totalmente remota, o evento discutiu as perspectivas para tempos de crise. Foi o momento de entender as adaptações ao "novo normal" e as novas necessidades sociais durante a pandemia.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">XIII SEMAU (2023)</span>
+                        <h3>Pensar Fora da Casa: habitar e socializar</h3>
+                        <div class="card-logo-box" style="height: 115px;">
+                            <img src="assets/svg/xiii-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>O grande reencontro presencial. Após os anos de isolamento, a semana voltou os olhos para o lado de fora, celebrando o convívio, a importância das ruas e o direito à cidade e ao espaço público.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">XIV SEMAU (2024)</span>
+                        <h3>Cidades Vivas: Projetando soluções para salvar o amanhã</h3>
+                        <div class="card-logo-box">
+                            <img src="assets/svg/xiv-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Uma edição voltada para o futuro e para a ecologia urbana. O debate focou em repensar os espaços em que vivemos não apenas como estruturas de concreto, mas como organismos dinâmicos, sustentáveis e pulsantes.</p>
+                    </div>
+
+                    <div class="carousel-card">
+                        <span class="card-tag">XV SEMAU (2025)</span>
+                        <h3>Cenários Plurais: A arquitetura Expressa nas Vivências</h3>
+                        <div class="card-logo-box">
+                            <img src="assets/svg/xv-semau.svg" alt="Logo 2016">
+                        </div>
+                        <p>Explorou as múltiplas realidades e vivências do morar, valorizando a diversidade cultural, social e as narrativas únicas que compõem a rica produção da arquitetura contemporânea brasileira.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <nav id="bottom-nav">
+        <button class="nav-item active" id="nav-home">
+            <i class="ph-bold ph-house"></i>
+            <span class="active-indicator"></span>
+        </button>
+        
+        <button class="nav-item" id="nav-schedule">
+            <i class="ph-bold ph-calendar-blank"></i>
+            <span class="active-indicator"></span>
+        </button>
+        
+        <button class="nav-item" id="nav-about">
+            <i class="ph-bold ph-book-open"></i>
+            <span class="active-indicator"></span>
+        </button>
+
+        <button class="nav-item" id="nav-quiz" style="display: none;">
+                <i class="ph-bold ph-game-controller"></i>
+                <span class="active-indicator"></span>
+            </button>
+        
+        <button class="nav-item" id="nav-profile">
+            <i class="ph-bold ph-user"></i>
+            <span class="active-indicator"></span>
+        </button>
+    </nav>
+
+    <div id="qr-modal" class="qr-modal" style="display: none;">
+            <div class="qr-modal-content">
+                <button id="btn-close-modal" class="btn-close-modal"><i class="ph-bold ph-x"></i></button>
+                <h3 style="color: var(--cor-primaria); text-align: center; margin-bottom: 20px; font-weight: 800;">Apresente na entrada</h3>
+                
+                <div id="qr-modal-canvas" class="qr-modal-canvas"></div>
+                
+                <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px; line-height: 1.4;">
+                    Aumente o brilho da tela para facilitar a leitura.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SCRIPTS (Carregados no final para não travar a tela) -->
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/navigation.js"></script>
+    <script type="module" src="js/schedule.js"></script>
+    <script type="module" src="js/quiz.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/ranking.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('✅ Service Worker registrado com sucesso!', reg))
+                    .catch(err => console.error('❌ Erro no Service Worker:', err));
+            });
+        }
+    </script>
+    <script type="module" src="js/runner.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+</body>
+</html>
