@@ -21,31 +21,31 @@ let roadLineX = 0;
 // ==========================================
 const imgBase = 'assets/img/';
 const assets = {
-    // Jogador
     playerRun: [new Image(), new Image(), new Image(), new Image(), new Image(), new Image()],
     playerJump: [new Image(), new Image(), new Image(), new Image(), new Image(), new Image(), new Image()],
-    // Obstáculos
     capivara: new Image(),
     cavalo: new Image(),
     feira: new Image(),
-    aluna: new Image(),    // NOVO
-    ciclista: new Image()  // NOVO
+    aluna: new Image(),    
+    ciclista: new Image()  
 };
 
-// Carrega imagens do Jogador
+// Carrega imagens da Corrida (1 a 6 continuam minúsculos no GitHub)
 for (let i = 0; i < 6; i++) {
     assets.playerRun[i].src = imgBase + (i + 1) + '.png';
 }
+
+// CORREÇÃO: O 'J' agora é maiúsculo (J1.png a J7.png)
 for (let i = 0; i < 7; i++) {
-    assets.playerJump[i].src = imgBase + 'j' + (i + 1) + '.png';
+    assets.playerJump[i].src = imgBase + 'J' + (i + 1) + '.png';
 }
 
-// Carrega imagens dos Obstáculos
-assets.capivara.src = imgBase + 'capivara.png';
-assets.cavalo.src = imgBase + 'cavalo.png';
-assets.feira.src = imgBase + 'feira.png';
-assets.aluna.src = imgBase + 'aluna.png';       // NOVO
-assets.ciclista.src = imgBase + 'ciclista.png'; // NOVO
+// CORREÇÃO: Iniciais maiúsculas para bater com os arquivos no GitHub
+assets.capivara.src = imgBase + 'Capivara.png';
+assets.cavalo.src = imgBase + 'Cavalo.png';
+assets.feira.src = imgBase + 'Feira.png';
+assets.aluna.src = imgBase + 'Aluna.png';       
+assets.ciclista.src = imgBase + 'Ciclista.png';
 
 // Ajusta o canvas
 function resizeCanvas() {
