@@ -406,7 +406,7 @@
 
 /* Onde cada sticker vai ficar posicionado */
 .sticker-1 {
-    top: 10%;
+    top: 95px;
     left: -10px;
     width: 90px;
     transform-origin: center right;
@@ -414,7 +414,7 @@
 }
 
 .sticker-2 {
-    top: 7%;
+    top: 70px;
     right: 1%;
     width: 110px;
     transform-origin: center left;
@@ -422,7 +422,7 @@
 }
 
 .sticker-3 {
-    bottom: 19%;
+    top: 570px;
     right: -2%;
     width: 95px;
     transform-origin: bottom center;
@@ -430,11 +430,28 @@
 }
 
 .sticker-4 {
-    bottom: 15%;
+    top: 620px;
     left: 0%;
     width: 95px;
     transform-origin: bottom center;
     --rotacao-final: -6deg; /* Um pouco menos torto */
+}
+
+.sticker-5 {
+    top: 1200px;
+    left: -10%;
+    width: 130px;
+    transform-origin: bottom center;
+    --rotacao-final: 10deg; /* Um pouco menos torto */
+}
+
+.sticker-6 {
+    top: 900px;
+    right: -5%;
+    left: auto;
+    width: 110px;
+    transform-origin: bottom center;
+    --rotacao-final: -8deg; /* Um pouco menos torto */
 }
 
 /* O gatilho! Quando a #view-home estiver aparecendo, 
@@ -458,6 +475,16 @@
 #view-home .sticker-4 {
     animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     animation-delay: 0.3s; /* O segundo atrasa um pouquinho */
+}
+
+#view-home .sticker-5 {
+    animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.2s; /* O tempo que ele demora para pular na tela */
+}
+
+#view-home .sticker-6 {
+    animation: colarSticker 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.4s; /* Aparece logo em seguida */
 }
 
 /* A coreografia da animação atualizada */

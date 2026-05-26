@@ -73,14 +73,14 @@
    TELA HOME (HERO & FEED)
    =============================== */
 .hero-section {
-    min-height: 100vh;
+    min-height: 72vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     padding: 20px;
-    margin-top: -60px;
+    margin-top: 50px;
 }
 
 .hero-section h1 {
@@ -876,4 +876,93 @@
 #btn-voltar-dashboard:hover {
     background-color: rgba(255, 255, 255, 0.1);
     border-color: #ffffff;
+}
+
+/* ========================================== */
+/* SEÇÃO INSTAGRAM NA HOME                    */
+/* ========================================== */
+.instagram-section {
+    top: -100px;
+    margin: 0 24px 120px 24px; /* A margem inferior de 120px impede que o menu de baixo cubra o post */
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08); /* Sombra suave para destacar do fundo */
+}
+
+.insta-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.insta-icon {
+    font-size: 38px;
+    /* Gradiente oficial do Instagram */
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.insta-text {
+    flex: 1;
+}
+
+.insta-text h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--cor-texto);
+    margin: 0;
+}
+
+.insta-text p {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
+.btn-seguir {
+    background: #E1306C; /* Rosa do Instagram */
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-seguir:active {
+    transform: scale(0.95);
+    background: #C13584;
+}
+
+.insta-feed-container {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* ESSENCIAL: Agora o container vira o "dono" do tapa-rodape */
+}
+
+.insta-feed-container iframe {
+    width: 100% !important;
+    border: none;
+    border-radius: 12px;
+}
+
+.tapa-rodape {
+    position: absolute;
+    bottom: 5px;
+    width: 80%;
+    height: 60px;
+    background-color: #f8f9fa;
+    z-index: 4;
+    pointer-events: all;
+    cursor: default;
 }
