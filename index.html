@@ -305,9 +305,27 @@
             <h1 style="text-align: center; color: var(--cor-eixo-rua); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">
                 Game Zone
             </h1>
+            <p class="game-invitation">
+                Acumule pontos jogando e troque por <a href="#view-recompensas" class="link-recompensas">recompensas</a>.
+            </p>
             
-            <button id="btn-jogar-quiz" style="width: 100%;">Jogar Quiz</button>
-            <button id="btn-abrir-runner" style="width: 100%; margin-bottom: 25px; background-color: var(--cor-primaria); color: #fff; border: 2px solid var(--cor-secundaria);">Jogar Corrida no Eixo</button>
+            <div class="game-zone-container">
+                <div class="game-card quiz-card">
+                    <div class="card-content">
+                        <h3>Responda o Quiz</h3>
+                        <p>Teste sua percepção e conhecimento arquitetônico.</p>
+                        <button id="btn-jogar-quiz" class="btn-game">JOGAR</button>
+                    </div>
+                </div>
+
+                <div class="game-card runner-card">
+                    <div class="card-content">
+                        <h3>Pegue o Fantasminha</h3>
+                        <p>Desvie dos obstáculos enquanto corre e ganhe pontos.</p>
+                        <button id="btn-abrir-runner" class="btn-game">JOGAR</button>
+                    </div>
+                </div>
+            </div>
 
             <div class="ranking-container">
                 <h3>🏆 Top 5 - Ranking</h3>
@@ -316,9 +334,9 @@
                 </ul>
             </div>
 
-            <div class="rewards-section">
+            <div id="view-recompensas" class="rewards-section">
                 <h2 class="rewards-title">Recompensas 🎁</h2>
-                <p class="rewards-subtitle">Acumule pontos acertando perguntas e troque por prêmios no encerramento do evento!</p>
+                <p class="rewards-subtitle">Troque seus pontos por prêmios no encerramento do evento!</p>
                 
                 <div class="reward-tier">
                     <div class="tier-icon">🥉</div>

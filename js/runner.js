@@ -3,6 +3,19 @@ import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.
 
 const canvas = document.getElementById('runner-canvas');
 const ctx = canvas.getContext('2d');
+
+// Ajuste de DPI para telas retina/alta resolução
+const dpr = window.devicePixelRatio || 1;
+const rect = canvas.getBoundingClientRect();
+
+canvas.width = rect.width * dpr;
+canvas.height = rect.height * dpr;
+
+ctx.scale(dpr, dpr);
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+
 const scoreDisplay = document.getElementById('runner-score');
 const gameOverScreen = document.getElementById('runner-game-over');
 const pointsEarnedDisplay = document.getElementById('runner-points-earned');

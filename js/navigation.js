@@ -107,3 +107,8 @@ if (btnFaseCredencial) btnFaseCredencial.addEventListener('click', () => navProf
 if (btnFaseInscricao) btnFaseInscricao.addEventListener('click', () => {
     window.open('https://sua-pagina-de-inscricao.com.br', '_blank'); 
 });
+
+document.querySelector('.link-recompensas').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelector('#view-recompensas').scrollIntoView({ behavior: 'smooth' });
+});
