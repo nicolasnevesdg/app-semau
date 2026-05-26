@@ -81,3 +81,8 @@ if (navQuiz) navQuiz.addEventListener('click', carregarRanking);
 if (navProfile) navProfile.addEventListener('click', carregarRanking);
 if (btnEntrar) btnEntrar.addEventListener('click', () => setTimeout(carregarRanking, 1000));
 if (btnVoltarDashboard) btnVoltarDashboard.addEventListener('click', carregarRanking);
+
+// Ouve o evento disparado pelo runner.js e atualiza o placar ao vivo
+window.addEventListener('pontosAtualizados', () => {
+    carregarRanking();
+});

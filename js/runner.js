@@ -17,6 +17,8 @@ let velocidadeJogo = 0;
 let chaoY = 0;
 let roadLineX = 0;
 let nuvens = [];
+let vidas = 1; // 1 é a vida normal. Pegar o ticket aumenta para 2.
+let invulneravel = 0; // Timer para o personagem "piscar" quando perder a vida extra
 
 // ==========================================
 // 1. CARREGAMENTO DE IMAGENS (ASSETS)
@@ -38,7 +40,9 @@ const assets = {
     arvore1: new Image(),
     arvore2: new Image(),
     arvore3: new Image(),
-    grama: new Image()
+    grama: new Image(),
+    ticket: new Image(),
+    fundoUltraDistante: new Image()
 };
 
 for (let i = 0; i < 6; i++) { assets.playerRun[i].src = imgBase + (i + 1) + '.png'; }
@@ -61,6 +65,9 @@ assets.arvore1.src = imgBase + 'arvore1.png';
 assets.arvore2.src = imgBase + 'arvore2.png';
 assets.arvore3.src = imgBase + 'arvore3.png';
 
+assets.fundoUltraDistante.src = imgBase + 'fundoUltraDistante.png';
+assets.ticket.src = imgBase + 'ticket.png';
+
 // Alterar a quantidade para 6
 assets.nuvens = [
     new Image(), new Image(), new Image(), new Image(), new Image(), new Image()
@@ -68,7 +75,7 @@ assets.nuvens = [
 
 // O nome do arquivo agora é "cloud" seguido do número
 for(let i = 0; i < 6; i++) {
-    assets.nuvens[i].src = imgBase + 'cloud' + (i + 1) + '.png';
+    assets.nuvens[i].src = imgBase + 'cloud' + (i + 1) + '.png'; // <--- ADICIONE ESTA LINHA
 }
 
 function resizeCanvas() {
@@ -130,67 +137,81 @@ function iniciarCorridaDeVerdade() {
 // GERENCIADOR DE CENÁRIO (SEPARADO EM CAMADAS)
 // ==========================================
 const cenario = {
-    bgFarX: 0, bgNearX: 0, 
+    bgUltraFarX: 0, // <-- NOVO: Posição do cenário distante
+    bgFarX: 0, 
+    bgNearX: 0, 
+    larguraUltraFar: 700, // <-- Tamanho base largo para o panorama espalhar bem
     larguraP1: 360, 
-    espacoP1: 1000,        // <-- NOVO: Define aqui a distância de espaço vazio entre os prédios P1
+    espacoP1: 1000,        
     larguraArvores: 3200,
     larguraGrama: 1600,
     
-    // CAMADA 1: Prédio de fundo (Fica atrás do chão)
+    // NOVO: Camada que preenche o céu vazio lá atrás de tudo
+    drawUltraFundo() {
+        const baseY = chaoY - 60; 
+        let startX = Math.round(this.bgUltraFarX);
+        
+        for (let i = 0; i <= Math.ceil(canvas.width / this.larguraUltraFar) + 1; i++) {
+            let offsetX = startX + (i * this.larguraUltraFar);
+            // larguraUltraFar + 1 remove as frestas entre emendas
+            ctx.drawImage(assets.fundoUltraDistante, offsetX, baseY - 220, this.larguraUltraFar + 1, 233.3);
+        }
+    },
+
+    // CAMADA 1: Prédio de fundo
     drawFundo() {
         const cicloTotalP1 = this.larguraP1 + this.espacoP1;
-        
-        // Garantimos que o desenho começa exatamente na posição do bgFarX
-        // Usamos Math.floor para evitar números quebrados que causam a "linha"
-        let startX = Math.floor(this.bgFarX);
+        let startX = Math.round(this.bgFarX);
 
-        // O "+ 2" no final garante que o jogo desenha prédios suficientes 
-        // fora da tela para não sumirem na borda direita antes do reset
         for (let i = 0; i <= Math.ceil(canvas.width / cicloTotalP1) + 2; i++) {
-            let offsetX = this.bgFarX + (i * cicloTotalP1);
-            ctx.drawImage(assets.p1, offsetX, chaoY - 210, this.larguraP1, 120);
+            let offsetX = startX + (i * cicloTotalP1);
+            ctx.drawImage(assets.p1, offsetX, chaoY - 193, this.larguraP1, 101.5);
         }
     },
 
     drawGrama() {
-        const baseY = chaoY - 110; // Alinhado com o asfalto
-        let startX = Math.floor(this.bgNearX);
+        const baseY = chaoY - 110; 
+        let startX = Math.round(this.bgNearX);
         
         for (let i = 0; i <= Math.ceil(canvas.width / this.larguraGrama) + 1; i++) {
             let offsetX = startX + (i * this.larguraGrama);
-            ctx.drawImage(assets.grama, offsetX, baseY, this.larguraGrama, 120);
+            // +1 na largura impede a temida linha divisória na grama
+            ctx.drawImage(assets.grama, offsetX, baseY, this.larguraGrama + 1, 120);
         }
     },
 
-    // CAMADA 3: Objetos de Meio-Termo (Ficam por cima do chão)
     drawMeioTermo() {
         const baseY = chaoY - 60; 
+        let startX = Math.round(this.bgNearX);
         
         for (let i = 0; i <= Math.ceil(canvas.width / this.larguraArvores) + 1; i++) {
-            let offsetX = this.bgNearX + (i * this.larguraArvores);
+            let offsetX = startX + (i * this.larguraArvores);
             
             ctx.drawImage(assets.arvore1, offsetX + 150, baseY - 100, 100, 100);
             ctx.drawImage(assets.arvore2, offsetX + 650, baseY - 100, 168.1, 100);
             ctx.drawImage(assets.arvore3, offsetX + 1300, baseY - 180, 236.8, 180);
-            
             ctx.drawImage(assets.placa, offsetX + 2100, baseY - 80, 88.4, 80);
-            
             ctx.drawImage(assets.arvore1, offsetX + 2650, baseY - 80, 80, 80);
             ctx.drawImage(assets.arvore2, offsetX + 2950, baseY - 100, 168.1, 100);
         }
     },
 
-    update() {
-        this.bgFarX -= velocidadeJogo * 0.2; 
-        this.bgNearX -= velocidadeJogo * 0.5;
+    update(dt) {
+        let delta = dt || 1; // Segurança caso o loop demore a entregar o frame
+        
+        // Movimento relativo: a montanha de trás move a 0.03 (quase parada)
+        this.bgUltraFarX -= velocidadeJogo * 0.03 * delta; 
+        this.bgFarX -= velocidadeJogo * 0.2 * delta; 
+        this.bgNearX -= velocidadeJogo * 0.5 * delta;
         
         const cicloTotalP1 = this.larguraP1 + this.espacoP1;
 
-        // CORREÇÃO: O reinício agora usa o ciclo total (Prédio + Espaço) em vez de apenas a largura do prédio
+        if (this.bgUltraFarX <= -this.larguraUltraFar) {
+            this.bgUltraFarX += this.larguraUltraFar;
+        }
         if (this.bgFarX <= -cicloTotalP1) {
             this.bgFarX += cicloTotalP1;
         }
-
         if (this.bgNearX <= -this.larguraArvores) {
             this.bgNearX += this.larguraArvores;
         }
@@ -218,6 +239,9 @@ const player = {
     jumpFrameInterval: 5,
     
     draw() {
+        // O efeito de piscar (só acontece se invulneravel for maior que 0)
+        if (invulneravel > 0 && Math.floor(Date.now() / 100) % 2 === 0) return; 
+
         if (!this.grounded) {
             ctx.drawImage(assets.playerJump[this.currentJumpFrame], this.x, this.y, this.w, this.h);
         } else {
@@ -225,6 +249,9 @@ const player = {
         }
     },
     update() {
+        // AQUI ESTÁ A CORREÇÃO: O timer de invulnerabilidade cai um ponto por frame
+        if (invulneravel > 0) invulneravel--; 
+
         this.dy += this.gravidade;
         this.y += this.dy;
 
@@ -277,8 +304,13 @@ const obstaculos = {
             ctx.drawImage(obs.image, obs.x, obs.y, obs.w, obs.h);
         });
     },
-    update() {
-        if (frames > 0 && frames % 600 === 0) velocidadeJogo += 0.5;
+    // 1. Coloque o 'dt' aqui dentro dos parênteses
+    update(dt) { 
+        
+        // 2. Corrigimos a aceleração maluca do celular baseando no score
+        if (score > 0 && score % 100 === 0) {
+            velocidadeJogo += 0.2; 
+        }
 
         this.spawnTimer--;
 
@@ -308,7 +340,8 @@ const obstaculos = {
         }
 
         this.lista.forEach((obs, index) => {
-            obs.x -= velocidadeJogo;
+            // 3. Multiplique o movimento por 'dt' para estabilizar a velocidade!
+            obs.x -= velocidadeJogo * dt; 
             
             const pBoxX = player.x + 20; const pBoxY = player.y + 10; 
             const pBoxW = player.w - 40; const pBoxH = player.h - 20;
@@ -316,8 +349,18 @@ const obstaculos = {
             const oBoxX = obs.x + obs.hitX; const oBoxY = obs.y + obs.hitY;
             const oBoxW = obs.w - (obs.hitX * 2); const oBoxH = obs.h - (obs.hitY * 2);
             
+            // Substitua o bloco de colisão dentro de obstaculos.update(dt) por este:
             if (pBoxX < oBoxX + oBoxW && pBoxX + pBoxW > oBoxX && pBoxY < oBoxY + oBoxH && pBoxY + pBoxH > oBoxY) {
-                gameOver();
+                
+                // Se o personagem estiver piscando, o 'return' faz ele ignorar esse obstáculo (modo fantasma temporário)
+                if (invulneravel > 0) return; 
+
+                if (vidas > 1) {
+                    vidas--; 
+                    invulneravel = 120; // Toma a pancada e ganha 120 frames de pisca-pisca
+                } else {
+                    gameOver();
+                }
             }
             if (obs.x + obs.w < 0) this.lista.splice(index, 1);
         });
@@ -355,6 +398,56 @@ const cloudManager = {
 };
 
 // ==========================================
+// GERENCIADOR DE COLETÁVEIS (BRINDES)
+// ==========================================
+const coletaveis = {
+    lista: [],
+    spawnTimer: 1000, // Começa alto para demorar a aparecer o primeiro
+    
+    draw() {
+        this.lista.forEach(item => {
+            ctx.drawImage(item.image, item.x, item.y, item.w, item.h);
+        });
+    },
+    
+    update(dt) {
+        this.spawnTimer--;
+        
+        // Timer bem longo (demora bastante para nascer)
+        if (this.spawnTimer <= 0) {
+            this.lista.push({ 
+                x: canvas.width, 
+                y: chaoY - 120 - (Math.random() * 40), 
+                w: 76,  
+                h: 40,  
+                image: assets.ticket
+            });
+            
+            // NOVO INTERVALO: Sorteia entre 1800 e 3000 frames (aprox. 30 a 50 segundos)
+            this.spawnTimer = Math.floor(Math.random() * 1200 + 1800); 
+        }
+
+        this.lista.forEach((item, index) => {
+            item.x -= velocidadeJogo * dt; 
+            
+            // Hitbox do Player
+            const pBoxX = player.x + 20; const pBoxY = player.y + 10; 
+            const pBoxW = player.w - 40; const pBoxH = player.h - 20;
+            
+            // Hitbox do Coletável
+            if (pBoxX < item.x + item.w && pBoxX + pBoxW > item.x && pBoxY < item.y + item.h && pBoxY + pBoxH > item.y) {
+                // Pegou o brinde!
+                vidas++; 
+                this.lista.splice(index, 1); // Remove da tela
+            } else if (item.x + item.w < 0) {
+                // Passou da tela sem pegar
+                this.lista.splice(index, 1);
+            }
+        });
+    }
+};
+
+// ==========================================
 // CONTROLES
 // ==========================================
 canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(!isGameOver && !isIntro) player.jump(); }, { passive: false });
@@ -374,19 +467,19 @@ function desenharCeuGradient() {
 // ==========================================
 // CHÃO (CAMADA 2: Entre o P1 e a vegetação)
 // ==========================================
-function desenharChaoAsfalto() {
+function desenharChaoAsfalto(dt) {
+    let delta = dt || 1;
     const larguraChao = 1046; 
-    const deslocamentoParaCima = 100; // Mantém isto para cravar o pé do personagem
-    roadLineX -= velocidadeJogo; 
+    const deslocamentoParaCima = 100; 
+    roadLineX -= velocidadeJogo * delta; 
     
-    // Reseta o loop de forma mais precisa
     if (roadLineX <= -larguraChao) {
         roadLineX = 0;
     }
     
-    for (let x = roadLineX; x < canvas.width; x += larguraChao) { 
-        // Substituímos o último pedaço todo por 162!
-        ctx.drawImage(assets.chao, x, chaoY - deslocamentoParaCima, larguraChao, 400); 
+    // Math.round + larguraChao + 1 sela a fresta vertical do chão definitivamente
+    for (let x = Math.round(roadLineX); x < canvas.width; x += larguraChao) { 
+        ctx.drawImage(assets.chao, x, chaoY - deslocamentoParaCima, larguraChao + 1, 400); 
     }
 }
 
@@ -398,8 +491,7 @@ let lastTime = 0; // Adicione esta variável no topo, junto com as outras (let f
 function loop(timestamp) {
     if (isGameOver) return;
     
-    // Calcula quanto tempo passou em milissegundos
-    let deltaTime = (timestamp - lastTime) / 16.67; // Normaliza para base 60fps
+    let deltaTime = (timestamp - lastTime) / 16.67; 
     lastTime = timestamp;
 
     desenharCeuGradient();
@@ -407,21 +499,24 @@ function loop(timestamp) {
     cloudManager.update();
     cloudManager.draw();
     
-    cenario.update(); 
+    cenario.update(deltaTime);            // <-- Passando deltaTime
+    cenario.drawUltraFundo();             // <-- Desenha as montanhas bem atrás de tudo
     cenario.drawFundo();
     cenario.drawGrama();
-    desenharChaoAsfalto();
+    desenharChaoAsfalto(deltaTime);       // <-- Passando deltaTime
     cenario.drawMeioTermo();
     
     if (isIntro) {
         ghost.update(); 
         ghost.draw();
     } else {
-        // Multiplicamos a atualização do player e obstáculos pelo deltaTime
-        // Isso garante que se o celular for muito rápido, ele compensa diminuindo o passo
         player.update(); 
         player.draw(); 
-        obstaculos.update(); 
+
+        coletaveis.update(deltaTime); // <-- ATUALIZA BRINDES
+        coletaveis.draw();
+
+        obstaculos.update(deltaTime);     // <-- Passando deltaTime (Seus obstáculos vão voltar!)
         obstaculos.draw();
         
         if (frames % 10 === 0) { score++; scoreDisplay.textContent = score; }
@@ -444,40 +539,72 @@ export function startRunner() {
     ghost.state = 'waiting';
     
     obstaculos.lista = []; obstaculos.spawnTimer = 0; 
+    cenario.bgUltraFarX = 0; // <-- ADICIONE ISSO AQUI PARA RESETAR AS MONTANHAS
     cenario.bgFarX = 0; cenario.bgNearX = 0; roadLineX = 0;
     
+    vidas = 1;
+    invulneravel = 0;
+    coletaveis.lista = [];
+    coletaveis.spawnTimer = 1000;
+
     score = 0; 
     frames = 0; 
     velocidadeJogo = 0; 
     isIntro = true;     
     isGameOver = false;
     
+    // IMPORTANTE: Resetamos o timestamp do deltaTime para não ter saltos
+    lastTime = performance.now();
+    
     scoreDisplay.textContent = score; 
     gameOverScreen.style.display = 'none';
     
-    loop();
+    loop(performance.now()); // Passamos o tempo inicial
 }
 
 async function gameOver() {
     isGameOver = true; cancelAnimationFrame(gameLoop);
     const pontosConvertidos = Math.floor(score / 10);
-    pointsEarnedDisplay.textContent = pontosConvertidos; gameOverScreen.style.display = 'block';
+    pointsEarnedDisplay.textContent = pontosConvertidos; 
+    gameOverScreen.style.display = 'block';
+
+    console.log("🏁 Game Over! Score:", score, "-> Pontos a somar:", pontosConvertidos);
 
     if (pontosConvertidos > 0) {
         const userId = localStorage.getItem('usuarioLogadoId');
+        console.log("🔍 ID do usuário no localStorage:", userId);
+
         if (userId) {
             try {
                 const userRef = doc(db, "inscritos", userId);
                 const userSnap = await getDoc(userRef);
+                
                 if (userSnap.exists()) {
                     const pontosAtuais = parseInt(userSnap.data().pontos) || 0;
                     const novoTotal = pontosAtuais + pontosConvertidos;
+                    
+                    console.log("💾 Pontos no banco:", pontosAtuais, "+ Novos:", pontosConvertidos, "= Total:", novoTotal);
+                    
                     await updateDoc(userRef, { pontos: novoTotal });
+                    
                     localStorage.setItem('usuarioPontos', novoTotal);
                     const ticketDisplay = document.getElementById('user-points-display');
                     if (ticketDisplay) ticketDisplay.textContent = novoTotal;
+                    
+                    console.log("✅ SUCESSO! Pontos salvos no Firebase.");
+
+                    // 👇 ADICIONE ESTA LINHA 👇
+                    // Isso cria um megafone invisível avisando o navegador inteiro que os pontos mudaram
+                    window.dispatchEvent(new Event('pontosAtualizados'));
+
+                } else {
+                    console.warn("⚠️ ERRO: Usuário não encontrado na coleção 'inscritos' do Firebase!");
                 }
-            } catch (erro) { console.error("Erro ao salvar pontos da corrida:", erro); }
+            } catch (erro) { 
+                console.error("❌ FIREBASE BLOQUEOU O SALVAMENTO:", erro); 
+            }
+        } else {
+            console.warn("⚠️ ERRO: Nenhum ID logado no localStorage. O jogo não sabe para quem dar os pontos.");
         }
     }
 }

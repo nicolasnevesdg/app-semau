@@ -395,3 +395,25 @@ export function atualizarMenuInferior() {
 
 // Execute logo na abertura do app para checar se já havia um login salvo
 atualizarMenuInferior();
+
+(function() {
+    setTimeout(function() {
+        // String contendo a estrutura HTML oculta em Base64
+        var assinaturaHTML = 'PGRpdiBzdHlsZT0idGV4dC1hbGlnbjogY2VudGVyOyBmb250LXNpemU6IDEycHg7IG9wYWNpdHk6IDAuNDsgbWFyZ2luLXRvcDogMzBweDsgcGFkZGluZy1ib3R0b206IDEwcHg7Ij5hcHAgd2ViIGRlc2Vudm9sdmlkbyBwb3IgPGEgaHJlZj0iaHR0cHM6Ly9uaWNvbGFzbmV2ZXMuY29tLmJyIiB0YXJnZXQ9Il9ibGFuayIgc3R5bGU9ImNvbG9yOiBpbmhlcml0OyB0ZXh0LWRlY29yYXRpb246IHVuZGVybGluZTsiPk7DrWNvbGFzIE5ldmVzPC9hPjwvZGl2Pg==';
+        
+        // MÁGICA AQUI: Decodificador especial para não quebrar os acentos (UTF-8)
+        var htmlDecodificado = decodeURIComponent(escape(atob(assinaturaHTML)));
+        
+        // 1. Injeta no rodapé da caixa de login
+        var loginContainer = document.querySelector('.login-container');
+        if (loginContainer) {
+            loginContainer.insertAdjacentHTML('beforeend', htmlDecodificado);
+        }
+        
+        // 2. Injeta no final da Área do Inscrito (Dashboard)
+        var dashboardView = document.getElementById('view-dashboard');
+        if (dashboardView) {
+            dashboardView.insertAdjacentHTML('beforeend', htmlDecodificado);
+        }
+    }, 500);
+})();
