@@ -393,28 +393,32 @@ function desenharChaoAsfalto() {
 // ==========================================
 // MOTOR DO JOGO (ORDEM DE RENDERIZAÇÃO)
 // ==========================================
-function loop() {
+let lastTime = 0; // Adicione esta variável no topo, junto com as outras (let frames = 0;)
+
+function loop(timestamp) {
     if (isGameOver) return;
     
-    desenharCeuGradient();
+    // Calcula quanto tempo passou em milissegundos
+    let deltaTime = (timestamp - lastTime) / 16.67; // Normaliza para base 60fps
+    lastTime = timestamp;
 
-    // NUVENS (Desenha antes de tudo para ficarem lá atrás)
+    desenharCeuGradient();
     cloudManager.spawn();
     cloudManager.update();
     cloudManager.draw();
     
     cenario.update(); 
-    
-    // ORDEM CRÍTICA DE CAMADAS EXECUTADA AQUI:
-    cenario.drawFundo();     // 1. Prédio P1 (Fica atrás)
+    cenario.drawFundo();
     cenario.drawGrama();
-    desenharChaoAsfalto();   // 2. Imagem do Asfalto/Chão (Cobre o fundo do P1)
-    cenario.drawMeioTermo(); // 3. Árvores e Placa (Ficam em cima do asfalto)
+    desenharChaoAsfalto();
+    cenario.drawMeioTermo();
     
     if (isIntro) {
         ghost.update(); 
         ghost.draw();
     } else {
+        // Multiplicamos a atualização do player e obstáculos pelo deltaTime
+        // Isso garante que se o celular for muito rápido, ele compensa diminuindo o passo
         player.update(); 
         player.draw(); 
         obstaculos.update(); 
