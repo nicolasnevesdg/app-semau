@@ -10,11 +10,13 @@ const btnRestart = document.getElementById('btn-runner-restart');
 
 let gameLoop;
 let isGameOver = false;
+let isIntro = true; 
 let frames = 0;
 let score = 0;
-let velocidadeJogo = 5;
+let velocidadeJogo = 0; 
 let chaoY = 0;
 let roadLineX = 0;
+let nuvens = [];
 
 // ==========================================
 // 1. CARREGAMENTO DE IMAGENS (ASSETS)
@@ -27,27 +29,48 @@ const assets = {
     cavalo: new Image(),
     feira: new Image(),
     aluna: new Image(),    
-    ciclista: new Image()  
+    ciclista: new Image(),
+    cachorro: new Image(),
+    chao: new Image(),
+    p1: new Image(),
+    placa: new Image(),
+    fantasma: new Image(),
+    arvore1: new Image(),
+    arvore2: new Image(),
+    arvore3: new Image(),
+    grama: new Image()
 };
 
-// Carrega imagens da Corrida (1 a 6 continuam minúsculos no GitHub)
-for (let i = 0; i < 6; i++) {
-    assets.playerRun[i].src = imgBase + (i + 1) + '.png';
-}
+for (let i = 0; i < 6; i++) { assets.playerRun[i].src = imgBase + (i + 1) + '.png'; }
+for (let i = 0; i < 7; i++) { assets.playerJump[i].src = imgBase + 'J' + (i + 1) + '.png'; }
 
-// CORREÇÃO: O 'J' agora é maiúsculo (J1.png a J7.png)
-for (let i = 0; i < 7; i++) {
-    assets.playerJump[i].src = imgBase + 'J' + (i + 1) + '.png';
-}
-
-// CORREÇÃO: Iniciais maiúsculas para bater com os arquivos no GitHub
 assets.capivara.src = imgBase + 'Capivara.png';
 assets.cavalo.src = imgBase + 'Cavalo.png';
 assets.feira.src = imgBase + 'Feira.png';
 assets.aluna.src = imgBase + 'Aluna.png';       
-assets.ciclista.src = imgBase + 'Ciclista.png';
+assets.ciclista.src = imgBase + 'Ciclista.png'; 
 
-// Ajusta o canvas
+assets.cachorro.src = imgBase + 'cururu.png';
+assets.chao.src = imgBase + 'chao.png';
+assets.p1.src = imgBase + 'p1.png';
+assets.placa.src = imgBase + 'placa.png';
+assets.fantasma.src = imgBase + 'fantasminha.png';
+assets.grama.src = imgBase + 'grama.png';
+
+assets.arvore1.src = imgBase + 'arvore1.png';
+assets.arvore2.src = imgBase + 'arvore2.png';
+assets.arvore3.src = imgBase + 'arvore3.png';
+
+// Alterar a quantidade para 6
+assets.nuvens = [
+    new Image(), new Image(), new Image(), new Image(), new Image(), new Image()
+];
+
+// O nome do arquivo agora é "cloud" seguido do número
+for(let i = 0; i < 6; i++) {
+    assets.nuvens[i].src = imgBase + 'cloud' + (i + 1) + '.png';
+}
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -57,33 +80,120 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // ==========================================
-// GERENCIADOR DE CENÁRIO (PARALLAX)
+// ANIMAÇÃO DE INTRODUÇÃO (FANTASMINHA)
 // ==========================================
-const cenario = {
-    bgFarX: 0, bgNearX: 0, larguraFar: 1000, larguraNear: 800,
+const ghost = {
+    x: 200,
+    y: 0,
+    w: 450,
+    h: 146.3,
+    timer: 0,
+    state: 'waiting', 
+    
     draw() {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-        for (let i = 0; i <= Math.ceil(canvas.width / this.larguraFar) + 1; i++) {
-            let offsetX = this.bgFarX + (i * this.larguraFar);
-            ctx.fillRect(offsetX + 50, chaoY - 180, 150, 180);
-            ctx.fillRect(offsetX + 220, chaoY - 250, 80, 250);
-            ctx.fillRect(offsetX + 240, chaoY - 340, 40, 90);
-            ctx.fillRect(offsetX + 350, chaoY - 120, 200, 120);
-            ctx.fillRect(offsetX + 600, chaoY - 200, 120, 200);
-            ctx.fillRect(offsetX + 750, chaoY - 150, 180, 150);
+        if (this.state === 'done') return;
+        let drawX = this.x;
+        let drawY = this.y;
+        
+        if (this.state === 'shaking') {
+            drawX += (Math.random() - 0.5) * 10; 
+            drawY += (Math.random() - 0.5) * 6;
         }
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-        for (let i = 0; i <= Math.ceil(canvas.width / this.larguraNear) + 1; i++) {
-            let offsetX = this.bgNearX + (i * this.larguraNear);
-            ctx.fillRect(offsetX + 100, chaoY - 60, 15, 60); ctx.beginPath(); ctx.arc(offsetX + 107, chaoY - 70, 40, 0, Math.PI * 2); ctx.fill();
-            ctx.fillRect(offsetX + 350, chaoY - 120, 6, 120); ctx.fillRect(offsetX + 350, chaoY - 120, 30, 6);
-            ctx.fillRect(offsetX + 600, chaoY - 80, 20, 80); ctx.beginPath(); ctx.arc(offsetX + 610, chaoY - 90, 50, 0, Math.PI * 2); ctx.fill();
-        }
+        
+        ctx.drawImage(assets.fantasma, drawX, drawY, this.w, this.h);
     },
     update() {
-        this.bgFarX -= velocidadeJogo * 0.2; this.bgNearX -= velocidadeJogo * 0.5;
-        if (this.bgFarX <= -this.larguraFar) this.bgFarX += this.larguraFar;
-        if (this.bgNearX <= -this.larguraNear) this.bgNearX += this.larguraNear;
+        if (this.state === 'done') return;
+        this.timer++;
+        
+        if (this.state === 'waiting' && this.timer > 60) { 
+            this.state = 'shaking';
+            this.timer = 0;
+        } else if (this.state === 'shaking' && this.timer > 60) { 
+            this.state = 'running';
+        } else if (this.state === 'running') {
+            this.x += 18; 
+            if (this.x > canvas.width) {
+                this.state = 'done';
+                iniciarCorridaDeVerdade(); 
+            }
+        }
+    }
+};
+
+function iniciarCorridaDeVerdade() {
+    isIntro = false;
+    velocidadeJogo = 6; 
+}
+
+// ==========================================
+// GERENCIADOR DE CENÁRIO (SEPARADO EM CAMADAS)
+// ==========================================
+const cenario = {
+    bgFarX: 0, bgNearX: 0, 
+    larguraP1: 360, 
+    espacoP1: 1000,        // <-- NOVO: Define aqui a distância de espaço vazio entre os prédios P1
+    larguraArvores: 3200,
+    larguraGrama: 1600,
+    
+    // CAMADA 1: Prédio de fundo (Fica atrás do chão)
+    drawFundo() {
+        const cicloTotalP1 = this.larguraP1 + this.espacoP1;
+        
+        // Garantimos que o desenho começa exatamente na posição do bgFarX
+        // Usamos Math.floor para evitar números quebrados que causam a "linha"
+        let startX = Math.floor(this.bgFarX);
+
+        // O "+ 2" no final garante que o jogo desenha prédios suficientes 
+        // fora da tela para não sumirem na borda direita antes do reset
+        for (let i = 0; i <= Math.ceil(canvas.width / cicloTotalP1) + 2; i++) {
+            let offsetX = this.bgFarX + (i * cicloTotalP1);
+            ctx.drawImage(assets.p1, offsetX, chaoY - 210, this.larguraP1, 120);
+        }
+    },
+
+    drawGrama() {
+        const baseY = chaoY - 110; // Alinhado com o asfalto
+        let startX = Math.floor(this.bgNearX);
+        
+        for (let i = 0; i <= Math.ceil(canvas.width / this.larguraGrama) + 1; i++) {
+            let offsetX = startX + (i * this.larguraGrama);
+            ctx.drawImage(assets.grama, offsetX, baseY, this.larguraGrama, 120);
+        }
+    },
+
+    // CAMADA 3: Objetos de Meio-Termo (Ficam por cima do chão)
+    drawMeioTermo() {
+        const baseY = chaoY - 60; 
+        
+        for (let i = 0; i <= Math.ceil(canvas.width / this.larguraArvores) + 1; i++) {
+            let offsetX = this.bgNearX + (i * this.larguraArvores);
+            
+            ctx.drawImage(assets.arvore1, offsetX + 150, baseY - 100, 100, 100);
+            ctx.drawImage(assets.arvore2, offsetX + 650, baseY - 100, 168.1, 100);
+            ctx.drawImage(assets.arvore3, offsetX + 1300, baseY - 180, 236.8, 180);
+            
+            ctx.drawImage(assets.placa, offsetX + 2100, baseY - 80, 88.4, 80);
+            
+            ctx.drawImage(assets.arvore1, offsetX + 2650, baseY - 80, 80, 80);
+            ctx.drawImage(assets.arvore2, offsetX + 2950, baseY - 100, 168.1, 100);
+        }
+    },
+
+    update() {
+        this.bgFarX -= velocidadeJogo * 0.2; 
+        this.bgNearX -= velocidadeJogo * 0.5;
+        
+        const cicloTotalP1 = this.larguraP1 + this.espacoP1;
+
+        // CORREÇÃO: O reinício agora usa o ciclo total (Prédio + Espaço) em vez de apenas a largura do prédio
+        if (this.bgFarX <= -cicloTotalP1) {
+            this.bgFarX += cicloTotalP1;
+        }
+
+        if (this.bgNearX <= -this.larguraArvores) {
+            this.bgNearX += this.larguraArvores;
+        }
     }
 };
 
@@ -92,7 +202,7 @@ const cenario = {
 // ==========================================
 const player = {
     x: 50,
-    y: chaoY - 50,
+    y: chaoY - 60,
     w: 70,         
     h: 70,         
     dy: 0,
@@ -103,7 +213,6 @@ const player = {
     currentRunFrame: 0, 
     frameChangeTimer: 0,
     frameChangeInterval: 6, 
-    
     currentJumpFrame: 0,
     jumpFrameTimer: 0,
     jumpFrameInterval: 5,
@@ -150,35 +259,23 @@ const player = {
             this.jumpFrameTimer = 0;
         }
     },
-    // NOVO: Função que corta o pulo ao soltar o clique/toque
     jumpCut() {
         if (!this.grounded && this.dy < 0) {
-            this.dy *= 0.5; // Reduz a velocidade de subida pela metade
+            this.dy *= 0.5; 
         }
     }
 };
 
 // ==========================================
-// GERENCIADOR DE OBSTÁCULOS (COM HITBOX CORRIGIDA)
+// GERENCIADOR DE OBSTÁCULOS
 // ==========================================
 const obstaculos = {
     lista: [],
     spawnTimer: 0,
     draw() {
         this.lista.forEach(obs => {
-            // Desenha a imagem normalmente
             ctx.drawImage(obs.image, obs.x, obs.y, obs.w, obs.h);
-            
-            /* DICA DE OURO: Se você quiser VER as caixas de colisão para testar
-               se estão justas o suficiente, apague as duas barras "//" das 4 linhas abaixo!
-            */
-            
-            // ctx.strokeStyle = 'red'; // Hitbox do obstáculo em vermelho
-            // ctx.strokeRect(obs.x + obs.hitPaddingX, obs.y + obs.hitPaddingY, obs.w - (obs.hitPaddingX * 2), obs.h - (obs.hitPaddingY * 2));
         });
-
-        // ctx.strokeStyle = 'blue'; // Hitbox do jogador em azul
-        // ctx.strokeRect(player.x + 20, player.y + 10, player.w - 40, player.h - 20);
     },
     update() {
         if (frames > 0 && frames % 600 === 0) velocidadeJogo += 0.5;
@@ -186,14 +283,13 @@ const obstaculos = {
         this.spawnTimer--;
 
         if (this.spawnTimer <= 0) {
-            // NOVO: Adicionado 'hitPaddingX' e 'hitPaddingY'.
-            // Isso define quantos pixels vamos ignorar das bordas transparentes de cada PNG.
             const tipos = [
-                { img: assets.capivara, w: 45, h: 45, hitPaddingX: 5, hitPaddingY: 5 },
-                { img: assets.cavalo, w: 70, h: 70, hitPaddingX: 10, hitPaddingY: 10 },
-                { img: assets.feira, w: 80, h: 80, hitPaddingX: 15, hitPaddingY: 15 },
-                { img: assets.aluna, w: 70, h: 70, hitPaddingX: 20, hitPaddingY: 10 },
-                { img: assets.ciclista, w: 70, h: 70, hitPaddingX: 15, hitPaddingY: 10 }
+                { img: assets.capivara, w: 50, h: 50, hitX: 5, hitY: 5 },
+                { img: assets.cavalo, w: 75, h: 75, hitX: 10, hitY: 10 },
+                { img: assets.feira, w: 90, h: 90, hitX: 15, hitY: 15 },
+                { img: assets.aluna, w: 70, h: 70, hitX: 20, hitY: 10 },      
+                { img: assets.ciclista, w: 80, h: 80, hitX: 15, hitY: 10 },
+                { img: assets.cachorro, w: 67.2, h: 40, hitX: 5, hitY: 5 } 
             ];
             
             const escolhido = tipos[Math.floor(Math.random() * tipos.length)];
@@ -204,48 +300,67 @@ const obstaculos = {
                 w: escolhido.w, 
                 h: escolhido.h,
                 image: escolhido.img,
-                hitPaddingX: escolhido.hitPaddingX, // Salva o encolhimento escolhido
-                hitPaddingY: escolhido.hitPaddingY
+                hitX: escolhido.hitX,
+                hitY: escolhido.hitY
             });
             
-            this.spawnTimer = Math.floor(Math.random() * 60 + 80);
+            this.spawnTimer = Math.floor(Math.random() * 60 + (80 - velocidadeJogo));
         }
 
         this.lista.forEach((obs, index) => {
             obs.x -= velocidadeJogo;
             
-            // 1. HITBOX DO JOGADOR (Encolhendo a caixa do estudante)
-            // A imagem tem 70x70, mas vamos cortar o espaço vazio em volta dele
-            const pBoxX = player.x + 20; // Corta 20px da esquerda
-            const pBoxY = player.y + 10; // Corta 10px do topo
-            const pBoxW = player.w - 40; // Tira 20px de cada lado (20+20)
-            const pBoxH = player.h - 20; // Tira 10px em cima e 10px embaixo
+            const pBoxX = player.x + 20; const pBoxY = player.y + 10; 
+            const pBoxW = player.w - 40; const pBoxH = player.h - 20;
 
-            // 2. HITBOX DO OBSTÁCULO (Encolhendo a caixa da barraca/animais)
-            const oBoxX = obs.x + obs.hitPaddingX;
-            const oBoxY = obs.y + obs.hitPaddingY;
-            const oBoxW = obs.w - (obs.hitPaddingX * 2);
-            const oBoxH = obs.h - (obs.hitPaddingY * 2);
+            const oBoxX = obs.x + obs.hitX; const oBoxY = obs.y + obs.hitY;
+            const oBoxW = obs.w - (obs.hitX * 2); const oBoxH = obs.h - (obs.hitY * 2);
             
-            // 3. NOVA DETECÇÃO DE COLISÃO (Usando as caixas encolhidas em vez do tamanho total)
-            if (pBoxX < oBoxX + oBoxW && 
-                pBoxX + pBoxW > oBoxX && 
-                pBoxY < oBoxY + oBoxH && 
-                pBoxY + pBoxH > oBoxY) {
+            if (pBoxX < oBoxX + oBoxW && pBoxX + pBoxW > oBoxX && pBoxY < oBoxY + oBoxH && pBoxY + pBoxH > oBoxY) {
                 gameOver();
             }
-
             if (obs.x + obs.w < 0) this.lista.splice(index, 1);
         });
     }
 };
-// Controles
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(!isGameOver) player.jump(); }, { passive: false });
-canvas.addEventListener('mousedown', () => { if(!isGameOver) player.jump(); });
 
-// NOVO: Controles para o corte do pulo
-canvas.addEventListener('touchend', (e) => { e.preventDefault(); if(!isGameOver) player.jumpCut(); }, { passive: false });
-canvas.addEventListener('mouseup', () => { if(!isGameOver) player.jumpCut(); });
+const cloudManager = {
+    spawn() {
+        // Reduzi de 0.01 para 0.003. Isso faz o jogo testar menos vezes se deve criar uma nuvem.
+        if (Math.random() < 0.003) { 
+            nuvens.push({
+                x: canvas.width,
+                y: Math.random() * 150,
+                img: assets.nuvens[Math.floor(Math.random() * 6)], 
+                speed: 0.1 + Math.random() * 0.2
+            });
+        }
+    },
+    update() {
+        for (let i = 0; i < nuvens.length; i++) {
+            nuvens[i].x -= nuvens[i].speed;
+            if (nuvens[i].x + 100 < 0) { // Remove quando sair da tela
+                nuvens.splice(i, 1);
+                i--;
+            }
+        }
+    },
+    draw() {
+        for (let n of nuvens) {
+            // AQUI está o segredo: use os valores corretos de largura e altura
+            // Se as nuvens são horizontais, 183.7 é a largura e 60 é a altura
+            ctx.drawImage(n.img, n.x, n.y, 183.7, 60); 
+        }
+    }
+};
+
+// ==========================================
+// CONTROLES
+// ==========================================
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if(!isGameOver && !isIntro) player.jump(); }, { passive: false });
+canvas.addEventListener('mousedown', () => { if(!isGameOver && !isIntro) player.jump(); });
+canvas.addEventListener('touchend', (e) => { e.preventDefault(); if(!isGameOver && !isIntro) player.jumpCut(); }, { passive: false });
+canvas.addEventListener('mouseup', () => { if(!isGameOver && !isIntro) player.jumpCut(); });
 
 function desenharCeuGradient() {
     let skyGradient = ctx.createLinearGradient(0, 0, 0, chaoY);
@@ -256,35 +371,85 @@ function desenharCeuGradient() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+// ==========================================
+// CHÃO (CAMADA 2: Entre o P1 e a vegetação)
+// ==========================================
 function desenharChaoAsfalto() {
-    ctx.fillStyle = '#1c1c1c'; ctx.fillRect(0, chaoY, canvas.width, canvas.height - chaoY);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; 
-    let larguraFaixa = 35, espacoFaixa = 25, faixaY = chaoY + 25; 
-    roadLineX -= velocidadeJogo; if (roadLineX <= -(larguraFaixa + espacoFaixa)) roadLineX = 0;
-    for (let x = roadLineX; x < canvas.width; x += larguraFaixa + espacoFaixa) { ctx.fillRect(x, faixaY, larguraFaixa, 5); }
+    const larguraChao = 1046; 
+    const deslocamentoParaCima = 100; // Mantém isto para cravar o pé do personagem
+    roadLineX -= velocidadeJogo; 
+    
+    // Reseta o loop de forma mais precisa
+    if (roadLineX <= -larguraChao) {
+        roadLineX = 0;
+    }
+    
+    for (let x = roadLineX; x < canvas.width; x += larguraChao) { 
+        // Substituímos o último pedaço todo por 162!
+        ctx.drawImage(assets.chao, x, chaoY - deslocamentoParaCima, larguraChao, 400); 
+    }
 }
 
+// ==========================================
+// MOTOR DO JOGO (ORDEM DE RENDERIZAÇÃO)
+// ==========================================
 function loop() {
     if (isGameOver) return;
-    desenharCeuGradient(); cenario.update(); cenario.draw(); desenharChaoAsfalto();
-    player.update(); player.draw(); obstaculos.update(); obstaculos.draw();
-    if (frames % 10 === 0) { score++; scoreDisplay.textContent = score; }
-    frames++; gameLoop = requestAnimationFrame(loop);
+    
+    desenharCeuGradient();
+
+    // NUVENS (Desenha antes de tudo para ficarem lá atrás)
+    cloudManager.spawn();
+    cloudManager.update();
+    cloudManager.draw();
+    
+    cenario.update(); 
+    
+    // ORDEM CRÍTICA DE CAMADAS EXECUTADA AQUI:
+    cenario.drawFundo();     // 1. Prédio P1 (Fica atrás)
+    cenario.drawGrama();
+    desenharChaoAsfalto();   // 2. Imagem do Asfalto/Chão (Cobre o fundo do P1)
+    cenario.drawMeioTermo(); // 3. Árvores e Placa (Ficam em cima do asfalto)
+    
+    if (isIntro) {
+        ghost.update(); 
+        ghost.draw();
+    } else {
+        player.update(); 
+        player.draw(); 
+        obstaculos.update(); 
+        obstaculos.draw();
+        
+        if (frames % 10 === 0) { score++; scoreDisplay.textContent = score; }
+    }
+    
+    frames++; 
+    gameLoop = requestAnimationFrame(loop);
 }
 
 export function startRunner() {
     resizeCanvas(); 
-    player.y = chaoY - player.h; player.dy = 0; player.grounded = true;
     
-    player.currentRunFrame = 0;
-    player.frameChangeTimer = 0;
-    player.currentJumpFrame = 0;
-    player.jumpFrameTimer = 0;
+    player.y = chaoY - player.h; player.dy = 0; player.grounded = true;
+    player.currentRunFrame = 0; player.frameChangeTimer = 0;
+    player.currentJumpFrame = 0; player.jumpFrameTimer = 0;
 
+    ghost.y = chaoY - ghost.h; 
+    ghost.x = 200;
+    ghost.timer = 0;
+    ghost.state = 'waiting';
+    
     obstaculos.lista = []; obstaculos.spawnTimer = 0; 
     cenario.bgFarX = 0; cenario.bgNearX = 0; roadLineX = 0;
-    score = 0; frames = 0; velocidadeJogo = 5; isGameOver = false;
-    scoreDisplay.textContent = score; gameOverScreen.style.display = 'none';
+    
+    score = 0; 
+    frames = 0; 
+    velocidadeJogo = 0; 
+    isIntro = true;     
+    isGameOver = false;
+    
+    scoreDisplay.textContent = score; 
+    gameOverScreen.style.display = 'none';
     
     loop();
 }
