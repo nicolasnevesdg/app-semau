@@ -4,18 +4,6 @@ import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.
 const canvas = document.getElementById('runner-canvas');
 const ctx = canvas.getContext('2d');
 
-// Ajuste de DPI para telas retina/alta resolução
-const dpr = window.devicePixelRatio || 1;
-const rect = canvas.getBoundingClientRect();
-
-canvas.width = rect.width * dpr;
-canvas.height = rect.height * dpr;
-
-ctx.scale(dpr, dpr);
-
-ctx.imageSmoothingEnabled = true;
-ctx.imageSmoothingQuality = 'high';
-
 const scoreDisplay = document.getElementById('runner-score');
 const gameOverScreen = document.getElementById('runner-game-over');
 const pointsEarnedDisplay = document.getElementById('runner-points-earned');
@@ -92,9 +80,27 @@ for(let i = 0; i < 6; i++) {
 }
 
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    chaoY = canvas.height * 0.65; 
+    // 1. Pega o elemento que segura o jogo
+    const gameContainer = document.getElementById('view-runner-game');
+    
+    // 2. Lê o tamanho apenas deste bloco (no PC será no máximo 480px, no telemóvel será a tela toda)
+    const larguraReal = gameContainer.clientWidth;
+    const alturaReal = gameContainer.clientHeight;
+    
+    const dpr = window.devicePixelRatio || 1;
+
+    // 3. Multiplica pela densidade de pixeis para não ficar desfocado
+    canvas.width = larguraReal * dpr;
+    canvas.height = alturaReal * dpr;
+
+    // NÃO colocar canvas.style.width aqui! O CSS já está a forçar os 100%.
+
+    ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // O chão do jogo acompanha a altura correta do ecrã
+    chaoY = alturaReal * 0.65; 
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -470,9 +476,10 @@ canvas.addEventListener('mouseup', () => { if(!isGameOver && !isIntro) player.ju
 
 function desenharCeuGradient() {
     let skyGradient = ctx.createLinearGradient(0, 0, 0, chaoY);
-    skyGradient.addColorStop(0, '#5175b5');    
-    skyGradient.addColorStop(0.5, '#809acd');  
-    skyGradient.addColorStop(1, '#c3d5ed');    
+    skyGradient.addColorStop(0, '#2563b8');
+    skyGradient.addColorStop(0.3, '#4085d4');
+    skyGradient.addColorStop(0.75, '#84c4f8');  
+    skyGradient.addColorStop(1, 'rgb(173, 219, 250)');    
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
