@@ -406,7 +406,7 @@
 
 /* Onde cada sticker vai ficar posicionado */
 .sticker-1 {
-    top: 95px;
+    top: 8%;
     left: -10px;
     width: 90px;
     transform-origin: center right;
@@ -414,7 +414,7 @@
 }
 
 .sticker-2 {
-    top: 70px;
+    top: 5.5%;
     right: 1%;
     width: 110px;
     transform-origin: center left;
@@ -422,7 +422,7 @@
 }
 
 .sticker-3 {
-    top: 570px;
+    top: 38%;
     right: -2%;
     width: 95px;
     transform-origin: bottom center;
@@ -430,7 +430,7 @@
 }
 
 .sticker-4 {
-    top: 620px;
+    top: 43%;
     left: 0%;
     width: 95px;
     transform-origin: bottom center;
@@ -438,7 +438,7 @@
 }
 
 .sticker-5 {
-    top: 1200px;
+    bottom: 8%;
     left: -10%;
     width: 130px;
     transform-origin: bottom center;
@@ -446,7 +446,7 @@
 }
 
 .sticker-6 {
-    top: 900px;
+    bottom: 28%;
     right: -5%;
     left: auto;
     width: 110px;

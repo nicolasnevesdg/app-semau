@@ -967,9 +967,35 @@
     cursor: default;
 }
 
+/* Container que segura a tela toda do jogo */
+#view-runner-game {
+    position: relative;
+    width: 100%;  /* <-- A MÁGICA ESTÁ AQUI: Trocamos 100vw por 100% */
+    height: 100vh; 
+    overflow: hidden; 
+    background-color: #c3d5ed; 
+}
+
+/* O Canvas vira um plano de fundo absoluto */
 #runner-canvas {
-    image-rendering: -webkit-optimize-contrast; /* Ajuda a manter as bordas nítidas */
-    image-rendering: crisp-edges;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1; /* Fica lá atrás */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Garante que o placar e botões fiquem na frente do jogo e não sejam engolidos */
+#view-runner-game > div:not(#runner-canvas) {
+    position: relative;
+    z-index: 2;
+    pointer-events: none; /* Deixa o clique passar reto pela div para o boneco poder pular */
+}
+
+/* Mas os botões precisam ser clicáveis! */
+#view-runner-game button {
+    pointer-events: all;
 }
