@@ -1,5 +1,7 @@
 import { db } from './firebase-config.js';
 import { collection, doc, addDoc, getDocs, updateDoc, query, where, arrayUnion, arrayRemove, setDoc, onSnapshot, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// ==========================================
 // ELEMENTOS DO HTML
 // ==========================================
 const adminNovoNome = document.getElementById('admin-novo-nome');
@@ -17,19 +19,16 @@ const adminResultadoBusca = document.getElementById('admin-resultado-busca');
 const paxNome = document.getElementById('pax-nome');
 const btnAbrirCamera = document.getElementById('btn-abrir-camera');
 const leitorQrcodeDiv = document.getElementById('leitor-qrcode');
-let leitor = null; // Essa variável vai guardar a "sessão" da câmera ligada
+let leitor = null; 
 
-// Puxa TODOS os 10 botões de presença de uma vez só
 const botoesPresenca = document.querySelectorAll('.btn-presenca');
 const botoesOficinaAdmin = document.querySelectorAll('.btn-oficina-admin');
 
 const btnAdminSortear = document.getElementById('btn-admin-sortear');
 const sorteioResultado = document.getElementById('sorteio-resultado');
 
-
 let idAlunoSelecionado = null;
 
-// Esconde o aviso de sucesso se começar a digitar novo nome
 if (adminNovoNome) {
     adminNovoNome.addEventListener('input', () => {
         if(adminAlertaSucesso) adminAlertaSucesso.style.display = 'none';
@@ -56,7 +55,7 @@ if (btnAdminCadastrar) {
         }
 
         btnAdminCadastrar.disabled = true;
-        btnAdminCadastrar.textContent = "Salvando...";
+        btnAdminCadastrar.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Salvando...';
 
         try {
             await addDoc(collection(db, "inscritos"), {
@@ -64,7 +63,6 @@ if (btnAdminCadastrar) {
                 email: email,
                 token: tokenGerado,
                 pontos: 0,
-                // Criando a grade de presença do aluno no Firebase zerada
                 d21_m: false, d21_t: false,
                 d22_m: false, d22_t: false,
                 d23_m: false, d23_t: false,
@@ -88,66 +86,41 @@ if (btnAdminCadastrar) {
 }
 
 // ==========================================
-// 1.5 SCANNER DE CÂMERA (EM TELA INTEIRA)
+// 1.5 SCANNER DE CÂMERA
 // ==========================================
 const modalCamera = document.getElementById('modal-camera');
 const btnFecharCamera = document.getElementById('btn-fechar-camera');
 
 if (btnAbrirCamera) {
     btnAbrirCamera.addEventListener('click', () => {
-        // 1. Mostra a tela escura
         modalCamera.style.display = 'flex';
+        if (!leitor) leitor = new Html5Qrcode("leitor-qrcode");
         
-        // 2. Prepara a câmera (a variável 'leitor' já está no topo do arquivo)
-        if (!leitor) {
-            leitor = new Html5Qrcode("leitor-qrcode");
-        }
-        
-        // 3. Liga a câmera do celular
         leitor.start(
             { facingMode: "environment" }, 
-            {
-                fps: 10,    
-                qrbox: { width: 250, height: 250 } 
-            },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
             (textoDecodificado) => {
-                // SUCESSO! Leu o código.
-                if (navigator.vibrate) navigator.vibrate(200); // Vibra no Android
-                
-                // Preenche a barra de pesquisa e clica em buscar automaticamente
+                if (navigator.vibrate) navigator.vibrate(200);
                 adminBuscaPax.value = textoDecodificado;
                 btnAdminBuscar.click();
-
-                // Desliga a câmera e fecha o modal
                 desligarCamera();
             },
-            (erroDeLeitura) => { /* Fica em silêncio enquanto procura o QR */ }
+            (erroDeLeitura) => { }
         ).catch((err) => {
-            console.error("Erro ao iniciar a câmera:", err);
-            alert("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
+            alert("Não foi possível acessar a câmera.");
             desligarCamera();
         });
     });
 }
 
-// Função para desligar a câmera e fechar a tela preta
 function desligarCamera() {
     if (leitor) {
-        leitor.stop().then(() => {
-            modalCamera.style.display = 'none';
-        }).catch(err => {
-            console.error("Erro ao parar a câmera", err);
-            modalCamera.style.display = 'none';
-        });
+        leitor.stop().then(() => { modalCamera.style.display = 'none'; }).catch(err => { modalCamera.style.display = 'none'; });
     } else {
         modalCamera.style.display = 'none';
     }
 }
-
-// Evento do botão vermelho de fechar
-if (btnFecharCamera) {
-    btnFecharCamera.addEventListener('click', desligarCamera);
-}
+if (btnFecharCamera) btnFecharCamera.addEventListener('click', desligarCamera);
 
 // ==========================================
 // 2. BUSCAR ALUNO E PREENCHER A GRADE
@@ -176,25 +149,24 @@ if (btnAdminBuscar) {
                 idAlunoSelecionado = alunoAchado.id;
                 paxNome.textContent = alunoAchado.nome;
                 
-                // Mágica: O script passa por todos os 10 botões e pinta de acordo com o banco
                 botoesPresenca.forEach(botao => {
                     const campoNoBanco = botao.dataset.campo;
                     atualizarBotaoPresenca(botao, alunoAchado[campoNoBanco]);
                 });
 
-                // 👇 NOVO: Pinta as oficinas de laranja se o aluno já estiver nelas
                 const oficinasAtuais = alunoAchado.oficinas || [];
                 botoesOficinaAdmin.forEach(botao => {
                     const idOficina = botao.dataset.oficina;
-                    
                     if (oficinasAtuais.includes(idOficina)) {
                         botao.classList.add('ativo');
-                        botao.style.backgroundColor = "var(--cor-secundaria)"; // Laranja
+                        botao.style.backgroundColor = "var(--cor-secundaria)";
                         botao.style.color = "#fff";
+                        botao.style.border = "1px solid var(--cor-secundaria)";
                     } else {
                         botao.classList.remove('ativo');
-                        botao.style.backgroundColor = "#e0e0e0"; // Cinza
-                        botao.style.color = "#333";
+                        botao.style.backgroundColor = "#f4f5f7";
+                        botao.style.color = "#666";
+                        botao.style.border = "1px solid #e8e8eb";
                     }
                 });
 
@@ -208,116 +180,86 @@ if (btnAdminBuscar) {
     });
 }
 
-// Função visual para pintar o botão de verde ou cinza
 function atualizarBotaoPresenca(botao, status) {
     if (status) {
         botao.classList.add('confirmado');
-        botao.textContent = "✓ Confirmado";
+        botao.innerHTML = '<i class="ph-bold ph-check"></i> Confirmado';
         botao.style.backgroundColor = "var(--cor-primaria)";
         botao.style.color = "#fff";
+        botao.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
     } else {
         botao.classList.remove('confirmado');
-        // Se o data-campo terminar em "_m", escreve Manhã, senão Tarde
         botao.textContent = botao.dataset.campo.endsWith('_m') ? "Manhã" : "Tarde";
-        botao.style.backgroundColor = "#e0e0e0";
-        botao.style.color = "#333";
+        botao.style.backgroundColor = "#f4f5f7";
+        botao.style.color = "#888";
+        botao.style.boxShadow = "none";
     }
 }
 
 // ==========================================
-// 3. DAR PRESENÇA AO CLICAR NOS BOTÕES
+// 3. DAR PRESENÇA E OFICINAS
 // ==========================================
 const togglePresenca = async (campo, botao) => {
     if (!idAlunoSelecionado) return;
-
     const jaTemPresenca = botao.classList.contains('confirmado');
     const novoStatus = !jaTemPresenca;
-
     try {
-        const alunoRef = doc(db, "inscritos", idAlunoSelecionado);
-        await updateDoc(alunoRef, {
-            [campo]: novoStatus
-        });
+        await updateDoc(doc(db, "inscritos", idAlunoSelecionado), { [campo]: novoStatus });
         atualizarBotaoPresenca(botao, novoStatus);
-    } catch (error) {
-        console.error("Erro ao atualizar presença:", error);
-    }
+    } catch (error) { console.error("Erro ao atualizar presença:", error); }
 };
 
-// Dá vida aos 10 botões ao mesmo tempo COM CONFIRMAÇÃO
 botoesPresenca.forEach(botao => {
     botao.addEventListener('click', () => {
-        // Verifica se a ação é dar ou tirar presença para mudar o texto
         const acao = botao.classList.contains('confirmado') ? "REMOVER a presença" : "CONFIRMAR a presença";
-        
-        // Abre o alerta na tela
         if (confirm(`Tem certeza que deseja ${acao} neste turno?`)) {
             togglePresenca(botao.dataset.campo, botao);
         }
     });
 });
 
-// 3.5 SELECIONAR/REMOVER OFICINAS DO ALUNO
-// ==========================================
 botoesOficinaAdmin.forEach(botao => {
     botao.addEventListener('click', async () => {
         if (!idAlunoSelecionado) return;
-
         const idOficina = botao.dataset.oficina;
         const jaEstaAtivo = botao.classList.contains('ativo');
-        
-        // 👇 NOVO: A mensagem muda se ele está colocando ou tirando a oficina
         const acao = jaEstaAtivo ? "REMOVER o aluno da" : "INSCREVER o aluno na";
         
-        // 👇 NOVO: A trava! Se a pessoa clicar em "Cancelar", o 'return' cancela tudo.
-        if (!confirm(`Tem certeza que deseja ${acao} ${idOficina}?`)) {
-            return; 
-        }
+        if (!confirm(`Tem certeza que deseja ${acao} ${idOficina}?`)) return; 
 
         const alunoRef = doc(db, "inscritos", idAlunoSelecionado);
-
         try {
             if (jaEstaAtivo) {
-                // Se já estava ativo, o clique remove do array no Firebase
-                await updateDoc(alunoRef, {
-                    oficinas: arrayRemove(idOficina)
-                });
+                await updateDoc(alunoRef, { oficinas: arrayRemove(idOficina) });
                 botao.classList.remove('ativo');
-                botao.style.backgroundColor = "#e0e0e0";
-                botao.style.color = "#333";
+                botao.style.backgroundColor = "#f4f5f7";
+                botao.style.color = "#666";
+                botao.style.border = "1px solid #e8e8eb";
             } else {
-                // Se não estava ativo, o clique adiciona no array do Firebase
-                await updateDoc(alunoRef, {
-                    oficinas: arrayUnion(idOficina)
-                });
+                await updateDoc(alunoRef, { oficinas: arrayUnion(idOficina) });
                 botao.classList.add('ativo');
                 botao.style.backgroundColor = "var(--cor-secundaria)";
                 botao.style.color = "#fff";
+                botao.style.border = "1px solid var(--cor-secundaria)";
             }
-        } catch (error) {
-            console.error("Erro ao atualizar oficinas do aluno:", error);
-        }
+        } catch (error) { console.error("Erro:", error); }
     });
 });
 
 // ==========================================
-// 4. O SORTEADOR (Com filtro de turno)
+// 4. O SORTEADOR
 // ==========================================
-// Apenas declaramos a nova variável, as outras já estão no topo do ficheiro!
 const selectSorteioTurno = document.getElementById('select-sorteio-turno'); 
 
 if (btnAdminSortear) {
     btnAdminSortear.addEventListener('click', async () => {
-        sorteioResultado.innerHTML = "Sorteando... 🎲";
+        sorteioResultado.innerHTML = '<p style="color: #888; font-size: 14px;"><i class="ph-bold ph-hourglass-high"></i> Misturando os nomes...</p>';
         btnAdminSortear.disabled = true;
         
-        // Pega o turno que você selecionou na tela
         const turnoEscolhido = selectSorteioTurno ? selectSorteioTurno.value : 'qualquer';
 
         try {
-            const inscritosRef = collection(db, "inscritos");
-            const querySnapshot = await getDocs(inscritosRef);
-            
+            const querySnapshot = await getDocs(collection(db, "inscritos"));
             let listaSorteaveis = [];
             
             querySnapshot.forEach((docSnap) => {
@@ -325,32 +267,28 @@ if (btnAdminSortear) {
                 let temPresenca = false;
 
                 if (turnoEscolhido === 'qualquer') {
-                    // Mantém a regra antiga se você quiser sortear entre todos que pisaram no evento
-                    temPresenca = dados.d21_m || dados.d21_t || dados.d22_m || dados.d22_t || 
-                                  dados.d23_m || dados.d23_t || dados.d24_m || dados.d24_t || 
-                                  dados.d25_m || dados.d25_t;
+                    temPresenca = dados.d21_m || dados.d21_t || dados.d22_m || dados.d22_t || dados.d23_m || dados.d23_t || dados.d24_m || dados.d24_t || dados.d25_m || dados.d25_t;
                 } else {
-                    // MÁGICA: Ele checa dinamicamente apenas o campo que você escolheu (ex: dados["d21_m"])
                     temPresenca = dados[turnoEscolhido] === true;
                 }
                 
-                // Se a pessoa passou no teste de presença, entra pra urna
-                if (temPresenca) {
-                    listaSorteaveis.push(dados.nome);
-                }
+                if (temPresenca) listaSorteaveis.push(dados.nome);
             });
             
             if (listaSorteaveis.length === 0) {
-                sorteioResultado.innerHTML = `<span style="color: #e06d53;">Ninguém com presença confirmada neste turno! ❌</span>`;
+                sorteioResultado.innerHTML = `<div style="background: #fffaf9; color: #e06d53; padding: 16px; border-radius: 12px; border: 1px solid #ffebeb; font-weight: 600; font-size: 14px;"><i class="ph-bold ph-warning-circle"></i> Ninguém com presença confirmada neste turno!</div>`;
                 return;
             }
             
-            // Sorteia o nome
             const ganhador = listaSorteaveis[Math.floor(Math.random() * listaSorteaveis.length)];
-            sorteioResultado.innerHTML = `🎉 Vencedor(a):<br><strong style="font-size: 22px;">${ganhador}</strong>`;
+            sorteioResultado.innerHTML = `
+                <div style="background: #f2fbf5; padding: 24px; border-radius: 16px; border: 1px solid #c3ebd2; margin-top: 10px;">
+                    <p style="font-size: 12px; color: #27ae60; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;"><i class="ph-bold ph-confetti"></i> Ganhador(a)</p>
+                    <strong style="font-size: 24px; color: var(--cor-primaria); font-weight: 800; word-break: break-word; line-height: 1.2;">${ganhador}</strong>
+                </div>
+            `;
             
         } catch (error) {
-            console.error("Erro no sorteio:", error);
             sorteioResultado.textContent = "Erro ao sortear.";
         } finally {
             btnAdminSortear.disabled = false;
@@ -358,98 +296,57 @@ if (btnAdminSortear) {
     });
 }
 
+// ==========================================
+// 5. NAVEGAÇÃO E CONFIGURAÇÕES
+// ==========================================
 btnSalvarFase.addEventListener('click', async () => {
     const faseEscolhida = selectFase.value;
-    
     if(confirm(`Tem certeza que deseja mudar o site para a fase: ${faseEscolhida}?`)) {
         try {
-            // Cria ou atualiza o documento de configuração geral
-            await setDoc(doc(db, "configuracoes", "geral"), {
-                faseAtual: faseEscolhida
-            }, { merge: true }); // O merge garante que não apague outras configs
-            
-            alert("✅ Site atualizado com sucesso! O botão já mudou para todos os alunos.");
-        } catch (error) {
-            console.error("Erro ao mudar fase:", error);
-            alert("Erro ao mudar a fase.");
-        }
+            await setDoc(doc(db, "configuracoes", "geral"), { faseAtual: faseEscolhida }, { merge: true });
+            alert("✅ Site atualizado com sucesso!");
+        } catch (error) { alert("Erro ao mudar a fase."); }
     }
 });
 
-
-// Referência do documento no banco de dados onde vamos guardar a lista de ativos
 const docConvidadosRef = doc(db, "configuracoes", "anuncios");
-
-// Seleciona todos os checkboxes que acabamos de criar
 const checkboxesConvidados = document.querySelectorAll('.toggle-convidado');
 
-// Lógica 1: Ficar de olho no Firebase e manter os botões sincronizados
 onSnapshot(docConvidadosRef, (docSnap) => {
     if (docSnap.exists()) {
-        // Pega a lista (array) de IDs que estão ativos no banco
         const ativos = docSnap.data().ativos || []; 
-
-        // Marca ou desmarca os botões da tela do admin baseado no banco
-        checkboxesConvidados.forEach(chk => {
-            chk.checked = ativos.includes(chk.value);
-        });
+        checkboxesConvidados.forEach(chk => { chk.checked = ativos.includes(chk.value); });
     }
 });
 
-// Lógica 2: Quando você clicar em um botão, atualiza o Firebase
 checkboxesConvidados.forEach(chk => {
     chk.addEventListener('change', async () => {
-        // Varre todos os checkboxes e pega o 'value' apenas dos que estão marcados
-        const listaAtualizada = Array.from(checkboxesConvidados)
-                                     .filter(box => box.checked)
-                                     .map(box => box.value);
-        
-        try {
-            await setDoc(docConvidadosRef, {
-                ativos: listaAtualizada
-            }, { merge: true });
-            
-            console.log("Anúncios atualizados no Firebase!");
-        } catch (error) {
-            console.error("Erro ao atualizar: ", error);
-        }
+        const listaAtualizada = Array.from(checkboxesConvidados).filter(box => box.checked).map(box => box.value);
+        try { await setDoc(docConvidadosRef, { ativos: listaAtualizada }, { merge: true }); } catch (error) {}
     });
 });
 
-// Elementos do controle de modo
 const selectModoCronograma = document.getElementById('select-modo-cronograma');
 const btnSalvarModoCronograma = document.getElementById('btn-salvar-modo-cronograma');
 
-// Sincroniza o select ao carregar a página com o valor atual do banco
 onSnapshot(docConvidadosRef, (docSnap) => {
     if (docSnap.exists() && docSnap.data().modo) {
         if (selectModoCronograma) selectModoCronograma.value = docSnap.data().modo;
     }
 });
 
-// Salva a alteração de fase
 if (btnSalvarModoCronograma) {
     btnSalvarModoCronograma.addEventListener('click', async () => {
         const modoEscolhido = selectModoCronograma.value;
-        const acaoTexto = modoEscolhido === 'fase1' ? "Fase 1 (Anúncios)" : "Fase 2 (Cronograma Oficial)";
-        
-        if (confirm(`Deseja alterar a visualização do app para: ${acaoTexto}?`)) {
+        if (confirm(`Deseja alterar a visualização do app?`)) {
             try {
-                await setDoc(docConvidadosRef, {
-                    modo: modoEscolhido
-                }, { merge: true });
-                alert("✅ Modo de visualização atualizado com sucesso!");
-            } catch (error) {
-                console.error("Erro ao atualizar modo:", error);
-                alert("Erro ao salvar configuração.");
-            }
+                await setDoc(docConvidadosRef, { modo: modoEscolhido }, { merge: true });
+                alert("✅ Modo atualizado!");
+            } catch (error) { alert("Erro ao salvar configuração."); }
         }
     });
 }
 
-// ==========================================
-// 5. NAVEGAÇÃO DO PAINEL ADMIN (MENU INFERIOR)
-// ==========================================
 const viewAdCadastro = document.getElementById('view-admin-cadastro');
 const viewAdPresenca = document.getElementById('view-admin-presenca');
 const viewAdLista = document.getElementById('view-admin-lista');
@@ -461,54 +358,48 @@ const navAdLista = document.getElementById('nav-ad-lista');
 const navAdConfigs = document.getElementById('nav-ad-configs');
 
 function showAdminView(viewToShow, navItemToHighlight) {
-    // Esconde todas as telas
     document.querySelectorAll('#app-container > .view').forEach(view => {
         view.style.display = 'none';
         view.classList.remove('active');
     });
-    
-    // Tira o "active" (cor laranja) de todos os botões do menu
     document.querySelectorAll('#bottom-nav .nav-item').forEach(nav => {
         nav.classList.remove('active');
     });
-
-    // Mostra a tela desejada e pinta o ícone selecionado
     viewToShow.style.display = 'block';
     viewToShow.classList.add('active');
     navItemToHighlight.classList.add('active');
 }
 
-// Eventos de clique nos ícones
 if(navAdCadastro) navAdCadastro.addEventListener('click', () => showAdminView(viewAdCadastro, navAdCadastro));
 if(navAdPresenca) navAdPresenca.addEventListener('click', () => showAdminView(viewAdPresenca, navAdPresenca));
 if(navAdLista) navAdLista.addEventListener('click', () => {
     showAdminView(viewAdLista, navAdLista);
-    carregarListaInscritos(); // Puxa os dados atualizados do Firebase na mesma hora!
+    carregarListaInscritos(); 
 });
 if(navAdConfigs) navAdConfigs.addEventListener('click', () => showAdminView(viewAdConfigs, navAdConfigs));
 
 // ==========================================
-// 6. LISTA DE INSCRITOS, DASHBOARD E EXCEL
+// 6. LISTA DE INSCRITOS (NOVO VISUAL)
 // ==========================================
 const containerListaInscritos = document.getElementById('container-lista-inscritos');
 const adminBuscaLista = document.getElementById('admin-busca-lista');
 const dashTotal = document.getElementById('dash-total');
 const btnExportarExcel = document.getElementById('btn-exportar-excel');
 
-let dadosParaExcel = []; // Matriz global que vai guardar os dados mastigados para a planilha
+let dadosParaExcel = []; 
 
 async function carregarListaInscritos() {
     if (!containerListaInscritos) return;
     
-    containerListaInscritos.innerHTML = '<p style="text-align:center; padding: 20px;">Carregando inscritos...</p>';
-    dadosParaExcel = []; // Limpa a matriz sempre que recarregar a tela
+    // Novo estado de carregamento elegante
+    containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px solid #e8e8eb;"><p style="color: #888; font-size: 14px; font-weight: 600; margin:0;"><i class="ph-bold ph-hourglass-high" style="margin-right: 8px;"></i> Carregando base de dados...</p></div>';
+    dadosParaExcel = []; 
     
     try {
-        const inscritosRef = collection(db, "inscritos");
-        const querySnapshot = await getDocs(inscritosRef);
+        const querySnapshot = await getDocs(collection(db, "inscritos"));
         
         if (querySnapshot.empty) {
-            containerListaInscritos.innerHTML = '<p style="text-align:center; padding: 20px;">Nenhum inscrito encontrado.</p>';
+            containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px dashed #e8e8eb;"><i class="ph-bold ph-users-slash" style="font-size: 32px; color: #ccc; margin-bottom: 12px; display: block;"></i><p style="color: #888; font-weight: 600; font-size: 14px; margin:0;">Nenhum inscrito encontrado.</p></div>';
             if(dashTotal) dashTotal.textContent = "0";
             return;
         }
@@ -520,183 +411,184 @@ async function carregarListaInscritos() {
             const dados = docSnap.data();
             totalInscritos++;
             
-            // --- CÁLCULO DE PRESENÇA ---
             const turnos = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
             let presencasConfirmadas = 0;
             turnos.forEach(t => { if(dados[t] === true) presencasConfirmadas++; });
             
             const porcentagem = (presencasConfirmadas / 10) * 100;
             const corPorcentagem = porcentagem >= 75 ? '#2ecc71' : '#e06d53';
-
-            // --- ALIMENTAR A MATRIZ DO EXCEL ---
             const oficinasFormatadas = dados.oficinas && dados.oficinas.length > 0 ? dados.oficinas.join(' | ') : 'Nenhuma';
             
             dadosParaExcel.push({
-                "Nome Completo": dados.nome,
-                "E-mail": dados.email,
-                "Token": dados.token,
-                "Oficinas Inscritas": oficinasFormatadas,
-                "Presença (%)": porcentagem + "%",
-                "Pontos no App": dados.pontos || 0,
-                "21/Set (Manhã)": dados.d21_m ? "Presente" : "Falta",
-                "21/Set (Tarde)": dados.d21_t ? "Presente" : "Falta",
-                "22/Set (Manhã)": dados.d22_m ? "Presente" : "Falta",
-                "22/Set (Tarde)": dados.d22_t ? "Presente" : "Falta",
-                "23/Set (Manhã)": dados.d23_m ? "Presente" : "Falta",
-                "23/Set (Tarde)": dados.d23_t ? "Presente" : "Falta",
-                "24/Set (Manhã)": dados.d24_m ? "Presente" : "Falta",
-                "24/Set (Tarde)": dados.d24_t ? "Presente" : "Falta",
-                "25/Set (Manhã)": dados.d25_m ? "Presente" : "Falta",
-                "25/Set (Tarde)": dados.d25_t ? "Presente" : "Falta"
+                "Nome Completo": dados.nome, "E-mail": dados.email, "Token": dados.token,
+                "Oficinas Inscritas": oficinasFormatadas, "Presença (%)": porcentagem + "%",
+                "21/Set (Manhã)": dados.d21_m ? "Presente" : "Falta", "21/Set (Tarde)": dados.d21_t ? "Presente" : "Falta",
+                "22/Set (Manhã)": dados.d22_m ? "Presente" : "Falta", "22/Set (Tarde)": dados.d22_t ? "Presente" : "Falta",
+                "23/Set (Manhã)": dados.d23_m ? "Presente" : "Falta", "23/Set (Tarde)": dados.d23_t ? "Presente" : "Falta",
+                "24/Set (Manhã)": dados.d24_m ? "Presente" : "Falta", "24/Set (Tarde)": dados.d24_t ? "Presente" : "Falta",
+                "25/Set (Manhã)": dados.d25_m ? "Presente" : "Falta", "25/Set (Tarde)": dados.d25_t ? "Presente" : "Falta"
             });
 
-            // --- PREPARAÇÃO DO E-MAIL AUTOMÁTICO ---
-            const assunto = encodeURIComponent("Seu Ingresso para a XVI SEMAU UFRRJ");
-            const corpoEmail = encodeURIComponent(
-                `Olá, ${dados.nome}!\n\nSua inscrição foi confirmada com sucesso na XVI SEMAU UFRRJ - O espaço que nos habita.\n\nGuarde seus dados de acesso:\nE-mail: ${dados.email}\nToken de Acesso: ${dados.token}\n\nAcesse o app do evento para ver o cronograma e acumular pontos: https://semau.spacennNos vemos lá!`
-            );
-            const linkMailTo = `mailto:${dados.email}?subject=${assunto}&body=${corpoEmail}`;
-
-            // --- MONTAGEM DO CARD NA TELA ---
+            // NOVO HTML DO CARTÃO - Estilo Minimalista
             const cardHTML = `
-                <div class="card-aluno-lista" data-nome="${dados.nome.toLowerCase()}" data-email="${dados.email.toLowerCase()}" style="background: #f8f9fa; border: 1px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; position: relative;">
+                <div class="card-aluno-lista" data-nome="${dados.nome.toLowerCase()}" data-email="${dados.email.toLowerCase()}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                     
-                    <button onclick="window.excluirInscrito('${docSnap.id}')" style="position: absolute;top: 5px;right: 15px;background: transparent;border: none;font-size: 20px;cursor: pointer;padding: 5px;line-height: 1;width: inherit;" title="Excluir Aluno">🗑️</button>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                        <p style="margin: 0; font-size: 18px; font-weight: 800; color: var(--cor-primaria); line-height: 1.2; word-break: break-word;">${dados.nome}</p>
+                        <button class="btn-excluir" style="background: #fffaf9; border: 1px solid #ffebeb; color: #e06d53; border-radius: 10px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; transition: 0.2s;" title="Excluir Aluno">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
+                    </div>
                     
-                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: var(--cor-primaria); padding-right: 45px; line-height: 1.3; word-break: break-word;">${dados.nome}</p>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-envelope-simple"></i> ${dados.email}</p>
+                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-key"></i> Token: <strong style="color: var(--cor-secundaria); font-family: var(--fonte-textos); letter-spacing: 2px;">${dados.token}</strong></p>
+                    </div>
                     
-                    <p style="margin: 0; font-size: 13px; color: #666;">📧 ${dados.email}</p>
-                    <p style="margin: 0; font-size: 13px; color: #666;">🔑 Token: <strong style="color: var(--cor-secundaria); font-family: var(--fonte-textos); letter-spacing: 2px;">${dados.token}</strong></p>
+                    <div style="background: #f9f9fb; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f0f0f5;">
+                        <span style="font-size: 13px; font-weight: 600; color: #888;">📊 Presença</span>
+                        <strong style="color: ${corPorcentagem}; font-size: 14px;">${porcentagem}% <span style="font-size: 11px; opacity: 0.6; font-weight: 600;">(${presencasConfirmadas}/10)</span></strong>
+                    </div>
                     
-                    <p style="margin: 0; font-size: 13px; color: #666;">
-                        📊 Presença: <strong style="color: ${corPorcentagem};">${porcentagem}%</strong> (${presencasConfirmadas}/10 turnos)
-                    </p>
-                    
-                    <button id="btn-email-${docSnap.id}" onclick="window.dispararEmail('${docSnap.id}', '${dados.nome}', '${dados.email}', '${dados.token}')" style="margin-top: 5px; background: var(--cor-secundaria); color: #fff; text-align: center; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s;">
-                        ✉️ Disparar E-mail Automático
+                    <button id="btn-email-${docSnap.id}" onclick="window.dispararEmail('${docSnap.id}', '${dados.nome}', '${dados.email}', '${dados.token}')" style="background: var(--cor-secundaria); color: #fff; text-align: center; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                        <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Ingresso
                     </button>
                 </div>
             `;
             containerListaInscritos.insertAdjacentHTML('beforeend', cardHTML);
         });
         
-        // Atualiza a Dashboard (Apenas o total)
         if (dashTotal) dashTotal.textContent = totalInscritos;
 
     } catch (error) {
-        console.error("Erro ao carregar lista de inscritos:", error);
-        containerListaInscritos.innerHTML = '<p style="color: red; text-align:center;">Erro ao carregar a lista.</p>';
+        containerListaInscritos.innerHTML = '<p style="color: #e06d53; text-align:center; font-weight: bold;">Erro ao carregar a lista.</p>';
     }
 }
 
 // ==========================================
-// FUNÇÃO DE DISPARO DE E-MAIL (EmailJS)
+// 7. EVENTOS GERAIS
 // ==========================================
+if (btnExportarExcel) {
+    btnExportarExcel.addEventListener('click', () => {
+        if (dadosParaExcel.length === 0) return alert("Não há dados para exportar.");
+        const cabecalhos = Object.keys(dadosParaExcel[0]).join(";");
+        const linhas = dadosParaExcel.map(linha => Object.values(linha).map(valor => `"${valor}"`).join(";")).join("\n");
+        const csvContent = "\uFEFF" + cabecalhos + "\n" + linhas;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.setAttribute("href", URL.createObjectURL(blob));
+        link.setAttribute("download", "XVI_SEMAU_Relatorio.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
+
+if (adminBuscaLista) {
+    adminBuscaLista.addEventListener('input', (e) => {
+        const termo = e.target.value.toLowerCase();
+        document.querySelectorAll('.card-aluno-lista').forEach(card => {
+            const nome = card.getAttribute('data-nome');
+            const email = card.getAttribute('data-email');
+            card.style.display = (nome.includes(termo) || email.includes(termo)) ? 'flex' : 'none';
+        });
+    });
+}
+
+if (containerListaInscritos) {
+    containerListaInscritos.addEventListener('click', async (e) => {
+        const btnClicado = e.target.closest('.btn-excluir');
+        if (btnClicado) {
+            const cardPai = btnClicado.closest('.card-aluno-lista');
+            const idDocumento = cardPai.querySelector(`button[id^='btn-email-']`).id.replace('btn-email-', ''); 
+            
+            if (confirm("🚨 ATENÇÃO: Tem certeza que deseja EXCLUIR este inscrito permanentemente?")) {
+                try {
+                    await deleteDoc(doc(db, "inscritos", idDocumento));
+                    carregarListaInscritos(); 
+                } catch (error) { alert("Erro ao excluir do banco de dados."); }
+            }
+        }
+    });
+}
+
+// EMAIL JS - COM ESTADOS VISUAIS NOVOS
 window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
     const botao = document.getElementById(`btn-email-${idBotao}`);
     
-    // Feedback visual para não clicar duas vezes
-    botao.disabled = true;
-    botao.style.backgroundColor = "#ccc";
-    botao.innerHTML = "⏳ Enviando...";
+    if(botao) {
+        botao.disabled = true;
+        botao.style.backgroundColor = "#f4f5f7";
+        botao.style.color = "#888";
+        botao.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Enviando...';
+    }
 
-    // Aqui configuramos as variáveis que o seu template lá no EmailJS vai receber
-    const parametros = {
-        to_name: nomeAluno,
-        to_email: emailAluno,
-        user_token: tokenAluno
-    };
+    const parametros = { to_name: nomeAluno, to_email: emailAluno, user_token: tokenAluno };
 
-    // Parâmetros: 'ID_DO_SERVICO', 'ID_DO_TEMPLATE', dados
     emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', parametros)
-        .then(function(response) {
-            console.log('E-mail enviado com sucesso!', response.status, response.text);
-            botao.style.backgroundColor = "#2ecc71"; // Fica Verde
-            botao.innerHTML = "✅ E-mail Enviado!";
+        .then(function() {
+            if(botao){
+                botao.style.backgroundColor = "#2ecc71";
+                botao.style.color = "#fff";
+                botao.innerHTML = '<i class="ph-bold ph-check-circle"></i> Ingresso Enviado!';
+            }
         }, function(error) {
-            console.error('Falha ao enviar e-mail...', error);
-            botao.disabled = false;
-            botao.style.backgroundColor = "#e06d53"; // Fica Vermelho
-            botao.innerHTML = "❌ Erro. Tentar de novo";
-            alert("Erro ao enviar o e-mail. Verifique o console.");
+            if(botao){
+                botao.disabled = false;
+                botao.style.backgroundColor = "#e06d53";
+                botao.style.color = "#fff";
+                botao.innerHTML = '<i class="ph-bold ph-warning-circle"></i> Erro. Tentar de novo';
+            }
         });
 }
 
 // ==========================================
-// 0. LOGIN DO ADMIN (Segurança via Firebase)
+// 8. LOGIN / LOGOUT
 // ==========================================
 const adminLoginOverlay = document.getElementById('admin-login-overlay');
 const adminSenhaInput = document.getElementById('admin-senha-input');
 const btnAdminLogin = document.getElementById('btn-admin-login');
 
-// 1. Verifica se já tem sessão iniciada
 if (sessionStorage.getItem('adminLogado') === 'true') {
     if(adminLoginOverlay) adminLoginOverlay.style.display = 'none';
 }
 
-// 2. Lógica de validação do botão com a base de dados
 if (btnAdminLogin) {
     btnAdminLogin.addEventListener('click', async () => {
         const senhaDigitada = adminSenhaInput.value.trim();
-        
         if (!senhaDigitada) return;
 
-        // Feedback visual enquanto aguarda o servidor
-        btnAdminLogin.textContent = "A verificar... ⏳";
+        btnAdminLogin.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Verificando...';
         btnAdminLogin.disabled = true;
 
         try {
-            // Vai ao Firebase na coleção "configuracoes", documento "seguranca"
-            const docRef = doc(db, "configuracoes", "seguranca");
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const senhaDoBanco = docSnap.data().senhaAdmin;
-
-                if (senhaDigitada === senhaDoBanco) {
-                    // Senha Correta!
-                    sessionStorage.setItem('adminLogado', 'true');
-                    adminLoginOverlay.style.display = 'none';
-                } else {
-                    // Senha Errada
-                    alert("Senha incorreta! ❌");
-                    adminSenhaInput.value = "";
-                    adminSenhaInput.focus();
-                }
+            const docSnap = await getDoc(doc(db, "configuracoes", "seguranca"));
+            if (docSnap.exists() && senhaDigitada === docSnap.data().senhaAdmin) {
+                sessionStorage.setItem('adminLogado', 'true');
+                adminLoginOverlay.style.display = 'none';
             } else {
-                console.error("Documento de segurança não encontrado.");
-                alert("Erro: O documento 'seguranca' não existe na base de dados.");
+                alert("Senha incorreta! ❌");
+                adminSenhaInput.value = "";
+                adminSenhaInput.focus();
             }
-        } catch (error) {
-            console.error("Erro ao verificar senha:", error);
-            alert("Erro ao ligar à base de dados. Verifique a consola.");
-        } finally {
-            // Devolve o botão ao estado normal
-            btnAdminLogin.textContent = "Entrar no Painel";
+        } catch (error) { alert("Erro ao conectar com o banco."); } 
+        finally {
+            btnAdminLogin.textContent = "Acessar Painel";
             btnAdminLogin.disabled = false;
         }
     });
 
-    // 3. Permite entrar premindo a tecla "Enter"
-    adminSenhaInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            btnAdminLogin.click();
+    adminSenhaInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') btnAdminLogin.click(); });
+}
+
+if (btnAdminLogout) {
+    btnAdminLogout.addEventListener('click', () => {
+        if (confirm("Deseja sair do painel?")) {
+            sessionStorage.removeItem('adminLogado');
+            if (adminLoginOverlay) {
+                adminLoginOverlay.style.display = 'flex';
+                adminSenhaInput.value = "";
+            }
         }
     });
-
-    // 4. Lógica de Logout (Sair)
-    if (btnAdminLogout) {
-        btnAdminLogout.addEventListener('click', () => {
-            if (confirm("Deseja realmente sair do painel?")) {
-                // Remove a chave de acesso da memória
-                sessionStorage.removeItem('adminLogado');
-                
-                // Volta a tela escura e limpa o input
-                if (adminLoginOverlay) {
-                    adminLoginOverlay.style.display = 'flex';
-                    adminSenhaInput.value = "";
-                }
-            }
-        });
-    }
-    }
+}
