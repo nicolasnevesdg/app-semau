@@ -10,160 +10,276 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/views.css">
 </head>
-<body style="background-color: var(--cor-fundo-app); padding: 20px;">
+<body>
 
-    <main style="max-width: 600px; margin: 0 auto;">
+    <!-- TELA DE LOGIN DA ORGANIZAÇÃO (OVERLAY) -->
+    <div id="admin-login-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--cor-fundo-app); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
         
-        <div class="admin-header" style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: var(--cor-primaria);">Painel da Organização 🛠️</h1>
-            <p>Gerenciamento de inscritos, presença e sorteios.</p>
-        </div>
-
-        <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
-            <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 15px;">🎟️ Cadastrar Novo Inscrito</h2>
-            <div style="display: flex; flex-direction: column; gap: 15px;">
-                <input type="text" id="admin-novo-nome" placeholder="Nome do participante" style="padding: 12px; border: 2px solid #eee; border-radius: 8px;">
-                <input type="email" id="admin-novo-email" placeholder="aluno@ufrrj.br" style="padding: 12px; border: 2px solid #eee; border-radius: 8px;">
-                <button id="btn-admin-cadastrar" style="background-color: var(--cor-primaria); color: #fff; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Salvar Inscrição</button>
-            </div>
-
-            <div id="admin-alerta-sucesso" style="display: none; margin-top: 20px; padding: 15px; background-color: var(--cor-fundo-app); border: 2px dashed var(--cor-secundaria); border-radius: 8px; text-align: center;">
-                <p style="color: var(--cor-primaria); font-weight: bold; margin-bottom: 5px;">✅ Inscrição Salva!</p>
-                <p style="font-size: 14px; color: var(--cor-texto); margin-bottom: 5px;">O Token de acesso é:</p>
-                <p id="admin-token-gerado" style="font-size: 36px; font-family: var(--fonte-textos); font-weight: 800; color: var(--cor-secundaria); letter-spacing: 4px; margin: 10px 0;">---</p>
-                <p style="font-size: 12px; color: var(--cor-texto); opacity: 0.7;">Peça para o participante anotar ou fotografar.</p>
-            </div>
-        </div>
-
-        <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
-            <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 15px;">📝 Registrar Presença</h2>
-            <div id="area-scanner" style="margin-bottom: 20px; text-align: center; background: var(--cor-fundo-app); padding: 15px; border-radius: 12px; border: 2px dashed #ccc;">
-                <p style="font-size: 14px; color: var(--cor-texto); margin-bottom: 10px;">Escaneie o QR Code do aluno para check-in rápido.</p>
-                
-                <div id="leitor-qrcode" style="width: 100%; max-width: 300px; margin: 0 auto; border-radius: 8px; overflow: hidden; display: none;"></div>
-                
-                <button id="btn-abrir-camera" style="background-color: var(--cor-eixo-rua); color: #0d372b; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;">
-                    📷 Ligar Câmera
-                </button>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="admin-busca-pax" placeholder="E-mail ou Token" style="flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px;">
-                <button id="btn-admin-buscar" style="background-color: var(--cor-secundaria); color: #fff; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Buscar</button>
-            </div>
+        <div style="background: #fff; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 100%; max-width: 350px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+            <h2 style="color: var(--cor-primaria); font-size: 24px; margin-bottom: 10px;">Acesso Restrito</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Digite a senha da organização para acessar o painel da SEMAU.</p>
             
-            <div id="admin-resultado-busca" style="margin-top: 15px; display: none; padding-top: 15px; border-top: 1px solid #eee;">
-                <p style="font-size: 18px;">👤 <strong><span id="pax-nome">---</span></strong></p>
-                
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                    <div style="background: var(--cor-fundo-app); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
-                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">21/Set (Segunda)</p>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-presenca" data-campo="d21_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Manhã</button>
-                            <button class="btn-presenca" data-campo="d21_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Tarde</button>
-                        </div>
-                    </div>
-                    <div style="background: var(--cor-fundo-app); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
-                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">22/Set (Terça)</p>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-presenca" data-campo="d22_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Manhã</button>
-                            <button class="btn-presenca" data-campo="d22_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Tarde</button>
-                        </div>
-                    </div>
-                    <div style="background: var(--cor-fundo-app); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
-                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">23/Set (Quarta)</p>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-presenca" data-campo="d23_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Manhã</button>
-                            <button class="btn-presenca" data-campo="d23_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Tarde</button>
-                        </div>
-                    </div>
-                    <div style="background: var(--cor-fundo-app); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
-                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">24/Set (Quinta)</p>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-presenca" data-campo="d24_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Manhã</button>
-                            <button class="btn-presenca" data-campo="d24_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Tarde</button>
-                        </div>
-                    </div>
-                    <div style="background: var(--cor-fundo-app); padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
-                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">25/Set (Sexta)</p>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-presenca" data-campo="d25_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Manhã</button>
-                            <button class="btn-presenca" data-campo="d25_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer;">Tarde</button>
-                        </div>
-                    </div>
-                </div><div style="background: var(--cor-fundo-app); padding: 15px; border-radius: 8px; border-left: 4px solid var(--cor-primaria); margin-top: 15px;">
-                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">🛠️ Oficinas Inscritas (Clique para alternar)</p>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <button class="btn-oficina-admin" data-oficina="OF01" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold;">OF01 - Levantamento</button>
-                            <button class="btn-oficina-admin" data-oficina="OF02" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold;">OF02 - Fotografia</button>
-                            <button class="btn-oficina-admin" data-oficina="OF03" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold;">OF03 - Aquarela</button>
-                            <button class="btn-oficina-admin" data-oficina="OF04" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold;">OF04 - SketchUp</button>
-                            <button class="btn-oficina-admin" data-oficina="OF05" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold;">OF05 - Maquete</button>
-                            <button class="btn-oficina-admin" data-oficina="OF06" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold;">OF06 - Mobiliário</button>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-        <div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--cor-primaria);">
-            <h3 style="font-size: 16px; margin-bottom: 15px;">⚙️ Controle da Página Inicial</h3>
+            <input type="password" id="admin-senha-input" placeholder="Senha de acesso" style="width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; text-align: center; font-family: var(--fonte-textos);">
             
-            <select id="select-fase-evento" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
-                <option value="cronograma">1. Pré-evento (Botão: Ver Cronograma)</option>
-                <option value="inscricao">2. Inscrições Abertas (Botão: Inscrever-se)</option>
-                <option value="credencial">3. Evento Rolando (Botão: Abrir Credencial)</option>
-            </select>
-            
-            <button id="btn-salvar-fase" style="background: var(--cor-primaria); color: #fff; padding: 12px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer;">Salvar e Atualizar Site</button>
-        </div>
-
-<div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 4px solid var(--cor-secundaria);">
-            <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 10px;">👁️ Visibilidade da Agenda</h2>
-            <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Escolha o que os alunos verão ao clicar no menu de programação.</p>
-            
-            <select id="select-modo-cronograma" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 2px solid #eee; font-size: 14px;">
-                <option value="fase1">Fase 1: Apenas Anúncios (Vitrine de Convidados/Oficinas)</option>
-                <option value="fase2">Fase 2: Cronograma Oficial (Linha do Tempo com Horários)</option>
-            </select>
-            
-            <button id="btn-salvar-modo-cronograma" style="background-color: var(--cor-primaria); color: #fff; padding: 12px; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer;">
-                Atualizar Tela no App
+            <button id="btn-admin-login" style="background-color: var(--cor-secundaria); color: #fff; padding: 15px; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; transition: 0.2s;">
+                Entrar no Painel
             </button>
         </div>
+        
+    </div>
 
-        <div class="admin-card" style="margin: 20px 0; color: #333; background: #fff; padding: 20px; border-radius: 12px;">
-            <h3 style="margin-bottom: 15px; color: #0d372b;">Controle de Anúncios (Fase 1)</h3>
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Ative as chaves para revelar os palestrantes e oficinas no aplicativo.</p>
+    <main id="app-container" style="max-width: 600px; margin: 0 auto; padding-bottom: 80px;">
+        
+        <div class="admin-header" style="text-align: center; margin-top: 20px; margin-bottom: 20px; position: relative;">
+            <h1 style="font-size: 40px; color: var(--cor-textos);  margin-bottom: 10px; ">Painel SEMAU</h1>
+            <p>Gestão de inscritos e configurações.</p>
+        </div>
+
+        <section id="view-admin-cadastro" class="view active">
+            <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 15px;">🎟️ Cadastrar Novo Inscrito</h2>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <input type="text" id="admin-novo-nome" placeholder="Nome do participante" style="padding: 12px; border: 2px solid #eee; border-radius: 8px;">
+                    <input type="email" id="admin-novo-email" placeholder="aluno@ufrrj.br" style="padding: 12px; border: 2px solid #eee; border-radius: 8px;">
+                    <button id="btn-admin-cadastrar" style="background-color: var(--cor-primaria); color: #fff; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Salvar Inscrição</button>
+                </div>
+
+                <div id="admin-alerta-sucesso" style="display: none; margin-top: 20px; padding: 15px; background-color: var(--cor-fundo-app); border: 2px dashed var(--cor-secundaria); border-radius: 8px; text-align: center;">
+                    <p style="color: var(--cor-primaria); font-weight: bold; margin-bottom: 5px;">✅ Inscrição Salva!</p>
+                    <p style="font-size: 14px; color: var(--cor-texto); margin-bottom: 5px;">O Token de acesso é:</p>
+                    <p id="admin-token-gerado" style="font-size: 36px; font-family: var(--fonte-textos); font-weight: 800; color: var(--cor-secundaria); letter-spacing: 4px; margin: 10px 0;">---</p>
+                    <p style="font-size: 12px; color: var(--cor-texto); opacity: 0.7;">Peça para o participante anotar ou fotografar.</p>
+                </div>
+            </div>
             
-            <h4 style="margin-bottom: 10px; font-size: 14px;">Palestrantes</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-01"> Palestrante 01</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-02"> Palestrante 02</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-03"> Palestrante 03</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-04"> Palestrante 04</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-05"> Palestrante 05</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-06"> Palestrante 06</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-07"> Palestrante 07</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-08"> Palestrante 08</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-09"> Palestrante 09</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-10"> Palestrante 10</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-11"> Palestrante 11</label>
+            <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 15px;">🎁 Sorteador Rápido</h2>
+                
+                <select id="select-sorteio-turno" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 2px solid #eee; font-size: 14px;">
+                    <option value="qualquer">Qualquer presença (Geral)</option>
+                    <option value="d21_m">21/Set (Segunda) - Manhã</option>
+                    <option value="d21_t">21/Set (Segunda) - Tarde</option>
+                    <option value="d22_m">22/Set (Terça) - Manhã</option>
+                    <option value="d22_t">22/Set (Terça) - Tarde</option>
+                    <option value="d23_m">23/Set (Quarta) - Manhã</option>
+                    <option value="d23_t">23/Set (Quarta) - Tarde</option>
+                    <option value="d24_m">24/Set (Quinta) - Manhã</option>
+                    <option value="d24_t">24/Set (Quinta) - Tarde</option>
+                    <option value="d25_m">25/Set (Sexta) - Manhã</option>
+                    <option value="d25_t">25/Set (Sexta) - Tarde</option>
+                </select>
+
+                <button id="btn-admin-sortear" style="background-color: var(--cor-secundaria); color: #fff; padding: 12px; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer;">Sortear Aluno Presente</button>
+                
+                <div id="sorteio-resultado" style="margin-top: 15px; text-align: center; font-size: 18px; color: var(--cor-primaria);"></div>
+            </div>
+        </section>
+
+        <section id="view-admin-presenca" class="view" style="display: none;">
+            <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 15px;">📝 Registrar Presença</h2>
+                <div id="area-scanner" style="margin-bottom: 20px; text-align: center; padding: 15px; border-radius: 12px; border: 2px dashed #ccc;">
+                    <p style="font-size: 14px; color: var(--cor-texto-escuro); margin-bottom: 10px;">Escaneie o QR Code do aluno para check-in rápido.</p>
+                    <button id="btn-abrir-camera" style="background-color: var(--cor-eixo-rua); color: #0d372b; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        📷 Ligar Câmara
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="admin-busca-pax" placeholder="E-mail ou Token" style="flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px;">
+                    <button id="btn-admin-buscar" style="background-color: var(--cor-secundaria); color: #fff; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Buscar</button>
+                </div>
+                
+                <div id="admin-resultado-busca" style="margin-top: 15px; display: none; padding-top: 15px; border-top: 1px solid #eee;">
+                    <p style="font-size: 18px; color: #333;">👤 <strong><span id="pax-nome">---</span></strong></p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
+                            <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">21/Set (Segunda)</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-presenca" data-campo="d21_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Manhã</button>
+                                <button class="btn-presenca" data-campo="d21_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Tarde</button>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
+                            <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">22/Set (Terça)</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-presenca" data-campo="d22_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Manhã</button>
+                                <button class="btn-presenca" data-campo="d22_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Tarde</button>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
+                            <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">23/Set (Quarta)</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-presenca" data-campo="d23_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Manhã</button>
+                                <button class="btn-presenca" data-campo="d23_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Tarde</button>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
+                            <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">24/Set (Quinta)</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-presenca" data-campo="d24_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Manhã</button>
+                                <button class="btn-presenca" data-campo="d24_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Tarde</button>
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid var(--cor-secundaria);">
+                            <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">25/Set (Sexta)</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-presenca" data-campo="d25_m" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Manhã</button>
+                                <button class="btn-presenca" data-campo="d25_t" style="flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; margin:0;">Tarde</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--cor-primaria); margin-top: 15px;">
+                        <p style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #333;">🛠️ Oficinas Inscritas (Clique para alternar)</p>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <button class="btn-oficina-admin" data-oficina="OF01" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold; margin:0;">OF01 - Levantamento</button>
+                            <button class="btn-oficina-admin" data-oficina="OF02" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold; margin:0;">OF02 - Fotografia</button>
+                            <button class="btn-oficina-admin" data-oficina="OF03" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold; margin:0;">OF03 - Aquarela</button>
+                            <button class="btn-oficina-admin" data-oficina="OF04" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold; margin:0;">OF04 - SketchUp</button>
+                            <button class="btn-oficina-admin" data-oficina="OF05" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold; margin:0;">OF05 - Maquete</button>
+                            <button class="btn-oficina-admin" data-oficina="OF06" style="padding: 10px; border: none; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; font-weight: bold; margin:0;">OF06 - Mobiliário</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 3: LISTA, DASHBOARD E PESQUISA -->
+        <section id="view-admin-lista" class="view" style="display: none;">
+            
+            <!-- DASHBOARD DE ESTATÍSTICAS -->
+            <div style="margin-bottom: 20px;">
+                <div style="background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--cor-primaria);">
+                    <h3 style="font-size: 14px; color: #666; margin-bottom: 5px;">Total de Inscritos</h3>
+                    <p id="dash-total" style="font-size: 32px; font-weight: 800; color: var(--cor-primaria); margin: 0;">0</p>
+                </div>
             </div>
 
-            <h4 style="margin-bottom: 10px; font-size: 14px;">Oficinas</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-01"> Oficina 01</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-02"> Oficina 02</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-03"> Oficina 03</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-04"> Oficina 04</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-05"> Oficina 05</label>
-                <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-06"> Oficina 06</label>
+            <!-- ÁREA DA LISTA -->
+            <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="color: var(--cor-primaria); font-size: 20px; margin: 0;">📋 Lista de Inscritos</h2>
+                    <button id="btn-exportar-excel" style="background-color: #27ae60; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s;">
+                        📥 Baixar Excel
+                    </button>
+                </div>
+                
+                <!-- Barra de Pesquisa -->
+                <input type="text" id="admin-busca-lista" placeholder="🔍 Buscar por nome ou e-mail..." style="width: 100%; padding: 12px; margin-bottom: 20px; border: 2px solid #eee; border-radius: 8px; font-size: 14px;">
+                
+                <div id="container-lista-inscritos"></div>
+            </div>
+        </section>
+
+        <section id="view-admin-configs" class="view" style="display: none;">
+            <div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--cor-primaria);">
+                <h3 style="font-size: 16px; margin-bottom: 15px; color: #333;">⚙️ Controle da Página Inicial</h3>
+                <select id="select-fase-evento" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;">
+                    <option value="cronograma">1. Pré-evento (Botão: Ver Cronograma)</option>
+                    <option value="inscricao">2. Inscrições Abertas (Botão: Inscrever-se)</option>
+                    <option value="credencial">3. Evento Rolando (Botão: Abrir Credencial)</option>
+                </select>
+                <button id="btn-salvar-fase" style="background: var(--cor-primaria); color: #fff; padding: 12px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin:0;">Salvar e Atualizar Site</button>
+            </div>
+
+            <div class="admin-card" style="background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; border-left: 4px solid var(--cor-secundaria);">
+                <h2 style="color: var(--cor-primaria); font-size: 20px; margin-bottom: 10px;">👁️ Visibilidade da Agenda</h2>
+                <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Escolha o que os alunos verão ao clicar no menu de programação.</p>
+                <select id="select-modo-cronograma" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 2px solid #eee; font-size: 14px;">
+                    <option value="fase1">Fase 1: Apenas Anúncios (Vitrine de Convidados/Oficinas)</option>
+                    <option value="fase2">Fase 2: Cronograma Oficial (Linha do Tempo com Horários)</option>
+                </select>
+                <button id="btn-salvar-modo-cronograma" style="background-color: var(--cor-primaria); color: #fff; padding: 12px; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; margin:0;">
+                    Atualizar Tela no App
+                </button>
+            </div>
+
+            <div class="admin-card" style="margin: 20px 0; color: #333; background: #fff; padding: 20px; border-radius: 12px;">
+                <h3 style="margin-bottom: 15px; color: #0d372b;">Controle de Anúncios (Fase 1)</h3>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Ative as chaves para revelar os palestrantes e oficinas no aplicativo.</p>
+                
+                <h4 style="margin-bottom: 10px; font-size: 14px;">Palestrantes</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; font-size: 13px;">
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-01"> Palestrante 01</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-02"> Palestrante 02</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-03"> Palestrante 03</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-04"> Palestrante 04</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-05"> Palestrante 05</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-06"> Palestrante 06</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-07"> Palestrante 07</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-08"> Palestrante 08</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-09"> Palestrante 09</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-10"> Palestrante 10</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="palestrante-11"> Palestrante 11</label>
+                </div>
+
+                <h4 style="margin-bottom: 10px; font-size: 14px;">Oficinas</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px;">
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-01"> Oficina 01</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-02"> Oficina 02</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-03"> Oficina 03</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-04"> Oficina 04</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-05"> Oficina 05</label>
+                    <label style="display: flex; gap: 10px; align-items: center;"><input type="checkbox" class="toggle-convidado" value="oficina-06"> Oficina 06</label>
+                </div>
+            </div>
+        <div class="admin-card" style="margin: 20px 0; background: #fff; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #ffcdd2;">
+                <h3 style="margin-bottom: 15px; color: #e06d53; font-size: 16px;">Encerrar Sessão</h3>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Saia do painel com segurança ao terminar o credenciamento.</p>
+                <button id="btn-admin-logout" style="background-color: #ffebee; color: #e06d53; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 16px; transition: 0.2s;">
+                    Sair do Painel
+                </button>
+            </div>
+        </section>
+
+        <nav id="bottom-nav">
+            <button class="nav-item active" id="nav-ad-cadastro">
+                <i class="ph-bold ph-user-plus"></i>
+                <span class="active-indicator"></span>
+            </button>
+            <button class="nav-item" id="nav-ad-presenca">
+                <i class="ph-bold ph-qr-code"></i>
+                <span class="active-indicator"></span>
+            </button>
+            <button class="nav-item" id="nav-ad-lista">
+                <i class="ph-bold ph-users"></i>
+                <span class="active-indicator"></span>
+            </button>
+            <button class="nav-item" id="nav-ad-configs">
+                <i class="ph-bold ph-gear"></i>
+                <span class="active-indicator"></span>
+            </button>
+        </nav>
+        
+        <div id="modal-camera" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
+            
+            <h3 style="color: white; margin-bottom: 20px; font-weight: 300;">Aponte para o <b style="font-weight: 800;">QR Code</b></h3>
+            
+            <div style="position: relative; width: 100%; max-width: 400px; padding: 0 20px;">
+                <div id="leitor-qrcode" style="width: 100%; border-radius: 16px; overflow: hidden; border: 4px solid var(--cor-secundaria);"></div>
+                
+                <button id="btn-fechar-camera" style="width: calc(100% - 40px); position: absolute; bottom: -80px; left: 20px; background: #e06d53; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                    🚫 Fechar Câmara
+                </button>
             </div>
         </div>
 
     </main>
 
-        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-        
-        <script type="module" src="js/admin.js"></script>
-    </body>
-    </html>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // A chave pública que você vai pegar no site deles depois
+            emailjs.init("SUA_CHAVE_PUBLICA_AQUI"); 
+        })();
+    </script>
+    
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
