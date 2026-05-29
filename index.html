@@ -80,11 +80,23 @@
         <section id="view-schedule" class="view" style="display: none;">
             
             <div id="container-fase1">
-                <h1>convidados</h1>
-                <div id="grid-palestrantes" class="grid-convidados"></div>
+                
+                <div id="empty-state-programacao" class="empty-state" style="display: none;">
+                    <img src="assets/svg/sticker-cadeira.svg" alt="Cadeira vazia" class="sticker-cadeira">
+                    <h3>Este <b style="font-weight: 800;">lugar</b> ainda <br>não está habitado rs</h3>
+                    <p>Logo nossa programação será divulgada!</p>
+                </div>
 
-                <h1 style="color:var(--cor-eixo-cidade); margin-top:20px;">oficinas</h1>
-                <div id="grid-oficinas" class="grid-convidados"></div>
+                <div id="section-palestrantes" style="display: none;">
+                    <h1>convidados</h1>
+                    <div id="grid-palestrantes" class="grid-convidados"></div>
+                </div>
+
+                <div id="section-oficinas" style="display: none;">
+                    <h1 style="color:var(--cor-eixo-cidade); margin-top:20px;">oficinas</h1>
+                    <div id="grid-oficinas" class="grid-convidados"></div>
+                </div>
+
             </div>
 
             <div id="container-fase2" style="display: none;">
