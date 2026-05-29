@@ -48,11 +48,33 @@ onSnapshot(docConvidadosRef, (docSnap) => {
             if (containerFase1) containerFase1.style.display = "block";
             if (containerFase2) containerFase2.style.display = "none";
 
-            // Renderiza a lista de Anúncios normalmente
+            // Elementos de controle da Fase 1
+            const emptyState = document.getElementById('empty-state-programacao');
+            const sectionPalestrantes = document.getElementById('section-palestrantes');
+            const sectionOficinas = document.getElementById('section-oficinas');
+
             if (gridPalestrantes) gridPalestrantes.innerHTML = "";
             if (gridOficinas) gridOficinas.innerHTML = "";
 
-            // Filtra e desenha
+            // Verifica o que temos anunciado hoje
+            const temPalestrante = ativos.some(id => !id.startsWith('oficina-'));
+            const temOficina = ativos.some(id => id.startsWith('oficina-'));
+
+            // REGRA 1 e 4: Cadeira Vazia
+            if (!temPalestrante && !temOficina) {
+                if (emptyState) emptyState.style.display = "flex";
+                if (sectionPalestrantes) sectionPalestrantes.style.display = "none";
+                if (sectionOficinas) sectionOficinas.style.display = "none";
+                return; // Para a execução por aqui se estiver tudo vazio
+            } else {
+                if (emptyState) emptyState.style.display = "none";
+            }
+
+            // REGRA 2 e 3: Títulos e Grids dinâmicos
+            if (sectionPalestrantes) sectionPalestrantes.style.display = temPalestrante ? "block" : "none";
+            if (sectionOficinas) sectionOficinas.style.display = temOficina ? "block" : "none";
+
+            // Filtra e desenha os cards de quem está anunciado
             ativos.forEach((id) => {
                 const convidado = catalogoConvidados[id];
                 if (!convidado) return;
