@@ -317,15 +317,6 @@
     text-align: center;
 }
 
-.login-header h2, .login-header  span {
-    color: #ffffff;
-    margin: 0 0 40px 0;
-    font-size: 60px;
-    font-weight: 800;
-    line-height: .7;
-    font-family: var(--fonte-destaque);
-    letter-spacing: -1px;
-}
 
 .login-header p {
     font-size: 16px;
@@ -446,10 +437,46 @@
        Ex: se tinha padding: 20px;, o topo vira 80px e o resto continua 20px */
 }
 
-#view-schedule h1{
-    font-size: 60px;
-    color: var(--cor-eixo-corpo);
-    text-align: center;
+/* Títulos institucionais convertidos em SVG. */
+.titulo-grafico {
+    display: block;
+    line-height: 0;
+    margin: 30px auto 20px;
+}
+
+.titulo-grafico img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.titulo-convidados {
+    width: 82%;
+    max-width: 250px;
+}
+
+.titulo-oficinas {
+    width: 64%;
+    max-width: 190px;
+    margin-top: 40px;
+}
+
+.titulo-cronograma {
+    width: 88%;
+    max-width: 360px;
+}
+
+.titulo-login {
+    width: 100%;
+    max-width: 280px;
+    margin-bottom: 20px;
+}
+
+.titulo-game-zone {
+    width: 100%;
+    max-width: 250px;
+    margin-bottom: 35px;
+    margin-top: 15px;
 }
 
 /* ===============================
@@ -481,11 +508,12 @@
 
 /* Nome do Convidado/Oficina */
 .card-convidado h2 {
-    font-family: var(--fonte-destaque);
+    font-family: var(--fonte-textos);
+    font-weight: 600;
     color: var(--cor-eixo-rua);
-    font-size: 32px;
+    font-size: 29px;
     margin: 0;
-    line-height: .8;
+    line-height: .95;
 }
 
 /* Descrição (Profissão ou Resumo da Oficina) */

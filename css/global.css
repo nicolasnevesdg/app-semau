@@ -2,14 +2,6 @@
    1. MAPEANDO AS FONTES LOCAIS
    ========================================== */
 
-/* Tapoca (Fonte de Destaque - Formato OTF) */
-@font-face {
-    font-family: 'Tapoca';
-    src: url('../assets/fonts/Tapoca-Regular.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-}
-
 /* Onest (Textos) - Peso 400 (Regular) */
 @font-face {
     font-family: 'Onest';
@@ -39,7 +31,6 @@
    ========================================== */
 :root {
     /* Tipografia Oficial XVI SEMAU */
-    --fonte-destaque: 'Tapoca', sans-serif;
     --fonte-textos: 'Onest', sans-serif; 
     
     /* Paleta Principal */
@@ -75,11 +66,10 @@ body {
     min-height: 100vh;
 }
 
-/* 5. Aplicando a Tapoca APENAS nos títulos de grande impacto (geral) */
+/* Títulos textuais usam a família oficial Onest. */
 h1 {
-    font-family: var(--fonte-destaque);
-    font-weight: normal; 
-    letter-spacing: 0.02em; 
+    font-family: var(--fonte-textos);
+    font-weight: 800;
     margin-bottom: 20px;
     font-size: 36px;
 }
