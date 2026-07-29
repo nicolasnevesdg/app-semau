@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-import { collection, doc, addDoc, getDocs, updateDoc, query, where, arrayUnion, arrayRemove, setDoc, onSnapshot, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, doc, addDoc, getDocs, updateDoc, query, where, arrayUnion, arrayRemove, setDoc, onSnapshot, deleteDoc, getDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==========================================
 // ELEMENTOS DO HTML
@@ -12,6 +12,10 @@ const adminTokenGerado = document.getElementById('admin-token-gerado');
 const selectFase = document.getElementById('select-fase-evento');
 const btnSalvarFase = document.getElementById('btn-salvar-fase');
 const btnAdminLogout = document.getElementById('btn-admin-logout');
+const selectLoteAtivo = document.getElementById('select-lote-ativo');
+const btnSalvarLote = document.getElementById('btn-salvar-lote');
+const toggleLojinhaVisivel = document.getElementById('toggle-lojinha-visivel');
+const btnSalvarLojinha = document.getElementById('btn-salvar-lojinha');
 
 const adminBuscaPax = document.getElementById('admin-busca-pax');
 const btnAdminBuscar = document.getElementById('btn-admin-buscar');
@@ -26,8 +30,33 @@ const botoesOficinaAdmin = document.querySelectorAll('.btn-oficina-admin');
 
 const btnAdminSortear = document.getElementById('btn-admin-sortear');
 const sorteioResultado = document.getElementById('sorteio-resultado');
+const btnAbrirTelao = document.getElementById('btn-abrir-telao');
+const statusTelao = document.getElementById('status-telao');
 
 let idAlunoSelecionado = null;
+let ultimaBuscaPorQr = false;
+const INTERVALO_QR_MS = 30000;
+const adminQrStatus = document.getElementById('admin-qr-status');
+
+function interpretarConteudoQr(valor) {
+    const texto = String(valor || '').trim();
+    if (!texto.startsWith('SEMAU|')) return { valido: true, busca: texto.toLowerCase(), origemQr: false };
+    const partes = texto.split('|');
+    const token = partes[1]?.trim().toUpperCase();
+    const slot = Number(partes[2]);
+    const slotAtual = Math.floor(Date.now() / INTERVALO_QR_MS);
+    if (!/^[A-Z0-9]{5}$/.test(token) || !Number.isInteger(slot)) return { valido: false, mensagem: 'QR Code inválido.' };
+    if (Math.abs(slotAtual - slot) > 1) return { valido: false, mensagem: 'Este QR Code expirou. Peça ao participante para atualizar o ingresso.' };
+    return { valido: true, busca: token.toLowerCase(), origemQr: true, geradoEm: new Date(slot * INTERVALO_QR_MS) };
+}
+
+function mostrarStatusQr(mensagem, valido) {
+    if (!adminQrStatus) return;
+    adminQrStatus.style.display = 'block';
+    adminQrStatus.style.background = valido ? '#e9f7ee' : '#fdeceb';
+    adminQrStatus.style.color = valido ? '#217a43' : '#a33a32';
+    adminQrStatus.textContent = mensagem;
+}
 
 if (adminNovoNome) {
     adminNovoNome.addEventListener('input', () => {
@@ -127,8 +156,23 @@ if (btnFecharCamera) btnFecharCamera.addEventListener('click', desligarCamera);
 // ==========================================
 if (btnAdminBuscar) {
     btnAdminBuscar.addEventListener('click', async () => {
-        const busca = adminBuscaPax.value.trim().toLowerCase();
+        const leitura = interpretarConteudoQr(adminBuscaPax.value);
+        if (!leitura.valido) {
+            ultimaBuscaPorQr = false;
+            mostrarStatusQr(leitura.mensagem, false);
+            adminResultadoBusca.style.display = 'none';
+            return;
+        }
+        const busca = leitura.busca;
         if (!busca) return;
+        ultimaBuscaPorQr = leitura.origemQr;
+        if (leitura.origemQr) {
+            const horario = leitura.geradoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            mostrarStatusQr('QR válido, gerado às ' + horario + '.', true);
+            adminBuscaPax.value = leitura.busca.toUpperCase();
+        } else if (adminQrStatus) {
+            adminQrStatus.style.display = 'none';
+        }
 
         adminResultadoBusca.style.display = 'none';
         idAlunoSelecionado = null;
@@ -151,7 +195,7 @@ if (btnAdminBuscar) {
                 
                 botoesPresenca.forEach(botao => {
                     const campoNoBanco = botao.dataset.campo;
-                    atualizarBotaoPresenca(botao, alunoAchado[campoNoBanco]);
+                    atualizarBotaoPresenca(botao, alunoAchado[campoNoBanco], alunoAchado[campoNoBanco + "_checkinEm"]);
                 });
 
                 const oficinasAtuais = alunoAchado.oficinas || [];
@@ -180,19 +224,24 @@ if (btnAdminBuscar) {
     });
 }
 
-function atualizarBotaoPresenca(botao, status) {
+function atualizarBotaoPresenca(botao, status, horario = null) {
     if (status) {
         botao.classList.add('confirmado');
-        botao.innerHTML = '<i class="ph-bold ph-check"></i> Confirmado';
-        botao.style.backgroundColor = "var(--cor-primaria)";
-        botao.style.color = "#fff";
-        botao.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+        let horaTexto = '';
+        if (horario) {
+            const data = typeof horario.toDate === 'function' ? horario.toDate() : new Date(horario);
+            if (!Number.isNaN(data.getTime())) horaTexto = ' • ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+        botao.innerHTML = '<i class="ph-bold ph-check"></i> Confirmado' + horaTexto;
+        botao.style.backgroundColor = 'var(--cor-primaria)';
+        botao.style.color = '#fff';
+        botao.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
     } else {
         botao.classList.remove('confirmado');
-        botao.textContent = botao.dataset.campo.endsWith('_m') ? "Manhã" : "Tarde";
-        botao.style.backgroundColor = "#f4f5f7";
-        botao.style.color = "#888";
-        botao.style.boxShadow = "none";
+        botao.textContent = botao.dataset.campo.endsWith('_m') ? 'Manhã' : 'Tarde';
+        botao.style.backgroundColor = '#f4f5f7';
+        botao.style.color = '#888';
+        botao.style.boxShadow = 'none';
     }
 }
 
@@ -204,8 +253,17 @@ const togglePresenca = async (campo, botao) => {
     const jaTemPresenca = botao.classList.contains('confirmado');
     const novoStatus = !jaTemPresenca;
     try {
-        await updateDoc(doc(db, "inscritos", idAlunoSelecionado), { [campo]: novoStatus });
-        atualizarBotaoPresenca(botao, novoStatus);
+        const atualizacao = novoStatus ? {
+            [campo]: true,
+            [campo + '_checkinEm']: serverTimestamp(),
+            [campo + '_origem']: ultimaBuscaPorQr ? 'qr_dinamico' : 'manual'
+        } : {
+            [campo]: false,
+            [campo + '_checkinEm']: deleteField(),
+            [campo + '_origem']: deleteField()
+        };
+        await updateDoc(doc(db, "inscritos", idAlunoSelecionado), atualizacao);
+        atualizarBotaoPresenca(botao, novoStatus, novoStatus ? new Date() : null);
     } catch (error) { console.error("Erro ao atualizar presença:", error); }
 };
 
@@ -249,6 +307,45 @@ botoesOficinaAdmin.forEach(botao => {
 // ==========================================
 // 4. O SORTEADOR
 // ==========================================
+const canalSorteio = 'BroadcastChannel' in window ? new BroadcastChannel('semau-sorteio') : null;
+let janelaTelao = null;
+let telaoConectado = false;
+
+function publicarNoTelao(mensagem) {
+    canalSorteio?.postMessage(mensagem);
+    localStorage.setItem('semau-sorteio-mensagem', JSON.stringify({ ...mensagem, enviadoEm: Date.now() }));
+}
+
+function atualizarStatusTelao(conectado) {
+    telaoConectado = conectado;
+    if (!statusTelao) return;
+    statusTelao.textContent = conectado ? 'Tela do telão conectada' : 'Tela do telão desconectada';
+    statusTelao.style.color = conectado ? '#218653' : '#888';
+}
+
+function receberMensagemTelao(dados) {
+    if (dados?.tipo === 'tela-pronta') atualizarStatusTelao(true);
+    if (dados?.tipo === 'tela-fechada') atualizarStatusTelao(false);
+}
+
+if (canalSorteio) canalSorteio.onmessage = evento => receberMensagemTelao(evento.data);
+window.addEventListener('storage', evento => {
+    if (evento.key !== 'semau-sorteio-mensagem' || !evento.newValue) return;
+    try { receberMensagemTelao(JSON.parse(evento.newValue)); } catch (error) { console.error(error); }
+});
+
+if (btnAbrirTelao) {
+    btnAbrirTelao.addEventListener('click', () => {
+        janelaTelao = window.open('sorteio-telao.html', 'semau-sorteio-telao', 'width=1280,height=720,resizable=yes');
+        if (!janelaTelao) {
+            alert('O navegador bloqueou a nova janela. Autorize pop-ups para abrir a tela do sorteio.');
+            return;
+        }
+        janelaTelao.focus();
+        if (statusTelao) statusTelao.textContent = 'Conectando ao telão...';
+    });
+}
+
 const selectSorteioTurno = document.getElementById('select-sorteio-turno'); 
 
 if (btnAdminSortear) {
@@ -281,6 +378,8 @@ if (btnAdminSortear) {
             }
             
             const ganhador = listaSorteaveis[Math.floor(Math.random() * listaSorteaveis.length)];
+            const turnoTexto = selectSorteioTurno?.selectedOptions[0]?.textContent || '';
+            publicarNoTelao({ tipo: 'sortear', nomes: listaSorteaveis, ganhador, turno: turnoTexto });
             sorteioResultado.innerHTML = `
                 <div style="background: #f2fbf5; padding: 24px; border-radius: 16px; border: 1px solid #c3ebd2; margin-top: 10px;">
                     <p style="font-size: 12px; color: #27ae60; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;"><i class="ph-bold ph-confetti"></i> Ganhador(a)</p>
@@ -308,6 +407,48 @@ btnSalvarFase.addEventListener('click', async () => {
         } catch (error) { alert("Erro ao mudar a fase."); }
     }
 });
+
+const docGeralRef = doc(db, "configuracoes", "geral");
+
+onSnapshot(docGeralRef, (docSnap) => {
+    if (!docSnap.exists()) return;
+    if (selectFase && docSnap.data().faseAtual) selectFase.value = docSnap.data().faseAtual;
+    if (selectLoteAtivo) selectLoteAtivo.value = String(docSnap.data().loteAtivo || 1);
+    if (toggleLojinhaVisivel) toggleLojinhaVisivel.checked = docSnap.data().lojinhaVisivel !== false;
+});
+
+if (btnSalvarLote) {
+    btnSalvarLote.addEventListener('click', async () => {
+        const loteAtivo = Number(selectLoteAtivo.value);
+        if (![1, 2, 3].includes(loteAtivo)) return;
+        try {
+            await setDoc(docGeralRef, { loteAtivo }, { merge: true });
+            alert('Lote ' + loteAtivo + ' ativado na página de ingressos.');
+        } catch (error) {
+            console.error('Erro ao ativar lote:', error);
+            alert('Não foi possível atualizar o lote.');
+        }
+    });
+}
+
+
+if (btnSalvarLojinha) {
+    btnSalvarLojinha.addEventListener('click', async () => {
+        btnSalvarLojinha.disabled = true;
+        const textoOriginal = btnSalvarLojinha.textContent;
+        btnSalvarLojinha.textContent = 'Salvando...';
+        try {
+            await setDoc(docGeralRef, { lojinhaVisivel: toggleLojinhaVisivel.checked }, { merge: true });
+            alert(toggleLojinhaVisivel.checked ? 'Produtos da lojinha publicados.' : 'Lojinha alterada para Em breve.');
+        } catch (error) {
+            console.error('Erro ao atualizar a lojinha:', error);
+            alert('Não foi possível atualizar a lojinha.');
+        } finally {
+            btnSalvarLojinha.disabled = false;
+            btnSalvarLojinha.textContent = textoOriginal;
+        }
+    });
+}
 
 const docConvidadosRef = doc(db, "configuracoes", "anuncios");
 const checkboxesConvidados = document.querySelectorAll('.toggle-convidado');

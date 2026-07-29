@@ -82,6 +82,13 @@ for(let i = 0; i < 6; i++) {
 function resizeCanvas() {
     // 1. Pega o elemento que segura o jogo
     const gameContainer = document.getElementById('view-runner-game');
+    const appContainer = document.getElementById('app-container');
+    const escalaApp = parseFloat(getComputedStyle(appContainer).zoom) || 1;
+    const alturaViewport = window.visualViewport?.height || window.innerHeight;
+
+    // O app recebe zoom no celular. Compensamos essa escala para o jogo
+    // continuar ocupando toda a altura visível, sem mover o cenário.
+    gameContainer.style.height = `${alturaViewport / escalaApp}px`;
     
     // 2. Lê o tamanho apenas deste bloco (no PC será no máximo 480px, no telemóvel será a tela toda)
     const larguraReal = gameContainer.clientWidth;
@@ -103,6 +110,7 @@ function resizeCanvas() {
     chaoY = alturaReal * 0.65; 
 }
 window.addEventListener('resize', resizeCanvas);
+window.visualViewport?.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // ==========================================
@@ -491,6 +499,7 @@ function desenharChaoAsfalto(dt) {
     let delta = dt || 1;
     const larguraChao = 1046; 
     const deslocamentoParaCima = 100; 
+    const alturaChao = larguraChao * (assets.chao.naturalHeight / assets.chao.naturalWidth); 
     roadLineX -= velocidadeJogo * delta; 
     
     if (roadLineX <= -larguraChao) {
@@ -499,7 +508,7 @@ function desenharChaoAsfalto(dt) {
     
     // Math.round + larguraChao + 1 sela a fresta vertical do chão definitivamente
     for (let x = Math.round(roadLineX); x < canvas.width; x += larguraChao) { 
-        ctx.drawImage(assets.chao, x, chaoY - deslocamentoParaCima, larguraChao + 1, 400); 
+        ctx.drawImage(assets.chao, x, chaoY - deslocamentoParaCima, larguraChao + 1, alturaChao); 
     }
 }
 
@@ -585,7 +594,13 @@ export function startRunner() {
 async function gameOver() {
     isGameOver = true; cancelAnimationFrame(gameLoop);
     const pontosConvertidos = Math.floor(score / 10);
-    pointsEarnedDisplay.textContent = pontosConvertidos; 
+    pointsEarnedDisplay.textContent = pontosConvertidos;
+    const resultMessage = document.getElementById('runner-result-message');
+    if (resultMessage && !localStorage.getItem('usuarioLogadoId')) {
+        resultMessage.innerHTML = 'Boa corrida! Faça login com seu ingresso antes de jogar para contabilizar pontos no ranking.';
+    } else if (resultMessage) {
+        resultMessage.innerHTML = 'Você sobreviveu e ganhou <strong id="runner-points-earned-copy" style="color: var(--cor-secundaria); font-size: 22px;">' + pontosConvertidos + '</strong> pts';
+    }
     gameOverScreen.style.display = 'block';
 
     console.log("🏁 Game Over! Score:", score, "-> Pontos a somar:", pontosConvertidos);
@@ -611,7 +626,7 @@ async function gameOver() {
                     const ticketDisplay = document.getElementById('user-points-display');
                     if (ticketDisplay) ticketDisplay.textContent = novoTotal;
                     
-                    console.log("✅ SUCESSO! Pontos salvos no Firebase.");
+                    console.log("âœ… SUCESSO! Pontos salvos no Firebase.");
 
                     // 👇 ADICIONE ESTA LINHA 👇
                     // Isso cria um megafone invisível avisando o navegador inteiro que os pontos mudaram
@@ -621,7 +636,7 @@ async function gameOver() {
                     console.warn("⚠️ ERRO: Usuário não encontrado na coleção 'inscritos' do Firebase!");
                 }
             } catch (erro) { 
-                console.error("❌ FIREBASE BLOQUEOU O SALVAMENTO:", erro); 
+                console.error("âŒ FIREBASE BLOQUEOU O SALVAMENTO:", erro); 
             }
         } else {
             console.warn("⚠️ ERRO: Nenhum ID logado no localStorage. O jogo não sabe para quem dar os pontos.");

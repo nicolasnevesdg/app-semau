@@ -36,19 +36,15 @@ const qrModalCanvas = document.getElementById('qr-modal-canvas');
 // Função que abre o Modal e desenha um QR Code gigante
 function abrirModalQR(textoQRCode) {
     if (!qrModal || !qrModalCanvas) return;
-    
-    qrModalCanvas.innerHTML = ''; // Limpa o QR Code anterior do modal
-    
-    // Gera um novo QR Code bem grande, nítido e fácil de ler
+    qrModalCanvas.innerHTML = '';
     new QRCode(qrModalCanvas, {
         text: textoQRCode,
         width: 200,
         height: 200,
-        colorDark : "#000000", 
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
     });
-    
     qrModal.style.display = 'flex';
 }
 
@@ -84,22 +80,51 @@ tokenBoxes.forEach((box, index) => {
 // ==========================================
 // 👇 PARTE B: A FUNÇÃO QUE DESENHA O QR CODE
 // ==========================================
-function gerarQRCode(texto) {
-    if (!qrCodeContainer) return;
-    
-    qrCodeContainer.innerHTML = "";
-    
+const INTERVALO_QR_MS = 30000;
+let tokenQrAtivo = null;
+let intervaloQr = null;
+let slotQrRenderizado = null;
+
+function criarPayloadQr(token) {
+    const slot = Math.floor(Date.now() / INTERVALO_QR_MS);
+    return 'SEMAU|' + token + '|' + slot;
+}
+
+function desenharQrDinamico(forcar = false) {
+    if (!qrCodeContainer || !tokenQrAtivo) return;
+    const slotAtual = Math.floor(Date.now() / INTERVALO_QR_MS);
+    const segundosRestantes = 30 - Math.floor((Date.now() % INTERVALO_QR_MS) / 1000);
+    const validade = document.getElementById('qr-validade');
+    if (validade) validade.textContent = 'Atualiza em ' + segundosRestantes + 's';
+    if (!forcar && slotAtual === slotQrRenderizado) return;
+    slotQrRenderizado = slotAtual;
+    const payload = criarPayloadQr(tokenQrAtivo);
+    qrCodeContainer.innerHTML = '';
     new QRCode(qrCodeContainer, {
-        text: texto,
+        text: payload,
         width: 150,
         height: 150,
-        colorDark : "#000000", 
-        colorLight : "#ffffff", 
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
     });
+    qrCodeContainer.onclick = () => abrirModalQR(criarPayloadQr(tokenQrAtivo));
+    if (qrModal?.style.display === 'flex') abrirModalQR(payload);
+}
 
-    // NOVO: Adiciona o evento de clique para abrir o modal
-    qrCodeContainer.onclick = () => abrirModalQR(texto);
+function gerarQRCode(token) {
+    tokenQrAtivo = token;
+    slotQrRenderizado = null;
+    if (intervaloQr) clearInterval(intervaloQr);
+    desenharQrDinamico(true);
+    intervaloQr = setInterval(() => desenharQrDinamico(), 1000);
+}
+
+function pararQrDinamico() {
+    if (intervaloQr) clearInterval(intervaloQr);
+    intervaloQr = null;
+    tokenQrAtivo = null;
+    slotQrRenderizado = null;
 }
 
 // ==========================================
@@ -141,7 +166,7 @@ function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
         const tokenDaOficina = `${tokenUsuario}-${idOficina}`; // O segredo da segurança (Ex: QC8YS-OF01)
 
         const cardHTML = `
-            <div class="ticket-oficina">
+            <div class="ticket-oficina" data-oficina="${idOficina}">
                 <div class="ticket-oficina-info">
                     <span class="tag-oficina">${idOficina}</span>
                     <h4 class="ticket-oficina-titulo">${oficina.titulo}</h4>
@@ -160,8 +185,8 @@ function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
             const containerOficina = document.getElementById(divId);
             new QRCode(containerOficina, {
                 text: tokenDaOficina,
-                width: 80,
-                height: 80,
+                width: 58,
+                height: 58,
                 colorDark : "#000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.M
@@ -206,6 +231,7 @@ if (btnEntrar) {
                     // Salva a sessão no navegador
                     localStorage.setItem('usuarioLogadoId', docSnap.id); 
                     localStorage.setItem('usuarioPoints', dadosUsuario.pontos || 0);
+                    window.dispatchEvent(new Event('usuarioLoginAlterado'));
 
                     // 👇 PARTE C (1/2): Gerar o QR Code logo após o login dar certo
                     gerarQRCode(dadosUsuario.token);
@@ -253,6 +279,8 @@ if (btnSair) {
     btnSair.addEventListener('click', () => {
         localStorage.removeItem('usuarioLogadoId');
         localStorage.removeItem('usuarioPoints');
+        pararQrDinamico();
+        window.dispatchEvent(new Event('usuarioLoginAlterado'));
 
         // Atualiza o menu para esconder o ícone do Quiz!
         atualizarMenuInferior();
@@ -383,14 +411,7 @@ const btnNavQuiz = document.getElementById('nav-quiz');
 
 export function atualizarMenuInferior() {
     if (!btnNavQuiz) return;
-
-    const userId = localStorage.getItem('usuarioLogadoId');
-
-    if (userId) {
-        btnNavQuiz.style.display = 'flex'; // Exibe o controle de jogo se estiver logado
-    } else {
-        btnNavQuiz.style.display = 'none';  // Esconde se deslogar
-    }
+    btnNavQuiz.style.removeProperty('display');
 }
 
 // Execute logo na abertura do app para checar se já havia um login salvo

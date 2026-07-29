@@ -1,0 +1,235 @@
+#app-container.pagina-retorno {
+    min-height: 100vh;
+    background: var(--cor-eixo-cidade);
+    color: var(--cor-primaria);
+}
+
+.retorno-topo {
+    padding: 24px 24px 34px;
+    text-align: center;
+}
+
+.retorno-voltar {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.retorno-logo {
+    width: 100%;
+    max-width: 170px;
+    height: auto;
+    margin: 44px auto 12px;
+    display: block;
+}
+
+.retorno-corpo {
+    min-height: calc(100vh - 185px);
+    padding: 38px 28px 44px;
+    border-radius: 30px 30px 0 0;
+    background: #f7f5f0;
+    text-align: center;
+}
+
+.retorno-status-icone {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 30px;
+}
+
+.pagamento-sucesso .retorno-status-icone {
+    background: #dcebe0;
+    color: var(--cor-primaria);
+}
+
+.pagamento-pendente .retorno-status-icone {
+    background: #fff0df;
+    color: var(--cor-secundaria);
+}
+
+.pagamento-falhou .retorno-status-icone {
+    background: #f5ded9;
+    color: #b84b3c;
+}
+
+.retorno-etiqueta {
+    margin-bottom: 9px;
+    display: block;
+    color: #7b827c;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+}
+
+.retorno-corpo h1 {
+    max-width: 330px;
+    margin: 0 auto 13px;
+    color: var(--cor-primaria);
+    font-size: 31px;
+    line-height: 1.04;
+}
+
+.retorno-mensagem {
+    max-width: 340px;
+    margin: 0 auto 24px;
+    color: #646b65;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.retorno-referencia {
+    width: fit-content;
+    margin: 0 auto 22px;
+    padding: 9px 13px;
+    border-radius: 12px;
+    background: rgba(128, 154, 205, 0.13);
+    color: #6d746e;
+    font-size: 9px;
+}
+
+.retorno-referencia strong {
+    margin-left: 5px;
+    color: var(--cor-primaria);
+    font-size: 10px;
+}
+
+.retorno-passos {
+    margin: 26px 0 20px;
+    padding: 8px 18px;
+    border: 1px solid rgba(13, 55, 43, 0.12);
+    border-radius: 20px;
+    background: #fff;
+    text-align: left;
+}
+
+.retorno-passos article {
+    padding: 15px 0;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 11px;
+}
+
+.retorno-passos article + article {
+    border-top: 1px solid #e8e9e6;
+}
+
+.retorno-passos article > span {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--cor-eixo-cidade);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.retorno-passos h2 {
+    margin-bottom: 4px;
+    color: var(--cor-primaria);
+    font-size: 13px;
+}
+
+.retorno-passos p {
+    color: #747a75;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.retorno-aviso {
+    padding: 12px 14px;
+    border-radius: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: rgba(128, 154, 205, 0.12);
+    color: #626a64;
+    text-align: left;
+}
+
+.retorno-aviso i {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: var(--cor-eixo-cidade);
+    font-size: 16px;
+}
+
+.retorno-aviso p {
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.retorno-acoes {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.retorno-acao {
+    padding: 12px 17px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-primaria);
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.retorno-acao.primaria {
+    background: var(--cor-secundaria);
+    color: #fff;
+}
+
+.retorno-acao.secundaria {
+    border: 1px solid rgba(13, 55, 43, 0.22);
+    background: transparent;
+}
+
+.retorno-rodape {
+    padding: 18px 20px 28px;
+    background: #f7f5f0;
+    color: #8a908b;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.retorno-rodape span {
+    margin: 0 4px;
+    color: var(--cor-secundaria);
+}
+/* Mantém a mesma escala reduzida nas respostas do pagamento */
+@media (max-width: 480px) {
+    #app-container.pagina-retorno {
+        width: 142.86%;
+        max-width: none;
+        min-height: 142.86vh;
+        zoom: 1.00;
+    }
+}
+
+@media (max-width: 390px) {
+    #app-container.pagina-retorno {
+        width: 147.06%;
+        min-height: 147.06vh;
+        zoom: .75;
+    }
+}

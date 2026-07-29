@@ -8,13 +8,15 @@ const viewDashboard = document.getElementById('view-dashboard');
 const viewLogin = document.getElementById('view-login');
 const viewQuiz = document.getElementById('view-quiz');
 const viewAbout = document.getElementById('view-about');
-const viewQuizHub = document.getElementById('view-quiz-hub'); // ✅ NOVO: Captura a Game Zone
+const viewStore = document.getElementById('view-store');
+const viewQuizHub = document.getElementById('view-quiz-hub'); // âœ… NOVO: Captura a Game Zone
 
 const navHome = document.getElementById('nav-home');
 const navSchedule = document.getElementById('nav-schedule');
 const navProfile = document.getElementById('nav-profile');
 const navAbout = document.getElementById('nav-about');
-const navQuiz = document.getElementById('nav-quiz'); // ✅ CORRIGIDO O NOME DA VARIÁVEL
+const navStore = document.getElementById('nav-store');
+const navQuiz = document.getElementById('nav-quiz'); // âœ… CORRIGIDO O NOME DA VARIÁVEL
 
 const btnLoginArea = document.getElementById('btn-login-area');
 
@@ -43,7 +45,9 @@ if (btnRunnerQuit) {
 // ==========================================
 // 2. FUNÇÃO PRINCIPAL DE NAVEGAÇÃO
 // ==========================================
-function showView(viewToShow) {
+function showView(viewToShow, navItem = null) {
+    if (!viewToShow) return;
+
     const allViews = document.querySelectorAll('.view');
     allViews.forEach(view => {
         view.classList.remove('active');
@@ -52,22 +56,31 @@ function showView(viewToShow) {
 
     viewToShow.classList.add('active');
     viewToShow.style.display = 'block';
+
+
+    if (navItem) {
+        document.querySelectorAll('#bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
+        navItem.classList.add('active');
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ==========================================
 // 3. EVENTOS DE CLIQUE (MENU INFERIOR)
 // ==========================================
-if(navHome) navHome.addEventListener('click', () => showView(viewHome));
-if(navSchedule) navSchedule.addEventListener('click', () => showView(viewSchedule));
-if(navAbout) navAbout.addEventListener('click', () => showView(viewAbout));
-if(navQuiz) navQuiz.addEventListener('click', () => showView(viewQuizHub)); // ✅ NOVO: Abre a Game Zone
+if(navHome) navHome.addEventListener('click', () => showView(viewHome, navHome));
+if(navSchedule) navSchedule.addEventListener('click', () => showView(viewSchedule, navSchedule));
+if(navAbout) navAbout.addEventListener('click', () => showView(viewAbout, navAbout));
+if(navStore) navStore.addEventListener('click', () => showView(viewStore, navStore));
+if(navQuiz) navQuiz.addEventListener('click', () => showView(viewQuizHub, navQuiz)); // âœ… NOVO: Abre a Game Zone
 
 navProfile.addEventListener('click', () => {
     const userId = localStorage.getItem('usuarioLogadoId');
     if (userId) {
-        showView(viewDashboard);
+        showView(viewDashboard, navProfile);
     } else {
-        showView(viewLogin);
+        showView(viewLogin, navProfile);
     }
 });
 
@@ -91,7 +104,7 @@ if(btnJogarQuiz) {
 }
 
 if(btnVoltarDashboard) {
-    // ✅ CORRIGIDO: Ao voltar do quiz, volta para a Game Zone (e não mais pro perfil)
+    // âœ… CORRIGIDO: Ao voltar do quiz, volta para a Game Zone (e não mais pro perfil)
     btnVoltarDashboard.addEventListener('click', () => showView(viewQuizHub)); 
 }
 
@@ -105,10 +118,27 @@ const btnFaseCredencial = document.getElementById('btn-fase-credencial');
 if (btnFaseCronograma) btnFaseCronograma.addEventListener('click', () => navSchedule.click());
 if (btnFaseCredencial) btnFaseCredencial.addEventListener('click', () => navProfile.click());
 if (btnFaseInscricao) btnFaseInscricao.addEventListener('click', () => {
-    window.open('https://sua-pagina-de-inscricao.com.br', '_blank'); 
+    window.location.href = 'ingressos.html';
 });
 
-document.querySelector('.link-recompensas').addEventListener('click', (e) => {
-    e.preventDefault();
-    document.querySelector('#view-recompensas').scrollIntoView({ behavior: 'smooth' });
+const linkRecompensas = document.querySelector('.link-recompensas');
+if (linkRecompensas) {
+    linkRecompensas.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelector('#view-recompensas')?.scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+function atualizarAreasProtegidasDosJogos() {
+    const logado = Boolean(localStorage.getItem('usuarioLogadoId'));
+    document.querySelectorAll('[data-game-protected]').forEach(area => {
+        area.classList.toggle('game-area-liberada', logado);
+    });
+}
+
+document.querySelectorAll('[data-game-login]').forEach(botao => {
+    botao.addEventListener('click', () => showView(viewLogin, navProfile));
 });
+
+window.addEventListener('usuarioLoginAlterado', atualizarAreasProtegidasDosJogos);
+atualizarAreasProtegidasDosJogos();

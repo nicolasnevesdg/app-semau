@@ -176,7 +176,7 @@ async function finalizarQuiz() {
             opcoesContainer.innerHTML = '<p style="color: #dc3545; font-weight:bold; text-align:center;">Erro ao salvar pontos. Verifique sua conexão.</p>';
         }
     } else {
-        opcoesContainer.innerHTML = '<p style="color: #dc3545; text-align:center;">Erro: Usuário não identificado.</p>';
+        opcoesContainer.innerHTML = '<p style="color: var(--cor-texto); text-align:center; line-height:1.5;">Rodada concluída! Faça login com seu ingresso antes de jogar para contabilizar pontos no ranking.</p>';
     }
 }
 

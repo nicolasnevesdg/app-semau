@@ -2,7 +2,7 @@
 #app-container {
     width: 100%;
     max-width: 480px; /* Trava a largura máxima igual a de um celular grande */
-    background-color: var(--cor-fundo-app);
+    background: var(--cor-fundo-app);
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
@@ -99,74 +99,70 @@ button {
    MENU INFERIOR (BOTTOM NAV) - NOVA ESTÉTICA
    =============================== */
 #bottom-nav {
-    position: fixed; 
-    bottom: 0;
+    position: fixed;
+    z-index: 1000;
     left: 50%;
-    transform: translateX(-50%); 
-    width: 100%;
-    max-width: 480px; 
-    background-color: var(--cor-primaria) !important; /* Força o verde escuro */
+    bottom: max(12px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    width: calc(100% - 28px);
+    max-width: 452px;
+    height: 75px;
+    padding: 6px 8px;
     display: flex;
-    justify-content: space-around;
     align-items: center;
-    padding: 10px 0; 
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.1); 
-    z-index: 1000; 
-    border-top-left-radius: 20px; 
-    border-top-right-radius: 20px;
-    height: 70px; 
+    justify-content: space-between;
+    gap: 3px;
+    border-radius: 999px;
+    background: var(--cor-fundo-app) !important;
 }
 
-/* Estilização dos itens de navegação (ícones) */
 #bottom-nav .nav-item {
-    background: transparent;
-    color: #ffffff; /* Cor dos ícones inativos (branco) */
+    position: relative;
     width: auto;
-    height: 100%;
-    border: none;
-    cursor: pointer;
+    min-width: 0;
+    height: 45px;
+    margin: 0;
+    padding: 0;
+    flex: 1 1 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    font-size: 24px; /* Tamanho do ícone */
-    transition: all 0.2s ease;
-    position: relative; /* Para posicionar a linha do indicador */
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, .74);
     font-family: inherit;
+    font-size: 22px;
+    font-weight: inherit;
     letter-spacing: inherit;
     box-shadow: none;
-    font-weight: inherit;
+    cursor: pointer;
+    transition: color .2s ease, background-color .2s ease, transform .2s ease, flex-grow .2s ease;
 }
 
-/* Comportamento de item ativo */
 #bottom-nav .nav-item:hover {
-    color: var(--cor-secundaria); /* Um brilho sutil ao passar o mouse */
+    color: #fff;
+    background: rgba(255, 255, 255, .06);
 }
 
 #bottom-nav .nav-item.active {
-    color: var(--cor-secundaria); /* Cor do ícone ativo (laranja) */
+    flex-grow: 1.18;
+    background: var(--cor-texto);
+    color: var(--cor-primaria);
 }
 
-/* O indicador (linha ativa) */
-#bottom-nav .active-indicator {
+#bottom-nav .nav-item:active {
+    transform: scale(.94);
+}
+
+#bottom-nav .nav-item i {
     display: block;
-    position: absolute;
-    bottom: 4px; /* Distância da borda inferior */
-    width: 24px; /* Largura da linha */
-    height: 3px; /* Espessura da linha */
-    background-color: transparent; /* Invisível por padrão */
-    border-radius: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: all 0.2s ease;
+    line-height: 1;
 }
 
-/* Quando o item estiver ativo, a linha fica laranja */
-#bottom-nav .nav-item.active .active-indicator {
-    background-color: var(--cor-secundaria);
+#bottom-nav .active-indicator {
+    display: none;
 }
-
 /* ==========================================
    ESTILIZAÇÃO DA LOGO NO TOPO
    ========================================== */
@@ -184,4 +180,35 @@ button {
     width: 100%;
     height: auto; /* Mantém a proporção perfeita do arquivo */
     object-fit: contain;
+}
+/* Escala uniforme para celulares */
+@media (max-width: 480px) {
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    #app-container {
+        width: 121.96%;
+        max-width: none;
+        min-height: 121.96vh;
+        zoom: .84;
+    }
+
+    #bottom-nav {
+        width: calc(121.96% - 28px);
+        max-width: none;
+    }
+}
+
+@media (max-width: 390px) {
+    #app-container {
+        width: 128.21%;
+        min-height: 128.21vh;
+        zoom: .78;
+    }
+
+    #bottom-nav {
+        width: calc(128.21% - 28px);
+    }
 }

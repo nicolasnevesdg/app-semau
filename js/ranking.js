@@ -10,6 +10,10 @@ const btnVoltarDashboard = document.getElementById('btn-voltar-dashboard');
 
 export async function carregarRanking() {
     if (!rankingList) return;
+    if (!localStorage.getItem('usuarioLogadoId')) {
+        rankingList.innerHTML = '<li style="text-align:center;">Entre com seu ingresso para ver o ranking.</li>';
+        return;
+    }
     rankingList.innerHTML = '<li style="text-align:center;">Atualizando placar... ⏳</li>';
 
     try {

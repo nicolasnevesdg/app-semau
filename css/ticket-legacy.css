@@ -1,0 +1,133 @@
+/* VERS?O ANTERIOR DO INGRESSO ? n?o carregada pelo site.
+
+HTML anterior:
+<div class="ticket-digital">
+  <div class="ticket-banner"></div>
+  <div class="ticket-header"><p class="ticket-label">Local</p><p>Auditório Gustavão - P1</p></div>
+  <div class="ticket-body">
+    <div class="ticket-dados"><p class="ticket-label">Participante</p><h2 id="user-name-display">João Silva</h2><p class="ticket-label">Token</p><h2 id="user-token-display">-----</h2></div>
+    <div class="ticket-qr-dinamico"><div id="qrcode-ticket" class="ticket-qr-box"></div><span id="qr-validade">Atualiza em 30s</span></div>
+  </div>
+  <div class="ticket-footer"><p>Pontos: <strong id="user-points-display">0</strong> 🌟</p></div>
+</div>
+*/
+
+/* ===============================
+   INGRESSO DIGITAL (TICKET)
+   =============================== */
+.ticket-digital {
+    background: #fff;
+    color: #000;
+    border-radius: 20px;
+    margin: 30px 0;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito de picote no meio do ingresso */
+.ticket-digital::before, .ticket-digital::after {
+    content: '';
+    position: absolute;
+    top: 192.5px;
+    width: 35px;
+    height: 35px;
+    background-color: #0c3328;
+    border-radius: 50%;
+}
+.ticket-digital::before { left: -20px; }
+.ticket-digital::after { right: -20px; }
+
+.ticket-header {
+    /* Removemos a borda nativa do navegador */
+    border-bottom: none; 
+
+    /* Desenhamos a nossa própria linha tracejada */
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.4) 50%, transparent 50%);
+    background-position: bottom;
+    background-size: 25px 2px; /* O segredo está aqui! */
+    background-repeat: repeat-x;
+    padding: 25px 30px;
+}
+
+/* Atualização do ticket-body para ficar lado a lado */
+.ticket-body {
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px; /* Espaço seguro entre os dados e o QR Code */
+}
+
+/* O texto ocupa o lado esquerdo */
+.ticket-dados {
+    flex: 1;
+}
+
+.ticket-dados h2 {
+    font-size: 21px;
+    margin-bottom: 15px; /* Espaçamento entre Participante e Token */
+}
+
+.ticket-dados h2:last-child {
+    margin-bottom: 0; /* Tira a margem do último para não empurrar o layout */
+}
+
+/* A nova caixinha branca apenas para o QR Code */
+.ticket-qr-box {
+    background: #fff;
+    padding: 8px; /* Esse é o respiro em volta do QR Code */
+    border-radius: 8px;
+    width: 130px;
+    height: 130px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Impede que o QR Code amasse se o nome do aluno for muito grande */
+}
+
+/* Força o QR gerado pelo JavaScript a preencher certinho o espaço */
+.ticket-qr-box img, 
+.ticket-qr-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.ticket-body {
+    padding: 30px;
+}
+
+.ticket-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+.ticket-body h2 {
+    font-size: 21px;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+.ticket-footer {
+    background: #ebebeb;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Banner Superior colado no topo do Ingresso */
+.ticket-banner {
+    width: 100%;
+    height: 120px;/* Substituímos a cor sólida pela imagem SVG que criámos */
+    background-image: url('../assets/svg/ticket-banner.svg');
+    background-color: var(--cor-eixo-cidade); /* Cor de fundo para o caso da imagem não carregar */
+    background-size: cover; /* Garante que a imagem cobre todo o espaço */
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
