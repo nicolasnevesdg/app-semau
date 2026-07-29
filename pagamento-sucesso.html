@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Tudo certo por aqui. — XVI SEMAU</title>
+    <meta name="theme-color" content="#809acd">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/pagamento.css">
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+</head>
+<body>
+    <main id="app-container" class="pagina-retorno pagamento-sucesso">
+        <header class="retorno-topo">
+            <a href="index.html" class="retorno-voltar"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i>Voltar ao site</a>
+            <img src="assets/svg/logo-cn-05.svg" alt="XVI SEMAU" class="retorno-logo">
+        </header>
+
+        <section class="retorno-corpo">
+            <div class="retorno-status-icone" aria-hidden="true"><i class="ph-bold ph-check"></i></div>
+            <span class="retorno-etiqueta">Pagamento aprovado</span>
+            <h1>Tudo certo por aqui.</h1>
+            <p class="retorno-mensagem">O Mercado Pago informou que seu pagamento foi aprovado. Agora nosso sistema concluirá a emissão do ingresso.</p>
+
+            <div class="retorno-referencia" id="retorno-referencia" hidden>
+                <span>Referência do pagamento</span>
+                <strong id="retorno-payment-id"></strong>
+            </div>
+
+            <div class="retorno-passos">
+                <article>
+                    <span>1</span>
+                    <div><h2>Confirmação automática</h2><p>Vamos validar o pagamento e criar seu cadastro com segurança.</p></div>
+                </article>
+                <article>
+                    <span>2</span>
+                    <div><h2>Ingresso no seu e-mail</h2><p>Você receberá o token de acesso assim que a emissão for concluída.</p></div>
+                </article>
+            </div>
+
+            <div class="retorno-aviso">
+                <i class="ph-bold ph-info" aria-hidden="true"></i>
+                <p>Esta tela é informativa. O ingresso só será emitido após a confirmação do pagamento pelo sistema.</p>
+            </div>
+
+            <div class="retorno-acoes">
+                <a href="index.html" class="retorno-acao primaria">Voltar ao site</a>
+                <a href="ingressos.html" class="retorno-acao secundaria">Ver ingressos</a>
+            </div>
+        </section>
+
+        <footer class="retorno-rodape">XVI SEMAU <span>•</span> 2026</footer>
+    </main>
+    <script src="js/pagamento-retorno.js"></script>
+</body>
+</html>

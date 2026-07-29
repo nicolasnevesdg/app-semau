@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio — XVI SEMAU</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/sorteio-telao.css">
+</head>
+<body>
+    <main class="telao" id="telao">
+        <canvas id="confetes" aria-hidden="true"></canvas>
+
+        <img class="telao-sticker telao-sticker-palmeira" src="assets/svg/sticker-palmeira.svg" alt="">
+        <img class="telao-sticker telao-sticker-selo" src="assets/svg/sticker-selo.svg" alt="">
+        <img class="telao-sticker telao-sticker-cadeira" src="assets/svg/sticker-cadeira.svg" alt="">
+        <img class="telao-sticker telao-sticker-estrela" src="assets/svg/sticker-estrela.svg" alt="">
+
+        <header class="telao-topo">
+            <p class="telao-marca"><strong>semau</strong>.space</p>
+            <button id="btn-tela-cheia" class="btn-tela-cheia" type="button">Tela cheia</button>
+        </header>
+
+        <section class="sorteio-palco" aria-live="polite">
+            <img class="sorteio-logo" src="assets/svg/logo-cn-02.svg" alt="XVI SEMAU">
+
+            <div id="estado-espera" class="estado-sorteio estado-espera">
+                <span class="sorteio-etiqueta">Sorteio ao vivo</span>
+                <h1>O próximo nome pode ser o seu.</h1>
+                <p id="status-conexao">Aguardando o comando da organização.</p>
+            </div>
+
+            <div id="estado-sorteando" class="estado-sorteio estado-sorteando" hidden>
+                <span class="sorteio-etiqueta">Quem será?</span>
+                <p id="nome-rodando" class="nome-rodando">Preparando...</p>
+                <strong id="contagem-sorteio" class="contagem-sorteio" aria-label="Contagem regressiva"></strong>
+            </div>
+
+            <div id="estado-resultado" class="estado-sorteio estado-resultado" hidden>
+                <span class="sorteio-etiqueta">Temos um nome!</span>
+                <p class="resultado-chamada">Parabéns,</p>
+                <h1 id="nome-ganhador">—</h1>
+                <p id="turno-ganhador" class="turno-ganhador"></p>
+            </div>
+        </section>
+
+        <footer class="telao-rodape">
+            <span>XVI Semana Acadêmica de Arquitetura e Urbanismo</span>
+            <span>UFRRJ</span>
+        </footer>
+    </main>
+    <script type="module" src="js/sorteio-telao.js"></script>
+</body>
+</html>

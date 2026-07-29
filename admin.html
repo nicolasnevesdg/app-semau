@@ -107,6 +107,10 @@
                 <option value="d25_t">25/Set (Sexta) - Tarde</option>
             </select>
 
+            <button id="btn-abrir-telao" class="admin-btn-secondary" style="width: 100%; margin-bottom: 10px; background: var(--cor-primaria);">
+                <i class="ph-bold ph-monitor-play"></i> Abrir tela do telão
+            </button>
+            <p id="status-telao" style="margin: 0 0 16px; color: #888; font-size: 12px; font-weight: 600; text-align: center;">Tela do telão desconectada</p>
             <button id="btn-admin-sortear" class="admin-btn-secondary" style="width: 100%;">Sortear Agora 🎲</button>
             
             <div id="sorteio-resultado" style="margin-top: 24px; text-align: center; font-size: 18px; color: var(--cor-primaria); line-height: 1.4;"></div>
@@ -130,6 +134,8 @@
                 <button id="btn-admin-buscar" class="admin-btn-secondary" style="padding: 0 24px;">Buscar</button>
             </div>
             
+            <p id="admin-qr-status" style="display:none; margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: center;"></p>
+
             <div id="admin-resultado-busca" style="margin-top: 32px; display: none;">
                 <div style="padding: 20px; background: #f4f5f7; border-radius: 16px; margin-bottom: 24px;">
                     <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 4px;">Participante Encontrado</p>
@@ -211,6 +217,27 @@
                 <option value="credencial">3. Evento Rolando (Abrir Credencial)</option>
             </select>
             <button id="btn-salvar-fase" class="admin-btn-primary" style="width: 100%;">Atualizar App</button>
+        </div>
+
+        <div class="admin-card-minimal">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px; color: var(--cor-primaria);">Lote de ingressos</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 16px;">Escolha qual lote aparecerá como ativo na página de ingressos.</p>
+            <select id="select-lote-ativo" class="admin-input" style="margin-bottom: 16px;">
+                <option value="1">1º lote</option>
+                <option value="2">2º lote</option>
+                <option value="3">3º lote</option>
+            </select>
+            <button id="btn-salvar-lote" class="admin-btn-primary" style="width: 100%;">Ativar lote selecionado</button>
+        </div>
+
+        <div class="admin-card-minimal">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px; color: var(--cor-primaria);">Lojinha</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 18px;">Escolha se os produtos aparecem no site ou se a página mostra apenas “Em breve”.</p>
+            <label style="display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 16px; margin-bottom: 16px; border: 1px solid #e8e8eb; border-radius: 12px; color: #444; font-size: 14px; font-weight: 700; cursor: pointer;">
+                <span>Exibir produtos da lojinha</span>
+                <input type="checkbox" id="toggle-lojinha-visivel" checked style="width: 20px; height: 20px; accent-color: var(--cor-secundaria); cursor: pointer;">
+            </label>
+            <button id="btn-salvar-lojinha" class="admin-btn-primary" style="width: 100%;">Salvar estado da lojinha</button>
         </div>
 
         <div class="admin-card-minimal">

@@ -1,21 +1,18 @@
 {
-  "name": "XVI SEMAU - UFRRJ",
-  "short_name": "SEMAU",
-  "description": "App oficial da XVI Semana Acadêmica de Arquitetura e Urbanismo da UFRRJ - O espaço que nos habita.",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#fdfcf9",
-  "theme_color": "#a38c76",
-  "icons": [
-    {
-      "src": "assets/img/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "assets/img/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+    "name":  "XVI SEMAU - UFRRJ",
+    "short_name":  "XVI Semau",
+    "description":  "App oficial da XVI Semana Acadêmica de Arquitetura e Urbanismo da UFRRJ — O lugar que nos habita.",
+    "start_url":  "./index.html",
+    "scope":  "./",
+    "display":  "standalone",
+    "background_color":  "#0d372b",
+    "theme_color":  "#0d372b",
+    "icons":  [
+                  {
+                      "src":  "assets/svg/app-icon.svg",
+                      "sizes":  "any",
+                      "type":  "image/svg+xml",
+                      "purpose":  "any"
+                  }
+              ]
 }

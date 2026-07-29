@@ -1,16 +1,31 @@
-const CACHE_NAME = 'semau-v2';
+const CACHE_NAME = 'semau-v125';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
     './',
     './index.html',
+    './sorteio-telao.html',
+    './ingressos.html',
+    './compra.html',
+    './pagamento-falhou.html',
+    './pagamento-pendente.html',
+    './pagamento-sucesso.html',
     './manifest.json',
     './css/global.css',
     './css/layout.css',
     './css/components.css',
     './css/views.css',
+    './css/sorteio-telao.css',
+    './css/compra.css',
+    './css/pagamento.css',
     './js/main.js',
+    './js/install-app.js',
     './js/navigation.js',
+    './js/store-config.js',
+    './js/sorteio-telao.js',
+    './js/ingressos.js',
+    './js/compra.js',
+    './js/pagamento-retorno.js',
     './js/auth.js',
     './js/quiz.js',
     './js/questions.js',
@@ -22,19 +37,45 @@ const assetsToCache = [
     './assets/svg/convidados.svg',
     './assets/svg/cronograma.svg',
     './assets/svg/game-zone.svg',
-    './assets/svg/oficinas.svg'
+    './assets/svg/lojinha-xvi.svg',
+    './assets/svg/oficinas.svg',
+    './assets/svg/logo-cn-02.svg',
+    './assets/svg/app-icon.svg',
+    './assets/svg/logo-cn-05.svg',
+    './assets/svg/sticker-palmeira.svg',
+    './assets/svg/sticker-selo.svg',
+    './assets/svg/sticker-cadeira.svg',
+    './assets/svg/sticker-olhos-da-pele.svg',
+    './assets/svg/sticker-azulejo.svg',
+    './assets/svg/sticker-estrela.svg',
+    './assets/svg/jean-geal.svg',
+    './assets/img/palestrante-teste.png',
+    './assets/img/professor-teste_1.png',
+    './assets/img/oficina-levantamento.png',
+    './assets/img/J1.png',
+    './assets/img/J2.png',
+    './assets/img/J3.png',
+    './assets/img/chao.png',
+    './assets/img/beneficio.png',
+    './assets/img/produto-teste_2.png',
+    './assets/img/card-anuncio-rasgo-verde-recortado.png',
+    './assets/patrocinadores/logifab.png',
+    './assets/patrocinadores/voitto.png',
+    './assets/patrocinadores/peanuts-bakery.png',
+    './assets/patrocinadores/gastrobarr-vo-sacasa-clara.png',
+    './assets/patrocinadores/studio3-papelaria.png',
+    './assets/patrocinadores/choco-latte.png',
+    './assets/patrocinadores/venus-artesa.png',
+    './assets/patrocinadores/cura-marca-branco.png',
+    './assets/patrocinadores/jardim-de-papel.png'
 ];
 
-// Instala o Service Worker e salva os arquivos
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(assetsToCache);
-        })
+        caches.open(CACHE_NAME).then(cache => cache.addAll(assetsToCache))
     );
 });
 
-// Remove versões antigas do cache para descartar arquivos que não fazem mais parte do app.
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -47,11 +88,11 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Intercepta a internet: se estiver offline, ele puxa os arquivos salvos!
 self.addEventListener('fetch', event => {
     event.respondWith(
-        fetch(event.request).catch(() => {
-            return caches.match(event.request);
-        })
+        fetch(event.request).catch(() => caches.match(event.request))
     );
 });
+
+
+

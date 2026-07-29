@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Comprar ingresso — XVI SEMAU</title>
+    <meta name="theme-color" content="#809acd">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/compra.css">
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+</head>
+<body>
+    <main id="app-container" class="pagina-compra">
+        <header class="compra-topo">
+            <a href="ingressos.html#ingressos" class="compra-voltar"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i>Voltar aos ingressos</a>
+            <img src="assets/svg/logo-cn-05.svg" alt="XVI SEMAU" class="compra-logo">
+            <div class="compra-etapas" aria-label="Etapas da compra">
+                <div class="compra-etapa ativa"><span>1</span><p>Seus dados</p></div>
+                <div class="compra-etapa-linha" aria-hidden="true"></div>
+                <div class="compra-etapa"><span>2</span><p>Pagamento</p></div>
+            </div>
+        </header>
+        <section class="compra-corpo">
+            <div class="compra-intro">
+                <span>Inscrição XVI SEMAU</span>
+                <h1>Vamos preparar seu ingresso.</h1>
+                <p>Preencha seus dados e confira a escolha antes de seguir para o pagamento.</p>
+            </div>
+            <aside class="resumo-pedido" aria-labelledby="resumo-titulo">
+                <div><span id="resumo-titulo">Seu ingresso</span><strong id="resumo-nome">Ingresso normal</strong></div>
+                <div class="resumo-preco"><strong id="resumo-valor">R$ 45,00</strong><span>valor individual</span></div>
+            </aside>
+            <form id="form-compra" class="form-compra" novalidate>
+                <fieldset>
+                    <legend>Dados do participante</legend>
+                    <label class="campo campo-largo" for="compra-nome"><span>Nome completo</span><input id="compra-nome" name="nome" type="text" autocomplete="name" required minlength="5" placeholder="Nome e sobrenome, como aparecerão no ingresso"></label>
+                    <label class="campo campo-largo" for="compra-email"><span>E-mail</span><input id="compra-email" name="email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"></label>
+                    <label class="campo campo-largo" for="compra-email-confirmacao"><span>Confirmar e-mail</span><input id="compra-email-confirmacao" name="emailConfirmacao" type="email" autocomplete="off" required placeholder="Digite novamente"></label>
+                    <label class="campo campo-largo" for="compra-telefone"><span>Telefone</span><input id="compra-telefone" name="telefone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="(21) 99999-9999"></label>
+                </fieldset>
+                <fieldset>
+                    <legend>Sobre você</legend>
+                    <label class="campo campo-largo" for="compra-instituicao"><span>Instituição</span><input id="compra-instituicao" name="instituicao" type="text" autocomplete="organization" required placeholder="Ex.: UFRRJ"></label>
+                    <label class="campo campo-largo" for="compra-matricula"><span>Número de matrícula</span><input id="compra-matricula" name="matricula" type="text" inputmode="numeric" required minlength="11" maxlength="11" pattern="[0-9]{11}" placeholder="Ex.: 20230051742"></label>
+                    <label class="campo" for="compra-curso"><span>Curso</span><input id="compra-curso" name="curso" type="text" required placeholder="Ex.: Arquitetura"></label>
+                    <label class="campo" for="compra-periodo"><span>Período</span><input id="compra-periodo" name="periodo" type="text" placeholder="Ex.: 6º"></label>
+                </fieldset>
+                <fieldset>
+                    <legend>Escolha confirmada</legend>
+                    <div class="opcoes-ingresso">
+                        <label class="opcao-ingresso"><input type="radio" name="tipoIngresso" value="normal" checked><span><strong>Ingresso normal</strong><small>Programação geral e certificado</small></span><b>R$ 45</b></label>
+                        <label class="opcao-ingresso"><input type="radio" name="tipoIngresso" value="kit"><span><strong>Ingresso com kit</strong><small>Ingresso + itens oficiais</small></span><b>R$ 68</b></label>
+                        <label class="opcao-ingresso opcao-promocional"><input type="radio" name="tipoIngresso" value="kit_camisa"><span><strong>Ingresso + kit + camisa</strong><small>Combo completo com desconto na camisa</small></span><b><small>de R$ 113</small>R$ 99</b></label>
+                    </div>
+                </fieldset>
+                <label class="aceite" for="compra-aceite"><input id="compra-aceite" name="aceite" type="checkbox" required><span>Confirmo que os dados estão corretos e aceito os termos da inscrição e o tratamento dos dados para emissão do ingresso.</span></label>
+                <div class="pagamento-seguro"><i class="ph-bold ph-shield-check" aria-hidden="true"></i><p>O pagamento será concluído no ambiente seguro do Mercado Pago.</p></div>
+                <button type="submit" class="btn-continuar">Continuar para pagamento<i class="ph-bold ph-arrow-right" aria-hidden="true"></i></button>
+                <div id="compra-status" class="compra-status" role="status" aria-live="polite" hidden></div>
+            </form>
+        </section>
+    </main>
+    <script type="module" src="js/compra.js"></script>
+</body>
+</html>

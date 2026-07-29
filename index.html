@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/views.css">
+    <link rel="stylesheet" href="css/novidades.css">
 
     <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 </head>
@@ -30,6 +31,7 @@
         <!-- Tela: Home (Contagem Regressiva / Acontecendo Agora) -->
         <section id="view-home" class="view active">
             <div class="hero-section">
+                <canvas id="fogos-evento-canvas" aria-hidden="true"></canvas>
 
                 <img src="assets/svg/sticker-palmeira.svg" class="sticker-animado sticker-1" alt="Palmeira">
                 <img src="assets/svg/sticker-selo.svg" class="sticker-animado sticker-2" alt="Selo">
@@ -42,11 +44,23 @@
                     <img src="assets/svg/logo-cn-02.svg" alt="Logo XVI SEMAU" class="logo-app">
                 </div>
                 <p style="font-weight: 300; font-size: 22px; margin-top: 10px; margin-bottom: 30px;">o <b style="font-weight: 800;">lugar</b> que nos habita</p>
-                <p style="margin-bottom: 15px;">Faltam apenas</p>
-                <div id="countdown-container">
-                    <div class="time-box" style="background: var(--cor-secundaria);"><span id="cd-dias">00</span><small>Dias</small></div>
-                    <div class="time-box" style="background: var(--cor-secundaria);"><span id="cd-horas">00</span><small>Horas</small></div>
-                    <div class="time-box" style="background: var(--cor-secundaria);"><span id="cd-min">00</span><small>Min</small></div>
+                <div id="evento-status-contagem">
+                    <p class="evento-status-chamada">Faltam apenas</p>
+                    <div id="countdown-container">
+                        <div class="time-box"><span id="cd-dias">00</span><small>Dias</small></div>
+                        <div class="time-box"><span id="cd-horas">00</span><small>Horas</small></div>
+                        <div class="time-box"><span id="cd-min">00</span><small>Min</small></div>
+                    </div>
+                </div>
+
+                <div id="evento-status-ao-vivo" class="evento-status-card" hidden aria-live="polite">
+                    <span id="evento-status-etiqueta" class="evento-status-etiqueta">Ao vivo</span>
+                    <h2 id="evento-status-titulo">A XVI SEMAU está acontecendo</h2>
+                    <p id="evento-status-texto"></p>
+                    <div id="evento-status-horario" class="evento-status-horario" hidden>
+                        <i class="ph-bold ph-clock" aria-hidden="true"></i>
+                        <span></span>
+                    </div>
                 </div>
 
                 <button id="btn-fase-cronograma" class="btn-fase-evento" style="display: none;">Ver Programação</button>
@@ -74,8 +88,51 @@
             </div>
             
         </div>
+
+            <section class="home-patrocinadores" aria-labelledby="titulo-patrocinadores-home">
+                <div class="home-patrocinadores-cabecalho">
+                    <span class="home-patrocinadores-etiqueta">Patrocínio & apoio</span>
+                    <h2 id="titulo-patrocinadores-home">Quem ajuda a habitar esta edição.</h2>
+                </div>
+
+                <div class="marquee-patrocinadores" aria-label="Logos de patrocinadores e apoiadores">
+                    <div class="marquee-patrocinadores-faixa">
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/logifab.png" alt="Logifab"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/voitto.png" alt="Voitto"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/cura-marca-branco.png" alt="Cura"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/peanuts-bakery.png" alt="Peanuts Bakery"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/choco-latte.png" alt="Choco Latte"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/gastrobarr-vo-sacasa-clara.png" alt="Gastrobar Vó Sacasa Clara"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/venus-artesa.png" alt="Vênus Artesã"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/studio3-papelaria.png" alt="Studio 3 Papelaria"></span>
+                        <span class="marca-patrocinador"><img src="assets/patrocinadores/jardim-de-papel.png" alt="Jardim de Papel"></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/logifab.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/voitto.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/cura-marca-branco.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/peanuts-bakery.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/choco-latte.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/gastrobarr-vo-sacasa-clara.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/venus-artesa.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/studio3-papelaria.png" alt=""></span>
+                        <span class="marca-patrocinador" aria-hidden="true"><img src="assets/patrocinadores/jardim-de-papel.png" alt=""></span>
+                    </div>
+                </div>
+            </section>
             
-        </section>
+                    <section id="app-install-card" class="app-install-card" aria-labelledby="app-install-title" hidden>
+                <div class="app-install-icon" aria-hidden="true"><img src="assets/svg/app-icon.svg" alt=""></div>
+                <div class="app-install-copy">
+                    <span>Aplicativo oficial</span>
+                    <h2 id="app-install-title">SEMAU na tela inicial</h2>
+                    <p>Credencial, programação e jogos sempre por perto.</p>
+                </div>
+                <button id="btn-instalar-app" class="btn-instalar-app" type="button" aria-describedby="app-install-title">
+                    <i class="ph-bold ph-download-simple" aria-hidden="true"></i>
+                    <span>Instalar aplicativo</span>
+                </button>
+                <p id="app-install-ios" class="app-install-ios" hidden>No Safari, toque em <i class="ph-bold ph-export" aria-hidden="true"></i> <strong>Compartilhar</strong> e depois em <strong>Adicionar à Tela de Início</strong>.</p>
+            </section>
+</section>
 
         <section id="view-schedule" class="view" style="display: none;">
             
@@ -344,10 +401,21 @@
                 </div>
             </div>
 
-            <div class="ranking-container">
+            <div class="game-restricted-area game-login-gate" data-game-protected>
+                <div class="game-points-card" aria-label="Sua pontuação na Game Zone">
+                    <span>Sua pontuação</span>
+                    <strong id="user-points-display">0</strong>
+                    <small>pontos</small>
+                </div>
+                <div class="game-login-overlay">
+                    <p>Faça login com seu ingresso, ganhe pontos e concorra a brindes especiais.</p>
+                    <button type="button" data-game-login>Fazer login</button>
+                </div>
+
+                <div class="ranking-container">
                 <h3>🏆 Top 5 - Ranking</h3>
                 <ul id="ranking-list">
-                    <li style="text-align: center;">Carregando ranking... ⏳</li>
+                    <li style="text-align: center;">Carregando ranking... â³</li>
                 </ul>
             </div>
 
@@ -381,6 +449,7 @@
 
                 
             </div>
+            </div>
         </section>
 
         <!-- Tela: Dashboard do Participante (Ticket e Quiz) -->
@@ -393,25 +462,37 @@
             </h2>
             <p> Aqui estão seus ingressos para o evento.</p>
             
-            <div class="ticket-digital">
-                <div class="ticket-banner"></div>
-                <div class="ticket-header">
-                    <p class="ticket-label">Local</p>
-                    <p>Auditório Gustavão - P1</p>
+            <div class="ticket-palco">
+                <img class="ticket-palco-sticker ticket-palco-palmeira" src="assets/svg/sticker-palmeira.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-selo" src="assets/svg/sticker-selo.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-olhos" src="assets/svg/sticker-olhos-da-pele.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-cadeira" src="assets/svg/sticker-cadeira.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-estrela-topo" src="assets/svg/sticker-estrela.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-azulejo" src="assets/svg/sticker-azulejo.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-fantasminha" src="assets/svg/sticker-fantasminha.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-telha" src="assets/svg/sticker-telha.svg" alt="" aria-hidden="true">
+                <img class="ticket-palco-sticker ticket-palco-estrela-base" src="assets/svg/sticker-estrela.svg" alt="" aria-hidden="true">
+
+                <div class="ticket-digital">
+                <span class="ticket-picote ticket-picote-top" aria-hidden="true"></span>
+                <div class="ticket-hero">
+                    <div class="ticket-hero-conteudo">
+                        <img class="ticket-hero-logo" src="assets/svg/logo-cn-02.svg" alt="XVI SEMAU">
+                        <span>Credencial oficial</span>
+                    </div>
                 </div>
-                <div class="ticket-body">
-                    <div class="ticket-dados">
-                        <p class="ticket-label">Participante</p>
-                        <h2 id="user-name-display">João Silva</h2>
-                        <p class="ticket-label">Token</p>
-                        <h2 id="user-token-display">-----</h2>
+                <div class="ticket-canoto">
+                    <div class="ticket-conteudo-inferior">
+                        <div class="ticket-dados">
+                            <div class="ticket-campo"><p class="ticket-label">Participante</p><h2 id="user-name-display" class="ticket-valor">João Silva</h2></div>
+                            <div class="ticket-campo"><p class="ticket-label">Token</p><h2 id="user-token-display" class="ticket-valor">-----</h2></div>
+                            <div class="ticket-campo"><p class="ticket-label">Local</p><p class="ticket-valor">Auditório Gustavão — P1</p></div>
+                        </div>
+                        <div class="ticket-qr-dinamico"><div id="qrcode-ticket" class="ticket-qr-box"></div><span id="qr-validade">Atualiza em 30s</span></div>
                     </div>
                     
-                    <div id="qrcode-ticket" class="ticket-qr-box"></div>
                 </div>
-                <div class="ticket-footer">
-                    
-                    <p>Pontos: <strong id="user-points-display">0</strong> 🌟</p>
+                <span class="ticket-picote ticket-picote-bottom" aria-hidden="true"></span>
                 </div>
             </div>
 
@@ -468,24 +549,26 @@
                 <div class=".logo-container-header">
                     <img src="assets/svg/sticker-slogan.svg" alt="Slogan XVI SEMAU" class="logo-app sticker">
                 </div>
-                <p>O tema da 17° Edição</p>
+                <p>O tema da XVI edição</p>
             </div>
             
             <div class="about-content">
-                <blockquote class="pallasmaa-quote">
-                    "A arquitetura não é apenas um cenário para a vida, mas uma extensão do próprio corpo humano. É pelo espaço que sentimos o mundo, e é nele que as nossas memórias, emoções e percepções se enraízam."
-                    <span>— Juhani Pallasmaa</span>
-                </blockquote>
-                
-                <p>Inspirados pelas reflexões de Pallasmaa em <em>"Os Olhos da Pele"</em>, propomos discutir a <strong>arquitetura do sentir</strong>: um olhar que valoriza não apenas a visão, mas todos os sentidos como protagonistas da experiência espacial.</p>
-                
-                <p>Partindo dessa perspectiva, a semana se volta para pensar as extensões do morar e os modos como projetar pode transformar não apenas a paisagem urbana, mas também a vida cotidiana das pessoas. Habitar é um ato que ultrapassa o abrigo físico: é viver, experienciar, sentir e construir identidades no espaço.</p>
-                
-                <div class="about-keywords">
-                    <span class="keyword">Corpo e Mundo</span>
-                    <span class="keyword">Experiência Sensível</span>
-                    <span class="keyword">Interior e Exterior</span>
-                    <span class="keyword">Tempo em Movimento</span>
+                <div class="tema-abertura">
+                    <p class="tema-intro">O tema propõe uma reflexão sobre</p>
+                    <h2><span>arquitetura do sentir</span></h2>
+                    <p class="tema-declaracao">Um olhar que entende a arquitetura para além da função e da forma.</p>
+                </div>
+
+                <div class="tema-texto">
+                    <p>Inspirada nas reflexões de Juhani Pallasmaa em <em>Os olhos da pele</em>, a XVI SEMAU parte de uma ideia simples: <strong>morar não é apenas ocupar um espaço, mas habitá-lo com os sentidos.</strong></p>
+                    <p>Tocar, ouvir, cheirar e sentir também moldam a maneira como nos relacionamos com a arquitetura e com os lugares que atravessam nossa rotina.</p>
+                </div>
+
+                <p class="tema-fecho">Habitar é construir <strong>memórias, identidades e pertencimento.</strong></p>
+
+                <div class="tema-pergunta">
+                    <span>Qual lugar</span>
+                    <strong>te habita?</strong>
                 </div>
             </div>
             <div class="carousel-wrapper">
@@ -576,32 +659,125 @@
             </div>
         </section>
 
+        <section id="view-store" class="view" style="display: none;">
+            <div class="loja-cabecalho">
+                <h2 class="loja-titulo-grafico"><img src="assets/svg/lojinha-xvi.svg" alt="Lojinha XVI SEMAU"></h2>
+                <p class="loja-frase">as <b>memórias</b> que nos habitam</p>
+                <p class="loja-descricao">Produtos da XVI SEMAU para guardar, usar e lembrar muito depois do evento.</p>
+            </div>
+
+            <div id="loja-estado-carregando" class="loja-estado loja-estado-carregando" role="status">
+                <i class="ph-bold ph-hourglass-high" aria-hidden="true"></i>
+                <p>Carregando lojinha...</p>
+            </div>
+
+            <div id="loja-em-breve" class="loja-estado loja-em-breve" style="display: flex;">
+                <img src="assets/svg/sticker-selo.svg" alt="" aria-hidden="true">
+                <span>Estamos preparando tudo</span>
+                <h3>Em breve</h3>
+            </div>
+
+            <div id="loja-conteudo-produtos" class="loja-grade" style="display: none;">
+                <article class="produto-card produto-destaque">
+                    <div class="produto-imagem produto-imagem-camiseta">
+                        <span class="produto-selo">Destaque</span>
+                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Camiseta oficial">
+                    </div>
+                    <div class="produto-conteudo">
+                        <h3>Camiseta oficial</h3>
+                        <p>Malha confortável com a identidade visual da XVI SEMAU.</p>
+                        <div class="produto-rodape">
+                            <strong>R$ 45,00</strong>
+                            <span>P ao GG</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="produto-card">
+                    <div class="produto-imagem produto-imagem-ecobag">
+                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Ecobag temática">
+                    </div>
+                    <div class="produto-conteudo">
+                        <h3>Ecobag temática</h3>
+                        <p>Para carregar caderno, garrafa e tudo o que você encontrar na SEMAU.</p>
+                        <div class="produto-rodape">
+                            <strong>R$ 28,00</strong>
+                            <span>Edição limitada</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="produto-card">
+                    <div class="produto-imagem produto-imagem-copo">
+                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Copo eco">
+                    </div>
+                    <div class="produto-conteudo">
+                        <h3>Copo eco</h3>
+                        <p>Reutilizável e personalizado para acompanhar os cinco dias do evento.</p>
+                        <div class="produto-rodape">
+                            <strong>R$ 22,00</strong>
+                            <span>Personalizado</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="produto-card">
+                    <div class="produto-imagem produto-imagem-stickers">
+                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Cartela de stickers">
+                    </div>
+                    <div class="produto-conteudo">
+                        <h3>Cartela de stickers</h3>
+                        <p>Adesivos inspirados nos símbolos e no universo gráfico da edição.</p>
+                        <div class="produto-rodape">
+                            <strong>R$ 12,00</strong>
+                            <span>Exclusiva</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <aside id="loja-aviso-vendas" class="loja-aviso" style="display: none;">
+                <i class="ph-bold ph-storefront" aria-hidden="true"></i>
+                <div>
+                    <h3>Vendas presenciais</h3>
+                    <p>Venda presencial durante o evento.</p>
+                </div>
+            </aside>
+        </section>
+
         <nav id="bottom-nav">
-        <button class="nav-item active" id="nav-home">
+        <button class="nav-item active" id="nav-home" aria-label="Início">
             <i class="ph-bold ph-house"></i>
             <span class="active-indicator"></span>
         </button>
         
-        <button class="nav-item" id="nav-schedule">
+        <button class="nav-item" id="nav-schedule" aria-label="Programação">
             <i class="ph-bold ph-calendar-blank"></i>
             <span class="active-indicator"></span>
         </button>
         
-        <button class="nav-item" id="nav-about">
+        <button class="nav-item" id="nav-about" aria-label="Sobre a SEMAU">
             <i class="ph-bold ph-book-open"></i>
             <span class="active-indicator"></span>
         </button>
 
-        <button class="nav-item" id="nav-quiz" style="display: none;">
+        <button class="nav-item" id="nav-store" aria-label="Abrir lojinha">
+            <i class="ph-bold ph-shopping-bag-open"></i>
+            <span class="active-indicator"></span>
+        </button>
+
+        <button class="nav-item" id="nav-quiz" aria-label="Abrir Game Zone">
                 <i class="ph-bold ph-game-controller"></i>
                 <span class="active-indicator"></span>
             </button>
         
-        <button class="nav-item" id="nav-profile">
+        <button class="nav-item" id="nav-profile" aria-label="Área do inscrito">
             <i class="ph-bold ph-user"></i>
             <span class="active-indicator"></span>
         </button>
     </nav>
+
+    </main>
 
     <div id="qr-modal" class="qr-modal" style="display: none;">
             <div class="qr-modal-content">
@@ -616,22 +792,22 @@
             </div>
         </div>
 
-    </main>
-
     <!-- SCRIPTS (Carregados no final para não travar a tela) -->
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/navigation.js"></script>
+    <script type="module" src="js/store-config.js"></script>
     <script type="module" src="js/schedule.js"></script>
     <script type="module" src="js/quiz.js"></script>
     <script type="module" src="js/main.js"></script>
+    <script src="js/install-app.js"></script>
     <script type="module" src="js/ranking.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('✅ Service Worker registrado com sucesso!', reg))
-                    .catch(err => console.error('❌ Erro no Service Worker:', err));
+                    .then(reg => console.log('âœ… Service Worker registrado com sucesso!', reg))
+                    .catch(err => console.error('âŒ Erro no Service Worker:', err));
             });
         }
     </script>
