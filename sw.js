@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v125';
+const CACHE_NAME = 'semau-v128';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -20,6 +20,7 @@ const assetsToCache = [
     './css/pagamento.css',
     './js/main.js',
     './js/install-app.js',
+    './js/sponsors.js',
     './js/navigation.js',
     './js/store-config.js',
     './js/sorteio-telao.js',
@@ -67,7 +68,11 @@ const assetsToCache = [
     './assets/patrocinadores/choco-latte.png',
     './assets/patrocinadores/venus-artesa.png',
     './assets/patrocinadores/cura-marca-branco.png',
-    './assets/patrocinadores/jardim-de-papel.png'
+    './assets/patrocinadores/jardim-de-papel.png',
+    './assets/patrocinadores/mare-logo.png',
+    './assets/patrocinadores/belas-artes.png',
+    './assets/patrocinadores/nut-acessorios.png',
+    './assets/patrocinadores/manufatura-atelie.png'
 ];
 
 self.addEventListener('install', event => {

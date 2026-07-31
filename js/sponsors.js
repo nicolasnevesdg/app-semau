@@ -1,0 +1,45 @@
+// LINKS DOS PATROCINADORES
+// Cole o endereço entre as aspas. Deixe vazio para manter a logo sem link.
+const linksPatrocinadores = {
+    // Logifab
+    "logifab.png": "https://www.instagram.com/logifab_ufrrj/",
+    // Voitto
+    "voitto.png": "https://www.instagram.com/grupovoitto/",
+    // Cura
+    "cura-marca-branco.png": "https://www.instagram.com/cursocura/",
+    // Peanuts Bakery
+    "peanuts-bakery.png": "https://www.instagram.com/peanuts.bak/",
+    // Choco Latte
+    "choco-latte.png": "https://www.instagram.com/choco.chocolatie/",
+    // Gastrobar Vó Sacasa Clara
+    "gastrobarr-vo-sacasa-clara.png": "https://www.instagram.com/gastrobarvosacasa/",
+    // Vênus Artesã
+    "venus-artesa.png": "https://www.instagram.com/venusartesa/",
+    // Studio 3 Papelaria
+    "studio3-papelaria.png": "https://www.instagram.com/studio3.papelaria/",
+    // Jardim de Papel
+    "jardim-de-papel.png": "https://www.instagram.com/jardim_d_papel/",
+    // Maré
+    "mare-logo.png": "https://www.instagram.com/mare.crochet_/",
+    // Belas Artes
+    "belas-artes.png": "https://www.instagram.com/belasartesoficiall/",
+    // Nut Acessórios
+    "nut-acessorios.png": "https://www.instagram.com/nutacessorios_/",
+    // Manufatura Ateliê
+    "manufatura-atelie.png": "https://www.instagram.com/manufatur.a/",
+};
+
+document.querySelectorAll("[data-patrocinador]").forEach(link => {
+    const arquivo = link.dataset.patrocinador;
+    const url = linksPatrocinadores[arquivo]?.trim();
+
+    if (!url) {
+        link.removeAttribute("href");
+        return;
+    }
+
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.setAttribute("aria-label", `${link.querySelector("img")?.alt || "Patrocinador"} — abrir perfil`);
+});
