@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v128';
+const CACHE_NAME = 'semau-v134';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -23,6 +23,7 @@ const assetsToCache = [
     './js/sponsors.js',
     './js/navigation.js',
     './js/store-config.js',
+    './js/store-gallery.js',
     './js/sorteio-telao.js',
     './js/ingressos.js',
     './js/compra.js',
@@ -59,6 +60,19 @@ const assetsToCache = [
     './assets/img/chao.png',
     './assets/img/beneficio.png',
     './assets/img/produto-teste_2.png',
+    './assets/lojinha-xvi/Camisa_01.png',
+    './assets/lojinha-xvi/Camisa_02.png',
+    './assets/lojinha-xvi/Camisa_03.png',
+    './assets/lojinha-xvi/Camisa_04.png',
+    './assets/lojinha-xvi/Camisa_05.png',
+    './assets/lojinha-xvi/Camisa_06.png',
+    './assets/lojinha-xvi/baralho/baralho-capa.jpg',
+    './assets/lojinha-xvi/baralho/baralho-slide-composicao.jpg',
+    './assets/lojinha-xvi/baralho/baralho-slide-carta-amor.jpg',
+    './assets/lojinha-xvi/baralho/baralho-slide-cartas-internas.jpg',
+    './assets/lojinha-xvi/baralho/baralho-slide-cartas.jpg',
+    './assets/lojinha-xvi/baralho/baralho-slide-caixa-frente-xvi.jpg',
+    './assets/lojinha-xvi/baralho/baralho-slide-caixa-verso-xvi.jpg',
     './assets/img/card-anuncio-rasgo-verde-recortado.png',
     './assets/patrocinadores/logifab.png',
     './assets/patrocinadores/voitto.png',
@@ -72,7 +86,8 @@ const assetsToCache = [
     './assets/patrocinadores/mare-logo.png',
     './assets/patrocinadores/belas-artes.png',
     './assets/patrocinadores/nut-acessorios.png',
-    './assets/patrocinadores/manufatura-atelie.png'
+    './assets/patrocinadores/manufatura-atelie.png',
+    './assets/patrocinadores/precinho-ruralino.png'
 ];
 
 self.addEventListener('install', event => {

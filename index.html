@@ -110,6 +110,7 @@
                         <a class="marca-patrocinador" data-patrocinador="belas-artes.png"><img src="assets/patrocinadores/belas-artes.png" alt="Belas Artes"></a>
                         <a class="marca-patrocinador" data-patrocinador="nut-acessorios.png"><img src="assets/patrocinadores/nut-acessorios.png" alt="Nut Acessórios"></a>
                         <a class="marca-patrocinador" data-patrocinador="manufatura-atelie.png"><img src="assets/patrocinadores/manufatura-atelie.png" alt="Manufatura Ateliê"></a>
+                        <a class="marca-patrocinador" data-patrocinador="precinho-ruralino.png"><img src="assets/patrocinadores/precinho-ruralino.png" alt="Ruralino"></a>
                         <a class="marca-patrocinador" data-patrocinador="logifab.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/logifab.png" alt=""></a>
                         <a class="marca-patrocinador" data-patrocinador="voitto.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/voitto.png" alt=""></a>
                         <a class="marca-patrocinador" data-patrocinador="cura-marca-branco.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/cura-marca-branco.png" alt=""></a>
@@ -123,6 +124,7 @@
                         <a class="marca-patrocinador" data-patrocinador="belas-artes.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/belas-artes.png" alt=""></a>
                         <a class="marca-patrocinador" data-patrocinador="nut-acessorios.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/nut-acessorios.png" alt=""></a>
                         <a class="marca-patrocinador" data-patrocinador="manufatura-atelie.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/manufatura-atelie.png" alt=""></a>
+                        <a class="marca-patrocinador" data-patrocinador="precinho-ruralino.png" aria-hidden="true" tabindex="-1"><img src="assets/patrocinadores/precinho-ruralino.png" alt=""></a>
                     </div>
                 </div>
             </section>
@@ -423,7 +425,7 @@
                 <div class="ranking-container">
                 <h3>🏆 Top 5 - Ranking</h3>
                 <ul id="ranking-list">
-                    <li style="text-align: center;">Carregando ranking... â³</li>
+                    <li style="text-align: center;">Carregando ranking... ⏳</li>
                 </ul>
             </div>
 
@@ -686,62 +688,30 @@
             </div>
 
             <div id="loja-conteudo-produtos" class="loja-grade" style="display: none;">
-                <article class="produto-card produto-destaque">
+                <button class="produto-card produto-destaque" type="button" data-produto="camisa" aria-label="Ver fotos da Camisa XVI">
                     <div class="produto-imagem produto-imagem-camiseta">
                         <span class="produto-selo">Destaque</span>
-                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Camiseta oficial">
+                        <img class="produto-foto" src="assets/lojinha-xvi/Camisa_01.png" alt="Camisa XVI">
                     </div>
                     <div class="produto-conteudo">
-                        <h3>Camiseta oficial</h3>
-                        <p>Malha confortável com a identidade visual da XVI SEMAU.</p>
+                        <h3>Camisa XVI</h3>
                         <div class="produto-rodape">
-                            <strong>R$ 45,00</strong>
-                            <span>P ao GG</span>
+                            <strong>R$ 54,90</strong>
                         </div>
                     </div>
-                </article>
+                </button>
 
-                <article class="produto-card">
-                    <div class="produto-imagem produto-imagem-ecobag">
-                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Ecobag temática">
+                <button class="produto-card" type="button" data-produto="baralho" aria-label="Ver fotos do Baralho XVI">
+                    <div class="produto-imagem produto-imagem-baralho">
+                        <img class="produto-foto" src="assets/lojinha-xvi/baralho/baralho-capa.jpg" alt="Cartas do Baralho XVI">
                     </div>
                     <div class="produto-conteudo">
-                        <h3>Ecobag temática</h3>
-                        <p>Para carregar caderno, garrafa e tudo o que você encontrar na SEMAU.</p>
+                        <h3>Baralho</h3>
                         <div class="produto-rodape">
-                            <strong>R$ 28,00</strong>
-                            <span>Edição limitada</span>
+                            <strong>R$ 28,90</strong>
                         </div>
                     </div>
-                </article>
-
-                <article class="produto-card">
-                    <div class="produto-imagem produto-imagem-copo">
-                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Copo eco">
-                    </div>
-                    <div class="produto-conteudo">
-                        <h3>Copo eco</h3>
-                        <p>Reutilizável e personalizado para acompanhar os cinco dias do evento.</p>
-                        <div class="produto-rodape">
-                            <strong>R$ 22,00</strong>
-                            <span>Personalizado</span>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="produto-card">
-                    <div class="produto-imagem produto-imagem-stickers">
-                        <img class="produto-foto" src="assets/img/produto-teste_2.png" alt="Cartela de stickers">
-                    </div>
-                    <div class="produto-conteudo">
-                        <h3>Cartela de stickers</h3>
-                        <p>Adesivos inspirados nos símbolos e no universo gráfico da edição.</p>
-                        <div class="produto-rodape">
-                            <strong>R$ 12,00</strong>
-                            <span>Exclusiva</span>
-                        </div>
-                    </div>
-                </article>
+                </button>
             </div>
 
             <aside id="loja-aviso-vendas" class="loja-aviso" style="display: none;">
@@ -787,6 +757,13 @@
 
     </main>
 
+    <div id="produto-galeria-modal" class="produto-galeria-modal" role="dialog" aria-modal="true" tabindex="-1" hidden>
+        <div class="produto-galeria-janela">
+            <div id="produto-galeria-trilha" class="produto-galeria-trilha"></div>
+            <div id="produto-galeria-pontos" class="produto-galeria-pontos" aria-label="Posição na galeria"></div>
+        </div>
+    </div>
+
     <div id="qr-modal" class="qr-modal" style="display: none;">
             <div class="qr-modal-content">
                 <button id="btn-close-modal" class="btn-close-modal"><i class="ph-bold ph-x"></i></button>
@@ -805,6 +782,7 @@
     <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/navigation.js"></script>
     <script type="module" src="js/store-config.js"></script>
+    <script src="js/store-gallery.js"></script>
     <script type="module" src="js/schedule.js"></script>
     <script type="module" src="js/quiz.js"></script>
     <script type="module" src="js/main.js"></script>
@@ -815,8 +793,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('âœ… Service Worker registrado com sucesso!', reg))
-                    .catch(err => console.error('âŒ Erro no Service Worker:', err));
+                    .then(reg => console.log('✅ Service Worker registrado com sucesso!', reg))
+                    .catch(err => console.error('❌ Erro no Service Worker:', err));
             });
         }
     </script>

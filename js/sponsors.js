@@ -27,6 +27,8 @@ const linksPatrocinadores = {
     "nut-acessorios.png": "https://www.instagram.com/nutacessorios_/",
     // Manufatura Ateliê
     "manufatura-atelie.png": "https://www.instagram.com/manufatur.a/",
+    // Ruralino
+    "precinho-ruralino.png": "https://www.instagram.com/ruralino.rj/",
 };
 
 document.querySelectorAll("[data-patrocinador]").forEach(link => {
