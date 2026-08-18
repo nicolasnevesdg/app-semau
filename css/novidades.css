@@ -1005,3 +1005,158 @@
 .btn-instalar-app:hover i, .btn-instalar-app:focus-visible i { color: var(--cor-primaria); }
 .btn-instalar-app:active { transform: scale(.98); }
 .app-install-ios { grid-column: 1 / -1; margin: 3px 2px 0; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.86); font-size: 12px; line-height: 1.5; text-align: center; }
+
+/* ------------------------------
+   LOJINHA: GALERIA DOS PRODUTOS
+   ------------------------------ */
+.produto-card {
+    padding: 0;
+    border: 0;
+    appearance: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .2s ease, opacity .2s ease;
+}
+
+.produto-card:active {
+    transform: scale(.98);
+}
+
+.produto-card:focus-visible {
+    outline: 2px solid var(--cor-secundaria);
+    outline-offset: 5px;
+}
+
+.produto-imagem-baralho {
+    background: linear-gradient(135deg, #809acd, #b1beaa);
+}
+
+body.produto-galeria-aberta {
+    position: fixed;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+.produto-galeria-modal[hidden] {
+    display: none !important;
+}
+
+.produto-galeria-modal {
+    position: fixed;
+    z-index: 2200;
+    inset: 0;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, .78);
+    opacity: 0;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    transition: opacity .22s ease;
+    touch-action: none;
+}
+
+.produto-galeria-modal.aberto {
+    opacity: 1;
+}
+
+.produto-galeria-janela {
+    position: relative;
+    width: min(84vw, 380px);
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #101010;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .38);
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+    transition: opacity .25s ease, transform .25s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+}
+
+.produto-galeria-modal.aberto .produto-galeria-janela {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.produto-galeria-janela:active {
+    cursor: grabbing;
+}
+
+.produto-galeria-trilha {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    transition: transform .42s cubic-bezier(.22, .72, .18, 1);
+    will-change: transform;
+}
+
+.produto-galeria-trilha.sem-animacao {
+    transition: none;
+}
+
+.produto-galeria-slide {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    margin: 0;
+    flex: 0 0 100%;
+    overflow: hidden;
+    background: #171717;
+}
+
+.produto-galeria-slide img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.produto-galeria-pontos {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, .45));
+}
+
+.produto-galeria-ponto {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .5);
+    transition: width .24s ease, background-color .24s ease;
+}
+
+.produto-galeria-ponto.ativo {
+    width: 20px;
+    background: #fff;
+}
+
+@media (max-height: 620px) {
+    .produto-galeria-janela {
+        width: min(68vh, 330px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .produto-card,
+    .produto-galeria-modal,
+    .produto-galeria-janela,
+    .produto-galeria-trilha,
+    .produto-galeria-ponto {
+        transition-duration: .01ms !important;
+    }
+}
