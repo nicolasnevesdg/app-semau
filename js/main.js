@@ -3,54 +3,65 @@
 // ==========================================
 
 const INICIO_DIA_EVENTO = new Date(2026, 8, 21, 0, 0, 0);
-const INICIO_EVENTO = new Date(2026, 8, 21, 9, 0, 0);
+const INICIO_EVENTO = new Date(2026, 8, 21, 8, 0, 0);
 const FIM_EVENTO = new Date(2026, 8, 25, 18, 0, 0);
 
 // PRÉVIA TEMPORÁRIA: após o encerramento definitivo do evento.
 // Troque por null para voltar a usar a data e o horário reais do aparelho.
 const DATA_DE_TESTE = null;
 
-// Horários provisórios. Atualize somente esta lista quando o cronograma final for fechado.
+// A segunda-feira já está sincronizada com a programação final.
+// Os demais dias permanecem provisórios até a confirmação da organização.
 const PROGRAMACAO_AO_VIVO = {
     '2026-09-21': [
-        { inicio: '09:00', fim: '10:30', titulo: 'Mesa de Abertura Oficial', tipo: 'atividade' },
-        { inicio: '10:30', fim: '12:00', titulo: 'Outros modos de habitar a cidade', tipo: 'atividade' },
-        { inicio: '12:00', fim: '14:00', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '14:00', fim: '15:30', titulo: 'Projeto, território e experiência', tipo: 'atividade' },
-        { inicio: '15:30', fim: '16:30', titulo: 'Intervalo da tarde', tipo: 'intervalo' },
-        { inicio: '16:30', fim: '18:00', titulo: 'Memórias que desenham lugares', tipo: 'atividade' }
+        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
+        { inicio: '09:00', fim: '10:30', titulo: 'Mesa de abertura + CAU/RJ', tipo: 'atividade' },
+        { inicio: '10:30', fim: '11:40', titulo: 'Palestra com Ethel Pinheiro', tipo: 'atividade' },
+        { inicio: '11:40', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
+        { inicio: '13:30', fim: '14:00', titulo: 'Recepção da tarde', tipo: 'atividade' },
+        { inicio: '14:00', fim: '14:10', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '14:10', fim: '15:20', titulo: 'Palestra com Ester Carro', tipo: 'atividade' },
+        { inicio: '15:20', fim: '15:40', titulo: 'Intervalo', tipo: 'intervalo' },
+        { inicio: '15:40', fim: '15:50', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '15:50', fim: '17:00', titulo: 'Palestra — informações em breve', tipo: 'atividade' }
     ],
     '2026-09-22': [
-        { inicio: '09:00', fim: '10:30', titulo: 'Cidade, corpo e movimento', tipo: 'atividade' },
-        { inicio: '10:30', fim: '11:00', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '11:00', fim: '12:30', titulo: 'Arquitetura para encontros', tipo: 'atividade' },
-        { inicio: '12:30', fim: '14:00', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '14:00', fim: '15:30', titulo: 'Cartografias do cotidiano', tipo: 'atividade' },
-        { inicio: '15:30', fim: '16:00', titulo: 'Intervalo da tarde', tipo: 'intervalo' },
-        { inicio: '16:00', fim: '17:30', titulo: 'Cor, matéria e atmosfera', tipo: 'atividade' }
+        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
+        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '09:10', fim: '10:20', titulo: 'Palestra com Thaysa Malaquias', tipo: 'atividade' },
+        { inicio: '10:20', fim: '10:40', titulo: 'Intervalo', tipo: 'intervalo' },
+        { inicio: '10:40', fim: '12:00', titulo: 'Sítio Roberto Burle Marx — Rafael Zamorano', tipo: 'atividade' },
+        { inicio: '12:00', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
+        { inicio: '13:30', fim: '15:00', titulo: 'Oficinas de Levantamento e Cerâmica', tipo: 'atividade' }
     ],
     '2026-09-23': [
-        { inicio: '09:00', fim: '10:30', titulo: 'Paisagem e pertencimento', tipo: 'atividade' },
-        { inicio: '10:30', fim: '11:00', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '11:00', fim: '12:30', titulo: 'Habitar em transformação', tipo: 'atividade' },
-        { inicio: '12:30', fim: '14:00', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '14:00', fim: '15:30', titulo: 'Construir com o que existe', tipo: 'atividade' },
-        { inicio: '15:30', fim: '16:00', titulo: 'Intervalo da tarde', tipo: 'intervalo' },
-        { inicio: '16:00', fim: '17:30', titulo: 'Fotografia e memória urbana', tipo: 'atividade' }
+        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
+        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '09:10', fim: '10:20', titulo: 'Palestra — informações em breve', tipo: 'atividade' },
+        { inicio: '10:20', fim: '10:40', titulo: 'Intervalo', tipo: 'intervalo' },
+        { inicio: '10:40', fim: '12:00', titulo: 'Pedra Lisa — Roberto Cruz Saavedra', tipo: 'atividade' },
+        { inicio: '12:00', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
+        { inicio: '13:30', fim: '14:00', titulo: 'Recepção da tarde', tipo: 'atividade' },
+        { inicio: '14:00', fim: '14:10', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '14:10', fim: '15:20', titulo: 'Palestra com o coletivo Urb.Anas', tipo: 'atividade' },
+        { inicio: '15:20', fim: '15:40', titulo: 'Intervalo', tipo: 'intervalo' },
+        { inicio: '15:40', fim: '17:00', titulo: 'Oficina de Aquarela e Jogo do Cuidado', tipo: 'atividade' }
     ],
     '2026-09-24': [
-        { inicio: '09:00', fim: '10:30', titulo: 'Clima, matéria e cotidiano', tipo: 'atividade' },
-        { inicio: '10:30', fim: '14:00', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '14:00', fim: '15:30', titulo: 'Maquetes de afeto', tipo: 'atividade' },
-        { inicio: '15:30', fim: '16:30', titulo: 'Intervalo da tarde', tipo: 'intervalo' },
-        { inicio: '16:30', fim: '18:00', titulo: 'Encerramento das atividades do dia', tipo: 'atividade' }
+        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
+        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '09:10', fim: '10:20', titulo: 'Palestra — informações em breve', tipo: 'atividade' },
+        { inicio: '10:20', fim: '10:40', titulo: 'Intervalo', tipo: 'intervalo' },
+        { inicio: '10:40', fim: '11:30', titulo: 'Palestra com Pedro Rajão · Negromuro', tipo: 'atividade' },
+        { inicio: '11:30', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
+        { inicio: '13:30', fim: '15:00', titulo: 'Oficinas de Mobiliário e Pintura de Mural', tipo: 'atividade' }
     ],
     '2026-09-25': [
-        { inicio: '10:00', fim: '11:30', titulo: 'Espaços comuns, futuros possíveis', tipo: 'atividade' },
-        { inicio: '11:30', fim: '14:00', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '14:00', fim: '15:30', titulo: 'O lugar que levamos conosco', tipo: 'atividade' },
-        { inicio: '15:30', fim: '16:00', titulo: 'Intervalo da tarde', tipo: 'intervalo' },
-        { inicio: '16:00', fim: '18:00', titulo: 'Mostras e encerramento da XVI SEMAU', tipo: 'atividade' }
+        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
+        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
+        { inicio: '09:10', fim: '10:20', titulo: 'Palestra com Verônica Natividade', tipo: 'atividade' },
+        { inicio: '10:20', fim: '11:00', titulo: 'Debate e mesa-redonda', tipo: 'atividade' },
+        { inicio: '11:00', fim: '12:00', titulo: 'Mesa de encerramento da XVI SEMAU', tipo: 'atividade' }
     ]
 };
 

@@ -21,6 +21,29 @@ const produtosGaleria = {
             { src: 'assets/lojinha-xvi/baralho/baralho-slide-caixa-frente-xvi.jpg', alt: 'Frente da embalagem do Baralho XVI' },
             { src: 'assets/lojinha-xvi/baralho/baralho-slide-caixa-verso-xvi.jpg', alt: 'Verso da embalagem do Baralho XVI' }
         ]
+    },
+    ima: {
+        nome: 'Imã',
+        capa: { src: 'assets/lojinha-xvi/ima/ima-capa.jpg', alt: 'Ímã XVI em formato de selo' },
+        imagens: [
+            { src: 'assets/lojinha-xvi/ima/ima-slide-01.jpg', alt: 'Ímã XVI em formato de selo sobre geladeira — vista frontal' },
+            { src: 'assets/lojinha-xvi/ima/ima-slide-02.jpg', alt: 'Ímã XVI em formato de selo — vista lateral aproximada' },
+            { src: 'assets/lojinha-xvi/ima/ima-slide-03.jpg', alt: 'Ímã XVI em formato de selo sobre a porta da geladeira' },
+            { src: 'assets/lojinha-xvi/ima/ima-slide-06.jpg', alt: 'Ímã verde e laranja com estrela — vista lateral esquerda' },
+            { src: 'assets/lojinha-xvi/ima/ima-slide-08.jpg', alt: 'Ímã inspirado em azulejo sobre geladeira' },
+            { src: 'assets/lojinha-xvi/ima/ima-slide-09.jpg', alt: 'Ímã com a frase o lugar que nos habita' }
+        ]
+    },
+    bottons: {
+        nome: 'Bottons',
+        capa: { src: 'assets/lojinha-xvi/bottons/bottons-capa.jpg', alt: 'Botton inspirado em azulejo preso a uma mochila' },
+        imagens: [
+            { src: 'assets/lojinha-xvi/bottons/bottons-slide-01.jpg', alt: 'Botton inspirado em azulejo preso a uma mochila preta' },
+            { src: 'assets/lojinha-xvi/bottons/bottons-slide-02.jpg', alt: 'Botton verde com estrela laranja preso a uma mochila preta' },
+            { src: 'assets/lojinha-xvi/bottons/bottons-slide-03.jpg', alt: 'Botton com desenho arquitetônico preso a uma mochila preta' },
+            { src: 'assets/lojinha-xvi/bottons/bottons-slide-04.jpg', alt: 'Botton verde com estrela laranja preso a uma ecobag clara' },
+            { src: 'assets/lojinha-xvi/bottons/bottons-slide-05.jpg', alt: 'Botton em formato de selo com o texto XVI preso a uma ecobag clara' }
+        ]
     }
 };
 

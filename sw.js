@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v134';
+const CACHE_NAME = 'semau-v146';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -73,6 +73,19 @@ const assetsToCache = [
     './assets/lojinha-xvi/baralho/baralho-slide-cartas.jpg',
     './assets/lojinha-xvi/baralho/baralho-slide-caixa-frente-xvi.jpg',
     './assets/lojinha-xvi/baralho/baralho-slide-caixa-verso-xvi.jpg',
+    './assets/lojinha-xvi/ima/ima-capa.jpg',
+    './assets/lojinha-xvi/ima/ima-slide-01.jpg',
+    './assets/lojinha-xvi/ima/ima-slide-02.jpg',
+    './assets/lojinha-xvi/ima/ima-slide-03.jpg',
+    './assets/lojinha-xvi/ima/ima-slide-06.jpg',
+    './assets/lojinha-xvi/ima/ima-slide-08.jpg',
+    './assets/lojinha-xvi/ima/ima-slide-09.jpg',
+    './assets/lojinha-xvi/bottons/bottons-capa.jpg',
+    './assets/lojinha-xvi/bottons/bottons-slide-01.jpg',
+    './assets/lojinha-xvi/bottons/bottons-slide-02.jpg',
+    './assets/lojinha-xvi/bottons/bottons-slide-03.jpg',
+    './assets/lojinha-xvi/bottons/bottons-slide-04.jpg',
+    './assets/lojinha-xvi/bottons/bottons-slide-05.jpg',
     './assets/img/card-anuncio-rasgo-verde-recortado.png',
     './assets/patrocinadores/logifab.png',
     './assets/patrocinadores/voitto.png',

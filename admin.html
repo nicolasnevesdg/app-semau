@@ -43,6 +43,15 @@
         box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); margin-bottom: 24px;
     }
 
+    .admin-agenda-lista { display: flex; flex-direction: column; }
+    .admin-agenda-item { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-top: 1px solid #ececef; }
+    .admin-agenda-item:first-child { padding-top: 0; border-top: 0; }
+    .admin-agenda-hora { color: var(--cor-secundaria); font-size: 12px; font-weight: 800; line-height: 1.35; }
+    .admin-agenda-conteudo h4 { margin: 0 0 7px; color: var(--cor-primaria); font-size: 14px; line-height: 1.3; }
+    .admin-agenda-conteudo p { margin: 3px 0 0; color: #68686f; font-size: 12px; line-height: 1.45; }
+    .admin-agenda-conteudo strong { color: #3d3d42; }
+    .admin-agenda-pendente { color: #b66a23; font-weight: 700; }
+    @media (max-width: 420px) { .admin-agenda-item { grid-template-columns: 74px minmax(0, 1fr); gap: 10px; } }
     /* Suaviza as barras de rolagem */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -174,11 +183,11 @@
                     <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 16px; color: var(--cor-primaria); border-bottom: 1px solid #eee; padding-bottom: 8px;">Oficinas Inscritas</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <button class="btn-oficina-admin" data-oficina="OF01" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF01 - Levantamento</button>
-                        <button class="btn-oficina-admin" data-oficina="OF02" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF02 - Fotografia</button>
+                        <button class="btn-oficina-admin" data-oficina="OF02" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF02 - Cerâmica</button>
                         <button class="btn-oficina-admin" data-oficina="OF03" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF03 - Aquarela</button>
-                        <button class="btn-oficina-admin" data-oficina="OF04" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF04 - SketchUp</button>
-                        <button class="btn-oficina-admin" data-oficina="OF05" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF05 - Maquete</button>
-                        <button class="btn-oficina-admin" data-oficina="OF06" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF06 - Mobiliário</button>
+                        <button class="btn-oficina-admin" data-oficina="OF04" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF04 - Jogo do Cuidado</button>
+                        <button class="btn-oficina-admin" data-oficina="OF05" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF05 - Mobiliário</button>
+                        <button class="btn-oficina-admin" data-oficina="OF06" style="padding: 12px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;">OF06 - Pintura de mural</button>
                     </div>
                 </div>
             </div>
@@ -253,32 +262,111 @@
         </div>
 
         <div class="admin-card-minimal">
+            <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Agenda interna</p>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 7px; color: var(--cor-primaria);">Segunda-feira · 21/09</h3>
+            <p style="font-size: 12px; color: #777; margin-bottom: 22px; line-height: 1.5;">Os responsáveis abaixo são informações internas da comissão e não aparecem no site público.</p>
+            <div class="admin-agenda-lista">
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">08:00<br>09:00</time><div class="admin-agenda-conteudo"><h4>Recepção e credenciamento</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:00<br>10:30</time><div class="admin-agenda-conteudo"><h4>Mesa de abertura + CAU/RJ</h4><p><strong>Responsável:</strong> Manuela</p><p><strong>Participantes:</strong> Ana Luiza Rodrigues Gambardella; Gilvan Lunz Debona; Anderson C. Ferrari; Sydnei Dias Menezes; Maria Ivone Martins Jacintho Barbosa <span class="admin-agenda-pendente">(memorando enviado em 07/07)</span>.</p><p><strong>Mediação:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:30<br>11:40</time><div class="admin-agenda-conteudo"><h4>Ethel Pinheiro</h4><p><strong>Responsável:</strong> Manuela Souza</p><p><strong>Mediação:</strong> Bruna Mota Rodrigues</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">11:40<br>13:30</time><div class="admin-agenda-conteudo"><h4>Almoço</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">13:30<br>14:00</time><div class="admin-agenda-conteudo"><h4>Recepção da tarde</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">14:00<br>14:10</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">14:10<br>15:20</time><div class="admin-agenda-conteudo"><h4>Ester Carro</h4><p><strong>Responsável:</strong> Ana Luiza Lugon</p><p><strong>Mediação:</strong> Samira Bueno Chahin</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">15:20<br>15:40</time><div class="admin-agenda-conteudo"><h4>Intervalo</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">15:40<br>15:50</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">15:50<br>17:00</time><div class="admin-agenda-conteudo"><h4 class="admin-agenda-pendente">Palestra · informações pendentes</h4><p><strong>Responsável:</strong> Maria Fernanda</p><p><strong>Mediação:</strong> <span class="admin-agenda-pendente">a confirmar</span></p></div></div>
+            </div>
+        </div>
+        <div class="admin-card-minimal">
+            <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Agenda interna</p>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 7px; color: var(--cor-primaria);">Terça-feira · 22/09</h3>
+            <p style="font-size: 12px; color: #777; margin-bottom: 22px; line-height: 1.5;">Os responsáveis abaixo são informações internas da comissão e não aparecem no site público.</p>
+            <div class="admin-agenda-lista">
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">08:00<br>09:00</time><div class="admin-agenda-conteudo"><h4>Recepção e credenciamento</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:00<br>09:10</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:10<br>10:20</time><div class="admin-agenda-conteudo"><h4>Thaysa Malaquias</h4><p><strong>Responsável:</strong> Ana Luiza Lugon</p><p><strong>Mediação:</strong> Silvia Scoralich de Carvalho</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:20<br>10:40</time><div class="admin-agenda-conteudo"><h4>Intervalo</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:40<br>12:00</time><div class="admin-agenda-conteudo"><h4>Sítio Roberto Burle Marx · Rafael Zamorano</h4><p><strong>Responsável:</strong> <span class="admin-agenda-pendente">Manuela / Laura Silva — confirmar</span></p><p><strong>Mediação:</strong> Luiz Augusto dos Reis</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">12:00<br>13:30</time><div class="admin-agenda-conteudo"><h4>Almoço</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">13:30<br>15:00</time><div class="admin-agenda-conteudo"><h4>Oficina de Levantamento · Instituto de Tecnologia</h4><p><strong>Responsável:</strong> Manuela Souza</p><p><strong>Ministrante:</strong> Raphael Valcarce</p><p><strong>Vagas:</strong> 15 participantes</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">13:30<br>15:00</time><div class="admin-agenda-conteudo"><h4>Oficina de Cerâmica · P1</h4><p><strong>Responsável:</strong> —</p><p><strong>Ministrante:</strong> <span class="admin-agenda-pendente">a confirmar</span></p></div></div>
+            </div>
+        </div>
+        <div class="admin-card-minimal">
+            <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Agenda interna</p>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 7px; color: var(--cor-primaria);">Quarta-feira · 23/09</h3>
+            <p style="font-size: 12px; color: #777; margin-bottom: 22px; line-height: 1.5;">Os responsáveis abaixo são informações internas da comissão e não aparecem no site público.</p>
+            <div class="admin-agenda-lista">
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">08:00<br>09:00</time><div class="admin-agenda-conteudo"><h4>Recepção e credenciamento</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:00<br>09:10</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:10<br>10:20</time><div class="admin-agenda-conteudo"><h4 class="admin-agenda-pendente">Palestra · informações pendentes</h4><p><strong>Responsável:</strong> Ana Luiza Lugon</p><p><strong>Mediação:</strong> Lorena Couto</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:20<br>10:40</time><div class="admin-agenda-conteudo"><h4>Intervalo</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:40<br>12:00</time><div class="admin-agenda-conteudo"><h4>Pedra Lisa · Roberto Cruz Saavedra</h4><p><strong>Responsável:</strong> Laura Silva</p><p><strong>Mediação:</strong> Marlise Sanchotene de Aguiar</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">12:00<br>13:30</time><div class="admin-agenda-conteudo"><h4>Almoço</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">13:30<br>14:00</time><div class="admin-agenda-conteudo"><h4>Recepção da tarde</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">14:00<br>14:10</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">14:10<br>15:20</time><div class="admin-agenda-conteudo"><h4>Urb.Anas</h4><p><strong>Responsável:</strong> Manuela Souza</p><p><strong>Participantes:</strong> Beatriz Corbacho da Silva; Camille Rodrigues da Cunha; Lívia Perfeito Sampaio; Maria Eduarda Werneck Oliveira Lima; Mariana Cristina de Souza Pio.</p><p><strong>Mediação:</strong> Denise de Alcântara Pereira</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">15:20<br>15:40</time><div class="admin-agenda-conteudo"><h4>Intervalo</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">15:40<br>17:00</time><div class="admin-agenda-conteudo"><h4>Oficina de Aquarela · P1</h4><p><strong>Responsáveis:</strong> Gabi e Laura</p><p><strong>Ministrante:</strong> Alberto Kaplan</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">15:40<br>17:00</time><div class="admin-agenda-conteudo"><h4>Jogo do Cuidado · P1</h4><p><strong>Responsável:</strong> Manuela Souza</p><p><strong>Ministrante:</strong> Urb.Anas</p></div></div>
+            </div>
+        </div>
+        <div class="admin-card-minimal">
+            <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Agenda interna</p>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 7px; color: var(--cor-primaria);">Quinta-feira · 24/09</h3>
+            <p style="font-size: 12px; color: #777; margin-bottom: 22px; line-height: 1.5;">Os responsáveis abaixo são informações internas da comissão e não aparecem no site público.</p>
+            <div class="admin-agenda-lista">
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">08:00<br>09:00</time><div class="admin-agenda-conteudo"><h4>Recepção e credenciamento</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:00<br>09:10</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:10<br>10:20</time><div class="admin-agenda-conteudo"><h4 class="admin-agenda-pendente">Palestra · informações pendentes</h4><p><strong>Responsável:</strong> Laura Silva</p><p><strong>Mediação:</strong> Ana Luiza Gambardella (Céu)</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:20<br>10:40</time><div class="admin-agenda-conteudo"><h4>Intervalo</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:40<br>11:30</time><div class="admin-agenda-conteudo"><h4>Pedro Rajão · Negromuro</h4><p><strong>Responsável:</strong> Letícia Linden</p><p><strong>Mediação:</strong> Gabriel Girnos Elias de Souza</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">11:30<br>13:30</time><div class="admin-agenda-conteudo"><h4>Almoço</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">13:30<br>15:00</time><div class="admin-agenda-conteudo"><h4>Oficina de Mobiliário · Instituto de Tecnologia</h4><p><strong>Responsável:</strong> Letícia Linden</p><p><strong>Ministrante:</strong> <span class="admin-agenda-pendente">a confirmar</span></p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">13:30<br>15:00</time><div class="admin-agenda-conteudo"><h4>Oficina de Pintura de Mural · Instituto de Tecnologia</h4><p><strong>Responsável:</strong> Maria Fernanda</p><p><strong>Ministrante:</strong> <span class="admin-agenda-pendente">a confirmar</span></p></div></div>
+            </div>
+        </div>
+
+        <div class="admin-card-minimal">
+            <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Agenda interna</p>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 7px; color: var(--cor-primaria);">Sexta-feira · 25/09</h3>
+            <p style="font-size: 12px; color: #777; margin-bottom: 22px; line-height: 1.5;">Os responsáveis abaixo são informações internas da comissão e não aparecem no site público.</p>
+            <div class="admin-agenda-lista">
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">08:00<br>09:00</time><div class="admin-agenda-conteudo"><h4>Recepção e credenciamento</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:00<br>09:10</time><div class="admin-agenda-conteudo"><h4>Sorteio</h4><p><strong>Responsável:</strong> —</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">09:10<br>10:20</time><div class="admin-agenda-conteudo"><h4>Verônica Natividade</h4><p><strong>Responsável:</strong> <span class="admin-agenda-pendente">Gabi / Manuela Souza — confirmar</span></p><p><strong>Mediação:</strong> Juarez Franco</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">10:20<br>11:00</time><div class="admin-agenda-conteudo"><h4>Debate e mesa-redonda</h4><p><strong>Responsável:</strong> Comissão</p><p><strong>Mediação:</strong> Comissão</p></div></div>
+                <div class="admin-agenda-item"><time class="admin-agenda-hora">11:00<br>12:00</time><div class="admin-agenda-conteudo"><h4>Mesa de encerramento</h4><p><strong>Responsável:</strong> —</p></div></div>
+            </div>
+        </div>
+        <div class="admin-card-minimal">
             <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--cor-primaria);">Revelação de Anúncios</h3>
             <p style="font-size: 13px; color: #666; margin-bottom: 24px;">Ligue as chaves para publicar os convidados no site.</p>
             
             <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">Palestrantes</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; font-size: 14px; font-weight: 600; color: #444;">
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-01"> Palestrante 01</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-02"> Palestrante 02</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-03"> Palestrante 03</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-04"> Palestrante 04</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-05"> Palestrante 05</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-06"> Palestrante 06</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-07"> Palestrante 07</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-08"> Palestrante 08</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-09"> Palestrante 09</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-10"> Palestrante 10</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-11"> Palestrante 11</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-01"> Ethel Pinheiro</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-02"> Ester Carro</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-03"> Segunda 15h50 · pendente</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-04"> Thaysa Malaquias</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-05"> Rafael Zamorano</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-06"> Quarta 09h10 · pendente</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-07"> Roberto Cruz Saavedra</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-08"> Urb.Anas</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-09"> Quinta 09h10 · pendente</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-10"> Pedro Rajão · Negromuro</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="palestrante-11"> Verônica Natividade</label>
             </div>
 
             <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">Oficinas</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; font-weight: 600; color: #444;">
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-01"> Oficina 01</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-02"> Oficina 02</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-03"> Oficina 03</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-04"> Oficina 04</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-05"> Oficina 05</label>
-                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-06"> Oficina 06</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-01"> Oficina de Levantamento</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-02"> Oficina de Cerâmica</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-03"> Oficina de Aquarela</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-04"> Jogo do Cuidado</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-05"> Oficina de Mobiliário</label>
+                <label style="display: flex; gap: 10px; align-items: center; cursor: pointer;"><input type="checkbox" class="toggle-convidado" value="oficina-06"> Oficina de Pintura de Mural</label>
             </div>
         </div>
 
