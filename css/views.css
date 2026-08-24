@@ -1141,6 +1141,22 @@
     border-radius: 12px;
 }
 
+/* Substituição temporária do widget usada na gravação. */
+.insta-feed-container-substituto {
+    display: block;
+}
+
+.insta-feed-substituto {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    user-select: none;
+    pointer-events: none;
+}
+
 .tapa-rodape {
     position: absolute;
     bottom: 5px;
