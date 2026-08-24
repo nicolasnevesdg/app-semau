@@ -520,13 +520,14 @@
 }
 
 .titulo-convidados {
-    width: 82%;
-    max-width: 360px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 10px;
 }
 
 .titulo-oficinas {
-    width: 64%;
-    max-width: 280px;
+    width: 100%;
+    max-width: 220px;
     margin-top: 20px;
 }
 
@@ -554,25 +555,42 @@
 
 .grid-convidados {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Cria exatamente 2 colunas com o mesmo tamanho */
-    gap: 40px 35px; /* 20px de espaço na vertical (entre linhas) e 16px na horizontal */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 28px;
     width: 100%;
     padding: 0 40px;
 }
 
 .card-convidado {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 10px; /* Espaço entre a foto, o nome e a descrição */
+}
+
+.card-convidado-foto {
+    width: 100%;
+    aspect-ratio: 103.96 / 128.22;
+    margin-bottom: 16px;
+    display: grid;
+    place-items: end center;
+    overflow: hidden;
 }
 
 /* Formatação da Foto/SVG */
-.card-convidado img {
+.card-convidado-foto img {
     width: 100%;
-    object-fit: cover;
-    margin-bottom: 10px;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    object-position: center bottom;
+}
+
+.card-convidado-texto {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
 }
 
 /* Nome do Convidado/Oficina */
@@ -580,9 +598,10 @@
     font-family: var(--fonte-textos);
     font-weight: 800;
     color: var(--cor-eixo-rua);
-    font-size: 32px;
+    font-size: clamp(20px, 5.2vw, 24px);
     margin: 0;
-    line-height: .95;
+    line-height: 1.02;
+    overflow-wrap: anywhere;
 }
 
 /* Descrição (Profissão ou Resumo da Oficina) */
@@ -1122,6 +1141,22 @@
     border-radius: 12px;
 }
 
+/* Substituição temporária do widget usada na gravação. */
+.insta-feed-container-substituto {
+    display: block;
+}
+
+.insta-feed-substituto {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    user-select: none;
+    pointer-events: none;
+}
+
 .tapa-rodape {
     position: absolute;
     bottom: 5px;
@@ -1173,7 +1208,12 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 60px 20px;
+    padding: 18px 20px 60px;
+}
+
+.titulo-cronograma-vazio {
+    margin-top: 0;
+    margin-bottom: 44px;
 }
 
 .empty-state .sticker-cadeira {

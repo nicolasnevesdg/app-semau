@@ -280,35 +280,102 @@
 }
 
 .loja-aviso {
-    width: fit-content;
+    width: min(100%, 360px);
     margin: 30px auto 0;
-    padding: 10px 14px;
-    border: 1px solid rgba(240, 120, 44, 0.34);
-    border-radius: 999px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.035);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.loja-compra-etiqueta {
+    padding: 4px 7px 8px;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+.loja-opcao-compra {
+    min-height: 54px;
+    padding: 9px 7px;
     display: flex;
     align-items: center;
-    gap: 9px;
-    background: rgba(240, 120, 44, 0.08);
-}
-
-.loja-aviso i {
-    flex: 0 0 auto;
-    color: var(--cor-secundaria);
-    font-size: 20px;
-}
-
-.loja-aviso h3 {
-    margin: 0;
+    gap: 10px;
     color: #fff;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
 }
 
-.loja-aviso p {
-    display: none;
+.loja-opcao-presencial {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.loja-opcao-icone {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: rgba(240, 120, 44, 0.12);
+    color: var(--cor-secundaria);
+}
+
+.loja-opcao-icone i {
+    color: inherit;
+    font-size: 18px;
+}
+
+.loja-opcao-texto {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+    flex: 1 1 auto;
+}
+
+.loja-opcao-texto strong {
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.loja-opcao-texto small {
+    color: rgba(255, 255, 255, 0.52);
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.loja-whatsapp-btn {
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.loja-whatsapp-btn .loja-opcao-icone {
+    background: rgba(177, 190, 170, 0.12);
+    color: #b1beaa;
+}
+
+.loja-opcao-seta {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 16px;
+}
+
+.loja-whatsapp-btn:active {
+    transform: scale(0.985);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.loja-whatsapp-btn:focus-visible {
+    outline: 2px solid var(--cor-secundaria);
+    outline-offset: 2px;
+}
 .loja-estado {
     min-height: 340px;
     align-items: center;
@@ -1030,6 +1097,27 @@
 
 .produto-imagem-baralho {
     background: linear-gradient(135deg, #809acd, #b1beaa);
+}
+
+.produto-card-sem-imagem {
+    cursor: default;
+}
+
+.produto-card-sem-imagem:active {
+    transform: none;
+}
+
+.produto-imagem-vazia {
+    border: 1px dashed rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.produto-imagem-pendente {
+    color: rgba(255, 255, 255, 0.52);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 body.produto-galeria-aberta {

@@ -131,12 +131,12 @@ function pararQrDinamico() {
 // CATÁLOGO DE OFICINAS (As 6 oficinas)
 // ==========================================
 const catalogoOficinas = {
-    "OF01": { titulo: "Levantamento (Escala 1:1)", data: "21/Set - 14:00" },
-    "OF02": { titulo: "Fotografia de Arquitetura", data: "22/Set - 14:00" },
-    "OF03": { titulo: "Aquarela na Prática", data: "23/Set - 09:00" },
-    "OF04": { titulo: "SketchUp e V-Ray", data: "23/Set - 14:00" },
-    "OF05": { titulo: "Maquete Física", data: "24/Set - 14:00" },
-    "OF06": { titulo: "Design de Mobiliário", data: "25/Set - 09:00" }
+    "OF01": { titulo: "Oficina de Levantamento", data: "22/Set - 13:30" },
+    "OF02": { titulo: "Oficina de Cerâmica", data: "22/Set - 13:30" },
+    "OF03": { titulo: "Oficina de Aquarela", data: "23/Set - 15:40" },
+    "OF04": { titulo: "Jogo do Cuidado", data: "23/Set - 15:40" },
+    "OF05": { titulo: "Oficina de Mobiliário", data: "24/Set - 13:30" },
+    "OF06": { titulo: "Oficina de Pintura de Mural", data: "24/Set - 13:30" }
 };
 
 const containerOficinas = document.getElementById('container-oficinas');

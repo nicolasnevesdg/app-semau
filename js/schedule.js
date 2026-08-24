@@ -13,23 +13,23 @@ const docConvidadosRef = doc(db, "configuracoes", "anuncios");
 
 // CATÁLOGO COMPLETO
 const catalogoConvidados = {
-    "palestrante-01": { nome: "Marina Albuquerque", descricao: "Arquiteta e urbanista", arquivoSvg: "jean-geal" },
-    "palestrante-02": { nome: "Caio Mendonça", descricao: "Arquiteto e pesquisador", arquivoSvg: "jean-geal" },
-    "palestrante-03": { nome: "Lívia Nascimento", descricao: "Urbanista e professora", arquivoSvg: "jean-geal" },
-    "palestrante-04": { nome: "Rafael Tavares", descricao: "Arquiteto e artista visual", arquivoSvg: "jean-geal" },
-    "palestrante-05": { nome: "Beatriz Sampaio", descricao: "Arquiteta e curadora", arquivoSvg: "jean-geal" },
-    "palestrante-06": { nome: "André Vilar", descricao: "Paisagista e pesquisador", arquivoSvg: "jean-geal" },
-    "palestrante-07": { nome: "Helena Moura", descricao: "Arquiteta e professora", arquivoSvg: "jean-geal" },
-    "palestrante-08": { nome: "Lucas Ferraz", descricao: "Arquiteto e restaurador", arquivoSvg: "jean-geal" },
-    "palestrante-09": { nome: "Natália Queiroz", descricao: "Arquiteta bioclimática", arquivoSvg: "jean-geal" },
-    "palestrante-10": { nome: "Thiago Azevedo", descricao: "Urbanista e pesquisador", arquivoSvg: "jean-geal" },
-    "palestrante-11": { nome: "Camila Figueira", descricao: "Arquiteta e ensaísta", arquivoSvg: "jean-geal" },
-    "oficina-01": { nome: "Cartografias do cotidiano", descricao: "Com Elisa Prado", arquivoSvg: "jean-geal" },
-    "oficina-02": { nome: "Cor, matéria e atmosfera", descricao: "Com Bruno Salgado", arquivoSvg: "jean-geal" },
-    "oficina-03": { nome: "Fotografia e memória urbana", descricao: "Com Joana Paes", arquivoSvg: "jean-geal" },
-    "oficina-04": { nome: "Maquetes de afeto", descricao: "Com Miguel Soares", arquivoSvg: "jean-geal" },
-    "oficina-05": { nome: "Desenho de rua", descricao: "Com Lara Fontes", arquivoSvg: "jean-geal" },
-    "oficina-06": { nome: "Intervenções efêmeras", descricao: "Com Daniel Portela", arquivoSvg: "jean-geal" }
+    "palestrante-01": { nome: "Ethel Pinheiro", descricao: "Arquiteta, urbanista e professora da UFRJ", arquivoSvg: "jean-geal" },
+    "palestrante-02": { nome: "Ester Carro", descricao: "Arquiteta, pesquisadora e professora universitária", arquivoSvg: "jean-geal" },
+    "palestrante-03": { nome: "Convidado(a) em breve", descricao: "Palestra de segunda-feira, às 15h50", arquivoSvg: "jean-geal" },
+    "palestrante-04": { nome: "Thaysa Malaquias", descricao: "Arquiteta, urbanista e pesquisadora do LabLugares — PROARQ/UFRJ", arquivoSvg: "jean-geal" },
+    "palestrante-05": { nome: "Rafael Zamorano", descricao: "Historiador e diretor substituto do Sítio Roberto Burle Marx", arquivoSvg: "jean-geal" },
+    "palestrante-06": { nome: "Convidado(a) em breve", descricao: "Palestra de quarta-feira, às 09h10", arquivoSvg: "jean-geal" },
+    "palestrante-07": { nome: "Roberto Cruz Saavedra", descricao: "Arquiteto e urbanista do Cruz Saavedra Arquitetura", arquivoSvg: "jean-geal" },
+    "palestrante-08": { nome: "Urb.Anas", descricao: "Com Beatriz Corbacho, Camille Rodrigues, Lívia Perfeito, Maria Eduarda Werneck e Mariana Pio", arquivoSvg: "jean-geal" },
+    "palestrante-09": { nome: "Convidado(a) em breve", descricao: "Palestra de quinta-feira, às 09h10", arquivoSvg: "jean-geal" },
+    "palestrante-10": { nome: "Pedro Rajão · Negromuro", descricao: "Integrante do coletivo Negromuro", arquivoSvg: "jean-geal" },
+    "palestrante-11": { nome: "Verônica Natividade", descricao: "Arquiteta, pesquisadora e professora da PUC-Rio", arquivoSvg: "jean-geal" },
+    "oficina-01": { nome: "Oficina de Levantamento", descricao: "Com Raphael Valcarce", arquivoSvg: "jean-geal" },
+    "oficina-02": { nome: "Oficina de Cerâmica", descricao: "Ministrante em breve", arquivoSvg: "jean-geal" },
+    "oficina-03": { nome: "Oficina de Aquarela", descricao: "Com Alberto Kaplan", arquivoSvg: "jean-geal" },
+    "oficina-04": { nome: "Jogo do Cuidado", descricao: "Com o coletivo Urb.Anas", arquivoSvg: "jean-geal" },
+    "oficina-05": { nome: "Oficina de Mobiliário", descricao: "Ministrante em breve", arquivoSvg: "jean-geal" },
+    "oficina-06": { nome: "Oficina de Pintura de Mural", descricao: "Ministrante em breve", arquivoSvg: "jean-geal" }
 };
 
 // 1. ESCUTA O BANCO DE DADOS EM TEMPO REAL (GERENCIA FASES)
@@ -84,9 +84,13 @@ onSnapshot(docConvidadosRef, (docSnap) => {
 
                 const cardHTML = `
                     <div class="card-convidado">
-                        <img src="assets/svg/${convidado.arquivoSvg}.svg" alt="Foto">
-                        <h2>${convidado.nome}</h2>
-                        <p>${convidado.descricao}</p>
+                        <div class="card-convidado-foto">
+                            <img src="assets/svg/${convidado.arquivoSvg}.svg" alt="Foto de ${convidado.nome}">
+                        </div>
+                        <div class="card-convidado-texto">
+                            <h2>${convidado.nome}</h2>
+                            <p>${convidado.descricao}</p>
+                        </div>
                     </div>
                 `;
                 targetGrid.insertAdjacentHTML('beforeend', cardHTML);
@@ -98,38 +102,38 @@ onSnapshot(docConvidadosRef, (docSnap) => {
 // 2. LÓGICA DE INTERAÇÃO DAS ABAS (FASE 2)
 // DADOS PROVISORIOS DAS PALESTRAS DO CRONOGRAMA OFICIAL
 // Troque nomes, cargos, professores, temas, resumos e fotos aqui quando o conteudo final chegar.
-const intervalosPalestras = ['10:30?12:00','14:00?15:30','16:30?18:00','09:00?10:30','11:00?12:30','09:00?10:30','11:00?12:30','14:00?15:30','09:00?10:30','10:00?11:30','14:00?15:30'];
+const intervalosPalestras = ['10:30?11:40','14:10?15:20','15:50?17:00','09:10?10:20','10:40?12:00','09:10?10:20','10:40?12:00','14:10?15:20','09:10?10:20','10:40?11:30','09:10?10:20'];
 const temasPalestras = [
-    'Outros modos de habitar a cidade', 'Projeto, território e experiência', 'Memórias que desenham lugares',
-    'Cidade, corpo e movimento', 'Arquitetura para encontros', 'Paisagem e pertencimento',
-    'Habitar em transformação', 'Construir com o que existe', 'Clima, matéria e cotidiano',
-    'Espaços comuns, futuros possíveis', 'O lugar que levamos conosco'
+    'Tema da palestra em breve', 'Tema da palestra em breve', 'Informações em breve',
+    'Tema da palestra em breve', 'Sítio Roberto Burle Marx', 'Tema da palestra em breve',
+    'Pedra Lisa', 'Tema da palestra em breve', 'Tema da palestra em breve',
+    'Tema da palestra em breve', 'Tema da palestra em breve'
 ];
 const resumosPalestras = [
-    'Uma conversa sobre espaço urbano, pertencimento e as relações que construímos com os lugares.',
-    'Debate sobre processos de projeto atentos às pessoas, ao cotidiano e às particularidades de cada território.',
-    'Reflexões sobre arquitetura, memória e identidade na transformação dos espaços que habitamos.',
-    'Um olhar para os percursos cotidianos e para as diferentes formas de perceber e ocupar o espaço urbano.',
-    'Como o desenho dos espaços pode aproximar pessoas, acolher diferenças e fortalecer a vida coletiva.',
-    'Discussão sobre as relações entre paisagem, cultura e os sentidos atribuídos ao lugar.',
-    'Perspectivas para pensar moradia, mudanças sociais e novas dinâmicas de ocupação.',
-    'Práticas de intervenção, reuso e leitura sensível das preexistências arquitetônicas.',
-    'Estratégias de projeto que aproximam desempenho ambiental, materialidade e experiência cotidiana.',
-    'Uma conversa sobre coletividade, espaços compartilhados e possibilidades para as cidades do futuro.',
-    'Uma síntese das memórias, encontros e experiências construídas durante a semana.'
+    'Atuação em representação, cultura, cidade, complexidade, memória e teoria do afeto.',
+    'Palestra com Ester Carro, do Instituto Fazendinhando. A descrição completa será publicada em breve.',
+    'Palestrante, tema e descrição aguardando confirmação.',
+    'Pesquisa e prática em arquitetura, com atuação em projeto de legalização e pesquisa acadêmica.',
+    'Uma conversa sobre história, patrimônio, museus e o Sítio Roberto Burle Marx.',
+    'Palestrante e tema aguardando confirmação.',
+    'Uma conversa sobre arquitetura social, urbanismo participativo, requalificação urbana e transformação de territórios.',
+    'Coletivo formado por Beatriz Corbacho, Camille Rodrigues, Lívia Perfeito, Maria Eduarda Werneck e Mariana Pio, com pesquisas sobre urbanismo, feminismo, gênero e interseccionalidade.',
+    'Palestrante e tema aguardando confirmação.',
+    'Encontro com Pedro Rajão, do coletivo Negromuro. As informações completas da palestra serão publicadas em breve.',
+    'Inteligência artificial, fabricação digital, design paramétrico e habitação de interesse social.'
 ];
 const palestrantesDemo = [
-    { nome: 'Marina Albuquerque', cargo: 'Arquiteta e urbanista', professor: 'Prof.ª Renata Vasconcelos' },
-    { nome: 'Caio Mendonça', cargo: 'Arquiteto e pesquisador', professor: 'Prof. Eduardo Linhares' },
-    { nome: 'Lívia Nascimento', cargo: 'Urbanista e professora', professor: 'Prof.ª Mônica Peixoto' },
-    { nome: 'Rafael Tavares', cargo: 'Arquiteto e artista visual', professor: 'Prof. Marcelo Farias' },
-    { nome: 'Beatriz Sampaio', cargo: 'Arquiteta e curadora', professor: 'Prof.ª Denise Amaral' },
-    { nome: 'André Vilar', cargo: 'Paisagista e pesquisador', professor: 'Prof. Paulo Nogueira' },
-    { nome: 'Helena Moura', cargo: 'Arquiteta e professora', professor: 'Prof.ª Clarice Matos' },
-    { nome: 'Lucas Ferraz', cargo: 'Arquiteto e restaurador', professor: 'Prof. Ricardo Paiva' },
-    { nome: 'Natália Queiroz', cargo: 'Arquiteta bioclimática', professor: 'Prof.ª Sônia Ribeiro' },
-    { nome: 'Thiago Azevedo', cargo: 'Urbanista e pesquisador', professor: 'Prof. Gustavo Meireles' },
-    { nome: 'Camila Figueira', cargo: 'Arquiteta e ensaísta', professor: 'Prof.ª Teresa Brandão' }
+    { nome: 'Ethel Pinheiro', cargo: 'Arquiteta, urbanista e professora da UFRJ', professor: 'Bruna Mota Rodrigues', professorCargo: 'Professora Assistente da UFRRJ' },
+    { nome: 'Ester Carro', cargo: 'Arquiteta, pesquisadora e professora universitária', professor: 'Samira Bueno Chahin', professorCargo: 'Mediação' },
+    { nome: 'Convidado(a) a confirmar', cargo: 'Informações em breve', professor: 'Mediação a confirmar', professorCargo: 'Informações em breve' },
+    { nome: 'Thaysa Malaquias', cargo: 'Arquiteta, urbanista e pesquisadora do LabLugares — PROARQ/UFRJ', professor: 'Silvia Scoralich de Carvalho', professorCargo: 'Docente do DAU/UFRRJ' },
+    { nome: 'Rafael Zamorano', cargo: 'Historiador e diretor substituto do Sítio Roberto Burle Marx', professor: 'Luiz Augusto dos Reis', professorCargo: 'Mediação' },
+    { nome: 'Convidado(a) a confirmar', cargo: 'Informações em breve', professor: 'Lorena Couto', professorCargo: 'Mediação' },
+    { nome: 'Roberto Cruz Saavedra', cargo: 'Arquiteto e urbanista · Cruz Saavedra Arquitetura', professor: 'Marlise Sanchotene de Aguiar', professorCargo: 'Docente do DAU/IT/UFRRJ' },
+    { nome: 'Urb.Anas', cargo: 'Beatriz Corbacho, Camille Rodrigues, Lívia Perfeito, Maria Eduarda Werneck e Mariana Pio', professor: 'Denise de Alcântara Pereira', professorCargo: 'Mediação' },
+    { nome: 'Convidado(a) a confirmar', cargo: 'Informações em breve', professor: 'Ana Luiza Gambardella', professorCargo: 'Mediação' },
+    { nome: 'Pedro Rajão · Negromuro', cargo: 'Integrante do coletivo Negromuro', professor: 'Gabriel Girnos', professorCargo: 'Professor do DAU/IT/UFRRJ' },
+    { nome: 'Verônica Natividade', cargo: 'Arquiteta, pesquisadora e professora da PUC-Rio', professor: 'Juarez Franco', professorCargo: 'Mediação' }
 ];
 
 const palestrasCronograma = intervalosPalestras.map((horario, indice) => ({
@@ -137,7 +141,7 @@ const palestrasCronograma = intervalosPalestras.map((horario, indice) => ({
     palestrante: palestrantesDemo[indice].nome,
     cargo: palestrantesDemo[indice].cargo,
     professor: palestrantesDemo[indice].professor,
-    professorCargo: 'Docente da UFRRJ',
+    professorCargo: palestrantesDemo[indice].professorCargo || 'Docente da UFRRJ',
     professorFoto: 'assets/img/professor-teste_1.png',
     titulo: temasPalestras[indice],
     resumo: resumosPalestras[indice],
@@ -180,11 +184,12 @@ renderizarPalestrasCronograma();
 
 // DADOS PROVISORIOS DAS OFICINAS DO CRONOGRAMA OFICIAL
 const oficinasCronograma = [
-    { horario: '14:00?15:30', ministrante: 'Elisa Prado', cargo: 'Arquiteta e cartógrafa', titulo: 'Cartografias do cotidiano', resumo: 'Uma leitura sensível dos percursos diários transformada em mapas afetivos e narrativas visuais.' },
-    { horario: '16:00?17:30', ministrante: 'Bruno Salgado', cargo: 'Arquiteto e artista visual', titulo: 'Cor, matéria e atmosfera', resumo: 'Experimentações com cor, textura e luz para investigar como os materiais alteram a percepção do espaço.' },
-    { horario: '16:00?17:30', ministrante: 'Joana Paes', cargo: 'Fotógrafa e pesquisadora', titulo: 'Fotografia e memória urbana', resumo: 'Um exercício de observação e registro das marcas, gestos e memórias presentes na paisagem cotidiana.' },
-    { horario: '14:00?15:30', ministrante: 'Miguel Soares', cargo: 'Arquiteto e educador', titulo: 'Maquetes de afeto', resumo: 'Construção de pequenas espacialidades a partir de lembranças, objetos e relações de pertencimento.' },
-    { horario: '16:00?18:00', ministrante: 'Lara Fontes e Daniel Portela', cargo: 'Artistas e arquitetos convidados', titulo: 'Desenho de rua e intervenções efêmeras', resumo: 'Duas práticas complementares para observar, desenhar e transformar temporariamente os espaços do campus.' }
+    { horario: '13:30?15:00', ministrante: 'Raphael Valcarce', cargo: 'Professor e vice-coordenador do DAU/UFRRJ', titulo: 'Oficina de Levantamento', resumo: 'Apresentação das principais técnicas de levantamento arquitetônico, com exercício prático de medição e registro no Instituto de Tecnologia.' },
+    { horario: '13:30?15:00', ministrante: 'Ministrante a confirmar', cargo: 'Informações em breve', titulo: 'Oficina de Cerâmica', resumo: 'As informações completas desta oficina serão publicadas em breve.' },
+    { horario: '15:40?17:00', ministrante: 'Alberto Kaplan', cargo: 'Professor e artista visual', titulo: 'Oficina de Aquarela', resumo: 'Experimentação em aquarela com o professor e artista visual Alberto Kaplan.' },
+    { horario: '15:40?17:00', ministrante: 'Urb.Anas', cargo: 'Coletivo de pesquisa da UFF', titulo: 'Jogo do Cuidado', resumo: 'Atividade coletiva sobre gênero, cuidado, espaço urbano e direito à cidade.' },
+    { horario: '13:30?15:00', ministrante: 'Ministrante a confirmar', cargo: 'Informações em breve', titulo: 'Oficina de Mobiliário', resumo: 'Confecção de bancos para o pátio atrás do Departamento de Arquitetura.' },
+    { horario: '13:30?15:00', ministrante: 'Ministrante a confirmar', cargo: 'Informações em breve', titulo: 'Oficina de Pintura de Mural', resumo: 'Atividade prática de pintura de mural no Instituto de Tecnologia. As informações completas serão publicadas em breve.' }
 ].map(oficina => ({ ...oficina, foto: 'assets/img/oficina-levantamento.png' }));
 
 function renderizarOficinasCronograma() {
