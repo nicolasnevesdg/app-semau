@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v151';
+const CACHE_NAME = 'semau-v152';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -6,6 +6,7 @@ const assetsToCache = [
     './index.html',
     './sorteio-telao.html',
     './ingressos.html',
+    './admin-cronograma.html',
     './compra.html',
     './pagamento-falhou.html',
     './pagamento-pendente.html',
@@ -17,6 +18,7 @@ const assetsToCache = [
     './css/views.css',
     './css/sorteio-telao.css',
     './css/compra.css',
+    './css/admin-cronograma.css',
     './css/pagamento.css',
     './js/main.js',
     './js/install-app.js',
@@ -27,6 +29,8 @@ const assetsToCache = [
     './js/sorteio-telao.js',
     './js/ingressos.js',
     './js/ingressos-config.js',
+    './js/programacao-ao-vivo-config.js',
+    './js/admin-cronograma.js',
     './js/compra.js',
     './js/pagamento-retorno.js',
     './js/auth.js',

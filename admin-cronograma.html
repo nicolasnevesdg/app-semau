@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Editor do cronograma ao vivo — XVI SEMAU</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/admin-cronograma.css">
+</head>
+<body>
+    <div id="admin-login-overlay" class="login-overlay">
+        <form id="form-admin-login" class="login-card">
+            <div class="login-icone"><i class="ph-bold ph-lock-key"></i></div>
+            <p class="editor-sobretitulo">Organização</p>
+            <h1>Acesso ao cronograma</h1>
+            <p>Use a mesma senha do painel administrativo.</p>
+            <label for="admin-senha-input">Senha</label>
+            <input type="password" id="admin-senha-input" autocomplete="current-password" required>
+            <button type="submit" id="btn-admin-login" class="botao botao-primario">Acessar editor</button>
+        </form>
+    </div>
+
+    <main class="editor-shell">
+        <header class="editor-cabecalho">
+            <a href="admin.html" class="voltar-link"><i class="ph-bold ph-arrow-left"></i> Voltar ao painel</a>
+            <button type="button" id="btn-admin-logout" class="sair-botao"><i class="ph-bold ph-sign-out"></i> Sair</button>
+            <div class="editor-titulo">
+                <div>
+                    <p class="editor-sobretitulo">Controle em tempo real</p>
+                    <h1>Cronograma ao vivo</h1>
+                    <p>Edite horários, títulos e mensagens. Depois de salvar, a tela pública muda automaticamente.</p>
+                </div>
+                <span class="ao-vivo-selo"><i></i> Sincronizado com o site</span>
+            </div>
+        </header>
+
+        <div id="editor-status" class="editor-status" role="status" aria-live="polite">Carregando programação…</div>
+
+        <nav id="cronograma-dias" class="dias-tabs" aria-label="Dias do evento"></nav>
+
+        <section class="dia-editor" aria-labelledby="dia-editor-titulo">
+            <div class="dia-editor-topo">
+                <div>
+                    <p id="dia-editor-data" class="editor-sobretitulo"></p>
+                    <h2 id="dia-editor-titulo">Programação do dia</h2>
+                    <p id="dia-editor-resumo" class="dia-editor-resumo"></p>
+                </div>
+                <button type="button" id="btn-restaurar-dia" class="botao botao-secundario"><i class="ph-bold ph-arrow-counter-clockwise"></i> Restaurar este dia</button>
+            </div>
+
+            <div id="cronograma-lista" class="atividades-lista"></div>
+
+            <button type="button" id="btn-adicionar-atividade" class="adicionar-botao">
+                <i class="ph-bold ph-plus-circle"></i>
+                Adicionar horário neste dia
+            </button>
+        </section>
+
+        <aside class="editor-ajuda">
+            <i class="ph-bold ph-info"></i>
+            <div>
+                <strong>Como a tela decide o que mostrar?</strong>
+                <p>Ela compara o relógio com o início e o fim de cada item. A mensagem complementar é opcional; quando fica vazia, o site informa automaticamente qual será a próxima atividade.</p>
+            </div>
+        </aside>
+
+        <div class="editor-acoes">
+            <div>
+                <strong id="alteracoes-status">Nenhuma alteração pendente</strong>
+                <span>Revise os horários antes de publicar.</span>
+            </div>
+            <button type="button" id="btn-salvar-cronograma" class="botao botao-primario"><i class="ph-bold ph-floppy-disk"></i> Salvar e publicar</button>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
+    <script type="module" src="js/admin-cronograma.js"></script>
+</body>
+</html>
