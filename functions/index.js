@@ -47,7 +47,9 @@ function normalizarLoteAtivo(value) {
 
 async function obterLoteAtivo() {
   const configuracao = await db.collection("configuracoes").doc("geral").get();
-  return normalizarLoteAtivo(configuracao.data()?.loteIngressosAtivo);
+  const dados = configuracao.data() || {};
+  const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(dados.loteAtivo)];
+  return normalizarLoteAtivo(dados.loteIngressosAtivo || loteLegado);
 }
 
 function obterIngresso(lote, tipo) {
