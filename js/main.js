@@ -1,69 +1,24 @@
+import { db } from './firebase-config.js';
+import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+    PROGRAMACAO_AO_VIVO_PADRAO,
+    clonarProgramacao,
+    normalizarProgramacao,
+    temProgramacaoValida
+} from './programacao-ao-vivo-config.js';
 // ==========================================
 // STATUS AUTOMÁTICO DA XVI SEMAU
 // ==========================================
 
 const INICIO_DIA_EVENTO = new Date(2026, 8, 21, 0, 0, 0);
 const INICIO_EVENTO = new Date(2026, 8, 21, 8, 0, 0);
-const FIM_EVENTO = new Date(2026, 8, 25, 18, 0, 0);
+const FIM_EVENTO = new Date(2026, 8, 25, 23, 59, 59);
 
 // PRÉVIA TEMPORÁRIA: após o encerramento definitivo do evento.
 // Troque por null para voltar a usar a data e o horário reais do aparelho.
 const DATA_DE_TESTE = null;
 
-// A segunda-feira já está sincronizada com a programação final.
-// Os demais dias permanecem provisórios até a confirmação da organização.
-const PROGRAMACAO_AO_VIVO = {
-    '2026-09-21': [
-        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
-        { inicio: '09:00', fim: '10:30', titulo: 'Mesa de abertura + CAU/RJ', tipo: 'atividade' },
-        { inicio: '10:30', fim: '11:40', titulo: 'Palestra com Ethel Pinheiro', tipo: 'atividade' },
-        { inicio: '11:40', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '13:30', fim: '14:00', titulo: 'Recepção da tarde', tipo: 'atividade' },
-        { inicio: '14:00', fim: '14:10', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '14:10', fim: '15:20', titulo: 'Palestra com Ester Carro', tipo: 'atividade' },
-        { inicio: '15:20', fim: '15:40', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '15:40', fim: '15:50', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '15:50', fim: '17:00', titulo: 'Palestra — informações em breve', tipo: 'atividade' }
-    ],
-    '2026-09-22': [
-        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
-        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '09:10', fim: '10:20', titulo: 'Palestra com Thaysa Malaquias', tipo: 'atividade' },
-        { inicio: '10:20', fim: '10:40', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '10:40', fim: '12:00', titulo: 'Sítio Roberto Burle Marx — Rafael Zamorano', tipo: 'atividade' },
-        { inicio: '12:00', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '13:30', fim: '15:00', titulo: 'Oficinas de Levantamento e Cerâmica', tipo: 'atividade' }
-    ],
-    '2026-09-23': [
-        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
-        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '09:10', fim: '10:20', titulo: 'Palestra — informações em breve', tipo: 'atividade' },
-        { inicio: '10:20', fim: '10:40', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '10:40', fim: '12:00', titulo: 'Pedra Lisa — Roberto Cruz Saavedra', tipo: 'atividade' },
-        { inicio: '12:00', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '13:30', fim: '14:00', titulo: 'Recepção da tarde', tipo: 'atividade' },
-        { inicio: '14:00', fim: '14:10', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '14:10', fim: '15:20', titulo: 'Palestra com o coletivo Urb.Anas', tipo: 'atividade' },
-        { inicio: '15:20', fim: '15:40', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '15:40', fim: '17:00', titulo: 'Oficina de Aquarela e Jogo do Cuidado', tipo: 'atividade' }
-    ],
-    '2026-09-24': [
-        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
-        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '09:10', fim: '10:20', titulo: 'Palestra — informações em breve', tipo: 'atividade' },
-        { inicio: '10:20', fim: '10:40', titulo: 'Intervalo', tipo: 'intervalo' },
-        { inicio: '10:40', fim: '11:30', titulo: 'Palestra com Pedro Rajão · Negromuro', tipo: 'atividade' },
-        { inicio: '11:30', fim: '13:30', titulo: 'Pausa para o almoço', tipo: 'almoco' },
-        { inicio: '13:30', fim: '15:00', titulo: 'Oficinas de Mobiliário e Pintura de Mural', tipo: 'atividade' }
-    ],
-    '2026-09-25': [
-        { inicio: '08:00', fim: '09:00', titulo: 'Recepção e credenciamento', tipo: 'atividade' },
-        { inicio: '09:00', fim: '09:10', titulo: 'Sorteio', tipo: 'atividade' },
-        { inicio: '09:10', fim: '10:20', titulo: 'Palestra com Verônica Natividade', tipo: 'atividade' },
-        { inicio: '10:20', fim: '11:00', titulo: 'Debate e mesa-redonda', tipo: 'atividade' },
-        { inicio: '11:00', fim: '12:00', titulo: 'Mesa de encerramento da XVI SEMAU', tipo: 'atividade' }
-    ]
-};
+let PROGRAMACAO_AO_VIVO = clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
 
 const elDias = document.getElementById('cd-dias');
 const elHoras = document.getElementById('cd-horas');
@@ -297,22 +252,22 @@ function atualizarStatusDoEvento() {
         if (momento.tipo === 'almoco') {
             mostrarStatus({
                 etiqueta: 'Pausa',
-                titulo: 'Pausa pro almo\u00e7o.',
-                texto: proxima ? `Voltamos \u00e0s ${proxima.inicio}.` : 'Voltamos em breve.',
+                titulo: momento.titulo || 'Pausa pro almo\u00e7o.',
+                texto: momento.texto || (proxima ? `Voltamos \u00e0s ${proxima.inicio}.` : 'Voltamos em breve.'),
                 horario: `${momento.inicio}–${momento.fim}`
             });
         } else if (momento.tipo === 'intervalo') {
             mostrarStatus({
                 etiqueta: 'Intervalo',
-                titulo: 'Um respiro.',
-                texto: proxima ? `Pr\u00f3xima atividade \u00e0s ${proxima.inicio}.` : 'Continuamos em breve.',
+                titulo: momento.titulo || 'Um respiro.',
+                texto: momento.texto || (proxima ? `Pr\u00f3xima atividade \u00e0s ${proxima.inicio}.` : 'Continuamos em breve.'),
                 horario: `${momento.inicio}–${momento.fim}`
             });
         } else {
             mostrarStatus({
                 etiqueta: 'Acontecendo agora',
                 titulo: momento.titulo,
-                texto: proxima ? `Depois, ${proxima.inicio}: ${proxima.titulo}.` : '\u00daltima atividade de hoje.',
+                texto: momento.texto || (proxima ? `Depois, ${proxima.inicio}: ${proxima.titulo}.` : '\u00daltima atividade de hoje.'),
                 horario: `${momento.inicio}–${momento.fim}`
             });
         }
@@ -343,6 +298,16 @@ function atualizarStatusDoEvento() {
         horario: proxima ? `${proxima.inicio}–${proxima.fim}` : ''
     });
 }
+
+onSnapshot(doc(db, 'configuracoes', 'cronogramaAoVivo'), snapshot => {
+    const programacaoRemota = normalizarProgramacao(snapshot.data()?.programacao);
+    PROGRAMACAO_AO_VIVO = temProgramacaoValida(programacaoRemota)
+        ? programacaoRemota
+        : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+    atualizarStatusDoEvento();
+}, error => {
+    console.warn('Não foi possível sincronizar o cronograma ao vivo.', error);
+});
 
 atualizarStatusDoEvento();
 setInterval(atualizarStatusDoEvento, 1000);
