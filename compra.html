@@ -29,8 +29,8 @@
                 <p>Preencha seus dados e confira a escolha antes de seguir para o pagamento.</p>
             </div>
             <aside class="resumo-pedido" aria-labelledby="resumo-titulo">
-                <div><span id="resumo-titulo">Seu ingresso</span><strong id="resumo-nome">Ingresso normal</strong></div>
-                <div class="resumo-preco"><strong id="resumo-valor">R$ 45,00</strong><span>valor individual</span></div>
+                <div><span id="resumo-titulo">1º Lote</span><strong id="resumo-nome">Ingresso normal</strong></div>
+                <div class="resumo-preco"><strong id="resumo-valor">R$ 20,00</strong><span>valor individual</span></div>
             </aside>
             <form id="form-compra" class="form-compra" novalidate>
                 <fieldset>
@@ -50,9 +50,8 @@
                 <fieldset>
                     <legend>Escolha confirmada</legend>
                     <div class="opcoes-ingresso">
-                        <label class="opcao-ingresso"><input type="radio" name="tipoIngresso" value="normal" checked><span><strong>Ingresso normal</strong><small>Programação geral e certificado</small></span><b>R$ 45</b></label>
-                        <label class="opcao-ingresso"><input type="radio" name="tipoIngresso" value="kit"><span><strong>Ingresso com kit</strong><small>Ingresso + itens oficiais</small></span><b>R$ 68</b></label>
-                        <label class="opcao-ingresso opcao-promocional"><input type="radio" name="tipoIngresso" value="kit_camisa"><span><strong>Ingresso + kit + camisa</strong><small>Combo completo com desconto na camisa</small></span><b><small>de R$ 113</small>R$ 99</b></label>
+                        <label class="opcao-ingresso"><input type="radio" name="tipoIngresso" value="normal" checked><span><strong>Ingresso normal</strong><small>Programação geral e certificado</small></span><b data-opcao-preco="normal">R$ 20</b></label>
+                        <label class="opcao-ingresso"><input type="radio" name="tipoIngresso" value="kit"><span><strong>Ingresso com kit</strong><small>Ingresso + itens oficiais</small></span><b data-opcao-preco="kit">R$ 40</b></label>
                     </div>
                 </fieldset>
                 <label class="aceite" for="compra-aceite"><input id="compra-aceite" name="aceite" type="checkbox" required><span>Confirmo que os dados estão corretos e aceito os termos da inscrição e o tratamento dos dados para emissão do ingresso.</span></label>

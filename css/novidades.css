@@ -924,6 +924,12 @@
     color: #fff;
 }
 
+.plano-botao:disabled {
+    opacity: .52;
+    cursor: not-allowed;
+    filter: saturate(.35);
+}
+
 .compra-aviso {
     min-height: 22px;
     margin-top: 18px;
@@ -1039,12 +1045,7 @@
 .lote-ativo b { color: var(--cor-primaria); }
 
 
-/* Terceira modalidade promocional */
 .plano-kit { background: #edf1ec; }
-.plano-promocional { margin-top: 8px; border: 2px solid var(--cor-secundaria); background: #e3e9e2; }
-.plano-promocional .plano-selo { background: var(--cor-secundaria); }
-.plano-promocional .plano-botao { background: var(--cor-secundaria); }
-.plano-preco-promocional > small { margin-bottom: 3px; color: #7f877f; font-size: 10px; font-weight: 700; text-decoration: line-through; }
 
 
 .home-patrocinadores-cabecalho {
