@@ -412,21 +412,32 @@ const docGeralRef = doc(db, "configuracoes", "geral");
 
 onSnapshot(docGeralRef, (docSnap) => {
     if (!docSnap.exists()) return;
-    if (selectFase && docSnap.data().faseAtual) selectFase.value = docSnap.data().faseAtual;
-    if (selectLoteAtivo) selectLoteAtivo.value = String(docSnap.data().loteAtivo || 1);
-    if (toggleLojinhaVisivel) toggleLojinhaVisivel.checked = docSnap.data().lojinhaVisivel !== false;
+    const configuracao = docSnap.data();
+    if (selectFase && configuracao.faseAtual) selectFase.value = configuracao.faseAtual;
+    if (selectLoteAtivo) {
+        const loteLegado = ({ 1: 'primeiro', 2: 'segundo' })[Number(configuracao.loteAtivo)];
+        selectLoteAtivo.value = ['social', 'primeiro', 'segundo'].includes(configuracao.loteIngressosAtivo)
+            ? configuracao.loteIngressosAtivo
+            : loteLegado || 'social';
+    }
+    if (toggleLojinhaVisivel) toggleLojinhaVisivel.checked = configuracao.lojinhaVisivel !== false;
 });
 
 if (btnSalvarLote) {
     btnSalvarLote.addEventListener('click', async () => {
-        const loteAtivo = Number(selectLoteAtivo.value);
-        if (![1, 2, 3].includes(loteAtivo)) return;
+        const loteIngressosAtivo = selectLoteAtivo.value;
+        const nomesLotes = { social: 'Lote Social', primeiro: '1º lote', segundo: '2º lote' };
+        if (!nomesLotes[loteIngressosAtivo]) return;
         try {
-            await setDoc(docGeralRef, { loteAtivo }, { merge: true });
-            alert('Lote ' + loteAtivo + ' ativado na página de ingressos.');
+            btnSalvarLote.disabled = true;
+            const loteAtivo = ({ social: 0, primeiro: 1, segundo: 2 })[loteIngressosAtivo];
+            await setDoc(docGeralRef, { loteIngressosAtivo, loteAtivo }, { merge: true });
+            alert(nomesLotes[loteIngressosAtivo] + ' ativado na página de ingressos.');
         } catch (error) {
             console.error('Erro ao ativar lote:', error);
             alert('Não foi possível atualizar o lote.');
+        } finally {
+            btnSalvarLote.disabled = false;
         }
     });
 }

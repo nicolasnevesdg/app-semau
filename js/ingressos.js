@@ -74,7 +74,8 @@ botoes.forEach(botao => {
 
 onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {
     const configuracao = snapshot.data() || {};
-    loteAtivo = normalizarLoteAtivo(configuracao.loteIngressosAtivo);
+    const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
+    loteAtivo = normalizarLoteAtivo(configuracao.loteIngressosAtivo || loteLegado);
     formularioLoteSocial = normalizarUrlFormulario(configuracao.formularioLoteSocial);
     atualizarLotes();
 }, atualizarLotes);
