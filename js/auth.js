@@ -223,6 +223,10 @@ if (btnEntrar) {
             if (!querySnapshot.empty) {
                 querySnapshot.forEach((docSnap) => {
                     const dadosUsuario = docSnap.data();
+                    if (dadosUsuario.ingressoAtivo === false) {
+                        alert("Este ingresso não está ativo. Procure a organização da XVI SEMAU.");
+                        return;
+                    }
                     
                     userNameDisplay.textContent = dadosUsuario.nome;
                     userTokenDisplay.textContent = dadosUsuario.token;
@@ -311,6 +315,12 @@ async function verificarSessao() {
             
             if (docSnap.exists()) {
                 const dadosUsuario = docSnap.data();
+                if (dadosUsuario.ingressoAtivo === false) {
+                    localStorage.removeItem('usuarioLogadoId');
+                    localStorage.removeItem('usuarioPoints');
+                    window.dispatchEvent(new Event('usuarioLoginAlterado'));
+                    return;
+                }
                 userNameDisplay.textContent = dadosUsuario.nome;
                 userTokenDisplay.textContent = dadosUsuario.token;
                 userPointsDisplay.textContent = dadosUsuario.pontos || 0;
