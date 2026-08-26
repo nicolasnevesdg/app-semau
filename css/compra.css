@@ -39,7 +39,6 @@
 .opcao-ingresso small { color: #7d837e; font-size: 10px; }
 .opcao-ingresso b { color: var(--cor-primaria); font-size: 14px; }
 .opcao-ingresso b small { display: block; color: #989d98; font-size: 8px; font-weight: 600; text-decoration: line-through; }
-.opcao-promocional::after { content: "PROMO"; position: absolute; top: -7px; right: 11px; padding: 3px 7px; border-radius: 999px; background: var(--cor-secundaria); color: #fff; font-size: 7px; font-weight: 900; letter-spacing: .8px; }
 .aceite { display: flex; align-items: flex-start; gap: 10px; color: #626963; font-size: 11px; line-height: 1.45; cursor: pointer; }
 .aceite input { margin-top: 2px; accent-color: var(--cor-secundaria); }
 .pagamento-seguro { margin-top: -4px; padding: 12px 14px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(128,154,205,.12); color: #59645e; }

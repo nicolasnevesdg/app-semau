@@ -17,22 +17,20 @@ const SITE_URL = "https://semau.space";
 const WEBHOOK_URL = "https://southamerica-east1-app-semau-ufrrj.cloudfunctions.net/mercadoPagoWebhook";
 
 const TIPOS_INGRESSO = Object.freeze({
-  normal: {
-    nome: "Ingresso normal — XVI SEMAU",
+  normal: Object.freeze({
+    nome: "Ingresso normal",
     descricao: "Programação geral da semana e certificado",
-    valor: 45,
-  },
-  kit: {
-    nome: "Ingresso com kit — XVI SEMAU",
+  }),
+  kit: Object.freeze({
+    nome: "Ingresso com kit",
     descricao: "Ingresso completo com itens oficiais da edição",
-    valor: 68,
-  },
-  kit_camisa: {
-    nome: "Ingresso + kit + camisa — XVI SEMAU",
-    descricao: "Combo completo da edição com desconto na camisa oficial",
-    valor: 99,
-  },
+  }),
 });
+const LOTES_PAGOS = Object.freeze({
+  primeiro: Object.freeze({ nome: "1º Lote", normal: 20, kit: 40 }),
+  segundo: Object.freeze({ nome: "2º Lote", normal: 25, kit: 45 }),
+});
+const LOTE_ATIVO_PADRAO = "social";
 
 function texto(value, maxLength) {
   return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
@@ -42,8 +40,31 @@ function emailValido(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function normalizarLoteAtivo(value) {
+  const lote = texto(value, 20).toLowerCase();
+  return lote === "social" || LOTES_PAGOS[lote] ? lote : LOTE_ATIVO_PADRAO;
+}
+
+async function obterLoteAtivo() {
+  const configuracao = await db.collection("configuracoes").doc("geral").get();
+  return normalizarLoteAtivo(configuracao.data()?.loteIngressosAtivo);
+}
+
+function obterIngresso(lote, tipo) {
+  const loteConfigurado = LOTES_PAGOS[lote];
+  const tipoConfigurado = TIPOS_INGRESSO[tipo];
+  if (!loteConfigurado || !tipoConfigurado) return null;
+  return {
+    nome: `${tipoConfigurado.nome} — ${loteConfigurado.nome} — XVI SEMAU`,
+    descricao: tipoConfigurado.descricao,
+    valor: loteConfigurado[tipo],
+    nomeLote: loteConfigurado.nome,
+  };
+}
+
 function validarDados(data) {
-  const tipo = ["normal", "kit", "kit_camisa"].includes(data.tipoIngresso) ? data.tipoIngresso : null;
+  const lote = LOTES_PAGOS[data.loteIngresso] ? data.loteIngresso : null;
+  const tipo = TIPOS_INGRESSO[data.tipoIngresso] ? data.tipoIngresso : null;
   const nome = texto(data.nome, 120);
   const email = texto(data.email, 150).toLowerCase();
   const telefone = texto(data.telefone, 24);
@@ -52,6 +73,7 @@ function validarDados(data) {
   const curso = texto(data.curso, 100);
   const periodo = texto(data.periodo, 30);
 
+  if (!lote) throw new HttpsError("invalid-argument", "Lote de ingresso inválido.");
   if (!tipo) throw new HttpsError("invalid-argument", "Tipo de ingresso inválido.");
   const partesNome = nome.split(/\s+/).filter((parte) => parte.length >= 2);
   if (partesNome.length < 2) throw new HttpsError("invalid-argument", "Informe o nome completo, com nome e sobrenome.");
@@ -62,7 +84,7 @@ function validarDados(data) {
   if (!curso) throw new HttpsError("invalid-argument", "Informe o curso.");
   if (data.aceite !== true) throw new HttpsError("failed-precondition", "É necessário aceitar os termos da inscrição.");
 
-  return { tipo, nome, email, telefone, instituicao, matricula, curso, periodo };
+  return { lote, tipo, nome, email, telefone, instituicao, matricula, curso, periodo };
 }
 
 async function mercadoPago(path, options = {}) {
@@ -175,6 +197,8 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
         matricula: pedido.matricula || null,
         curso: pedido.curso || null,
         periodo: pedido.periodo || null,
+        loteIngresso: pedido.loteIngresso || null,
+        nomeLote: pedido.nomeLote || null,
         tipoIngresso: pedido.tipoIngresso,
         nomeIngresso: pedido.nomeIngresso,
         pedidoId,
@@ -221,7 +245,14 @@ exports.criarPreferencia = onCall(
   },
   async (request) => {
     const dados = validarDados(request.data || {});
-    const ingresso = TIPOS_INGRESSO[dados.tipo];
+    const loteAtivo = await obterLoteAtivo();
+    if (loteAtivo === "social") {
+      throw new HttpsError("failed-precondition", "O Lote Social é realizado pelo formulário de comprovação.");
+    }
+    if (dados.lote !== loteAtivo) {
+      throw new HttpsError("failed-precondition", "Este lote não está disponível no momento.");
+    }
+    const ingresso = obterIngresso(dados.lote, dados.tipo);
     const pedidoRef = db.collection("pedidos").doc();
 
     await pedidoRef.set({
@@ -232,6 +263,8 @@ exports.criarPreferencia = onCall(
       matricula: dados.matricula,
       curso: dados.curso,
       periodo: dados.periodo || null,
+      loteIngresso: dados.lote,
+      nomeLote: ingresso.nomeLote,
       tipoIngresso: dados.tipo,
       nomeIngresso: ingresso.nome,
       valor: ingresso.valor,
@@ -247,7 +280,7 @@ exports.criarPreferencia = onCall(
         method: "POST",
         body: JSON.stringify({
           items: [{
-            id: dados.tipo,
+            id: `${dados.lote}_${dados.tipo}`,
             title: ingresso.nome,
             description: ingresso.descricao,
             quantity: 1,
@@ -270,6 +303,7 @@ exports.criarPreferencia = onCall(
           statement_descriptor: "SEMAU 2026",
           metadata: {
             pedido_id: pedidoRef.id,
+            lote_ingresso: dados.lote,
             tipo_ingresso: dados.tipo,
           },
         }),

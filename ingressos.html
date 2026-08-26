@@ -90,19 +90,19 @@
             <div class="ingressos-conteudo">
                 <span class="secao-etiqueta escura">Ingressos da edição</span>
                 <h2>Escolha como você quer viver a XVI SEMAU.</h2>
-                <p class="planos-intro">O 1º lote está disponível. Escolha seu ingresso abaixo.</p>
+                <p class="planos-intro">O Lote Social será realizado por formulário, com envio do comprovante de matrícula na modalidade de cota.</p>
 
                 <div class="lotes-lista">
-                    <div class="lote-card lote-ativo" data-lote="1"><div><strong>1º lote</strong><span>Disponível</span></div><b>Ativo</b></div>
-                    <div class="lote-card lote-inativo" data-lote="2"><div><strong>2º lote</strong><span>Abre na sequência</span></div><b>Em breve</b></div>
-                    <div class="lote-card lote-inativo" data-lote="3"><div><strong>3º lote</strong><span>Última chamada</span></div><b>Em breve</b></div>
+                    <div class="lote-card lote-ativo" data-lote="social"><div><strong>Lote Social</strong><span>Inscrição por formulário</span></div><b>Ativo</b></div>
+                    <div class="lote-card lote-inativo" data-lote="primeiro"><div><strong>1º Lote</strong><span>Abre na sequência</span></div><b>Em breve</b></div>
+                    <div class="lote-card lote-inativo" data-lote="segundo"><div><strong>2º Lote</strong><span>Última chamada</span></div><b>Em breve</b></div>
                 </div>
 
                 <div class="planos-grade">
                     <article class="plano-card">
                         <div class="plano-topo">
                             <h3>Ingresso<br>normal</h3>
-                            <div class="plano-preco"><strong>R$ 45</strong><span>por participante</span></div>
+                            <div class="plano-preco"><strong data-preco-tipo="normal">R$ 10</strong><span>por participante</span></div>
                         </div>
                         <ul>
                             <li><i class="ph-bold ph-check"></i>Programação geral da semana</li>
@@ -110,17 +110,17 @@
                             <li><i class="ph-bold ph-check"></i>Ativações e sorteios</li>
                             <li><i class="ph-bold ph-check"></i>Certificado após o evento</li>
                         </ul>
-                        <button type="button" class="plano-botao" data-tipo="normal">Escolher ingresso</button>
+                        <button type="button" class="plano-botao" data-tipo="normal" disabled>Formulário em breve</button>
                     </article>
 
-                    <article class="plano-card plano-kit">
+                    <article class="plano-card plano-kit plano-destaque">
                         <img src="assets/svg/sticker-estrela.svg" class="plano-sticker plano-sticker-1" alt="">
                         <img src="assets/svg/sticker-azulejo.svg" class="plano-sticker plano-sticker-2" alt="">
                         <img src="assets/svg/sticker-olhos-da-pele.svg" class="plano-sticker plano-sticker-3" alt="">
                         <span class="plano-selo">Mais completo</span>
                         <div class="plano-topo">
                             <h3>Ingresso<br>com kit</h3>
-                            <div class="plano-preco"><strong>R$ 68</strong><span>por participante</span></div>
+                            <div class="plano-preco"><strong data-preco-tipo="kit">R$ 20</strong><span>por participante</span></div>
                         </div>
                         <ul>
                             <li><i class="ph-bold ph-check"></i>Tudo do ingresso normal</li>
@@ -128,29 +128,12 @@
                             <li><i class="ph-bold ph-check"></i>Cartela de stickers e brinde</li>
                             <li><i class="ph-bold ph-check"></i>Retirada especial do kit</li>
                         </ul>
-                        <button type="button" class="plano-botao" data-tipo="kit">Quero o ingresso com kit</button>
+                        <button type="button" class="plano-botao" data-tipo="kit" disabled>Formulário em breve</button>
                     </article>
 
-                    <article class="plano-card plano-destaque plano-promocional">
-                        <img src="assets/svg/sticker-estrela.svg" class="plano-sticker plano-sticker-1" alt="">
-                        <img src="assets/svg/sticker-azulejo.svg" class="plano-sticker plano-sticker-2" alt="">
-                        <img src="assets/svg/sticker-olhos-da-pele.svg" class="plano-sticker plano-sticker-3" alt="">
-                        <span class="plano-selo">Camisa com desconto</span>
-                        <div class="plano-topo">
-                            <h3>Ingresso + kit<br>+ camisa</h3>
-                            <div class="plano-preco plano-preco-promocional"><small>de R$ 113</small><strong>R$ 99</strong><span>por participante</span></div>
-                        </div>
-                        <ul>
-                            <li><i class="ph-bold ph-check"></i>Tudo do ingresso com kit</li>
-                            <li><i class="ph-bold ph-check"></i>Camisa oficial da XVI SEMAU</li>
-                            <li><i class="ph-bold ph-check"></i>Desconto exclusivo no combo</li>
-                            <li><i class="ph-bold ph-check"></i>Retirada conjunta no evento</li>
-                        </ul>
-                        <button type="button" class="plano-botao" data-tipo="kit_camisa">Quero o combo completo</button>
-                    </article>
                 </div>
 
-                <p class="compra-aviso" id="compra-aviso" role="status" aria-live="polite"></p>
+                <p class="compra-aviso" id="compra-aviso" role="status" aria-live="polite">Assim que o formulário do Lote Social for publicado, o botão será liberado aqui.</p>
             </div>
         </section>
 
