@@ -3,11 +3,15 @@ const { defineSecret } = require("firebase-functions/params");
 const { logger } = require("firebase-functions");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { createHmac, randomInt, timingSafeEqual } = require("node:crypto");
 
 initializeApp();
 
 const db = getFirestore();
 const mercadoPagoAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN");
+const mercadoPagoWebhookSecret = defineSecret("MERCADOPAGO_WEBHOOK_SECRET");
+const SITE_ORIGINS = ["https://semau.space", "https://www.semau.space"];
+const TOKEN_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REGION = "southamerica-east1";
 const SITE_URL = "https://semau.space";
 const WEBHOOK_URL = "https://southamerica-east1-app-semau-ufrrj.cloudfunctions.net/mercadoPagoWebhook";
@@ -79,8 +83,142 @@ async function mercadoPago(path, options = {}) {
   return body;
 }
 
+async function gerarTokenIngresso() {
+  for (let tentativa = 0; tentativa < 12; tentativa += 1) {
+    let token = "";
+    for (let indice = 0; indice < 5; indice += 1) {
+      token += TOKEN_CHARS[randomInt(TOKEN_CHARS.length)];
+    }
+    const existente = await db.collection("inscritos").where("token", "==", token).limit(1).get();
+    if (existente.empty) return token;
+  }
+  throw new Error("Não foi possível gerar um token único para o ingresso.");
+}
+
+function statusMantemIngressoAtivo(status) {
+  return status === "approved";
+}
+
+function assinaturaWebhookValida(xSignature, xRequestId, dataId, secret) {
+  const partes = String(xSignature || "").split(",");
+  const valores = {};
+  partes.forEach((parte) => {
+    const [chave, valor] = parte.split("=", 2).map((item) => item?.trim());
+    if (chave && valor) valores[chave] = valor;
+  });
+
+  if (!valores.ts || !/^[a-f0-9]{64}$/i.test(valores.v1 || "") || !dataId || !xRequestId || !secret) {
+    return false;
+  }
+
+  const idNormalizado = String(dataId).toLowerCase();
+  const manifesto = `id:${idNormalizado};request-id:${xRequestId};ts:${valores.ts};`;
+  const calculada = Buffer.from(createHmac("sha256", secret).update(manifesto).digest("hex"), "hex");
+  const recebida = Buffer.from(valores.v1, "hex");
+  return calculada.length === recebida.length && timingSafeEqual(calculada, recebida);
+}
+
+async function processarPagamento(paymentId, pedidoEsperado = "") {
+  const payment = await mercadoPago(`/v1/payments/${encodeURIComponent(paymentId)}`);
+  const pedidoId = texto(payment.external_reference || payment.metadata?.pedido_id, 120);
+  if (!pedidoId || (pedidoEsperado && pedidoId !== pedidoEsperado)) {
+    throw new Error("O pagamento não pertence ao pedido informado.");
+  }
+
+  const pedidoRef = db.collection("pedidos").doc(pedidoId);
+  const inscritoRef = db.collection("inscritos").doc(pedidoId);
+  const tokenNovo = await gerarTokenIngresso();
+
+  return db.runTransaction(async (transaction) => {
+    const [pedidoDoc, inscritoDoc] = await Promise.all([
+      transaction.get(pedidoRef),
+      transaction.get(inscritoRef),
+    ]);
+    if (!pedidoDoc.exists) throw new Error("Pedido não encontrado.");
+
+    const pedido = pedidoDoc.data();
+    const valorRecebido = Number(payment.transaction_amount || 0);
+    const valorEsperado = Number(pedido.valor || 0);
+    const moedaRecebida = texto(payment.currency_id, 8).toUpperCase();
+    const statusRecebido = texto(payment.status, 40) || "unknown";
+    const valorConfere = Math.abs(valorRecebido - valorEsperado) < 0.001;
+    const moedaConfere = moedaRecebida === "BRL";
+    const pagamentoAprovado = statusRecebido === "approved" && valorConfere && moedaConfere;
+    const statusSeguro = statusRecebido === "approved" && !pagamentoAprovado
+      ? "manual_review"
+      : statusRecebido;
+    const token = inscritoDoc.exists ? inscritoDoc.data().token : tokenNovo;
+
+    transaction.update(pedidoRef, {
+      status: statusSeguro,
+      paymentId: String(payment.id),
+      paymentStatus: statusRecebido,
+      paymentStatusDetail: texto(payment.status_detail, 100) || null,
+      paymentMethod: texto(payment.payment_type_id, 60) || null,
+      valorRecebido,
+      valorConfere,
+      moedaRecebida: moedaRecebida || null,
+      moedaConfere,
+      credencialEmitida: pagamentoAprovado,
+      token: pagamentoAprovado ? token : pedido.token || null,
+      pagoEm: payment.date_approved || null,
+      atualizadoEm: FieldValue.serverTimestamp(),
+      webhookProcessadoEm: FieldValue.serverTimestamp(),
+    });
+
+    if (pagamentoAprovado && !inscritoDoc.exists) {
+      transaction.set(inscritoRef, {
+        nome: pedido.nome,
+        email: pedido.email,
+        telefone: pedido.telefone || null,
+        instituicao: pedido.instituicao || null,
+        matricula: pedido.matricula || null,
+        curso: pedido.curso || null,
+        periodo: pedido.periodo || null,
+        tipoIngresso: pedido.tipoIngresso,
+        nomeIngresso: pedido.nomeIngresso,
+        pedidoId,
+        paymentId: String(payment.id),
+        token,
+        pontos: 0,
+        oficinas: [],
+        ingressoAtivo: true,
+        statusPagamento: statusRecebido,
+        d21_m: false, d21_t: false,
+        d22_m: false, d22_t: false,
+        d23_m: false, d23_t: false,
+        d24_m: false, d24_t: false,
+        d25_m: false, d25_t: false,
+        criadoEm: FieldValue.serverTimestamp(),
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+    } else if (inscritoDoc.exists) {
+      transaction.update(inscritoRef, {
+        ingressoAtivo: statusMantemIngressoAtivo(statusSeguro) && valorConfere && moedaConfere,
+        statusPagamento: statusRecebido,
+        paymentId: String(payment.id),
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+    }
+
+    return {
+      pedidoId,
+      status: statusSeguro,
+      aprovado: pagamentoAprovado,
+      token: pagamentoAprovado ? token : null,
+      nome: pagamentoAprovado ? pedido.nome : null,
+      email: pagamentoAprovado ? pedido.email : null,
+    };
+  });
+}
+
 exports.criarPreferencia = onCall(
-  { region: REGION, secrets: [mercadoPagoAccessToken], cors: [SITE_URL] },
+  {
+    region: REGION,
+    maxInstances: 2,
+    secrets: [mercadoPagoAccessToken],
+    cors: SITE_ORIGINS,
+  },
   async (request) => {
     const dados = validarDados(request.data || {});
     const ingresso = TIPOS_INGRESSO[dados.tipo];
@@ -137,7 +275,8 @@ exports.criarPreferencia = onCall(
         }),
       });
 
-      const checkoutUrl = preferencia.sandbox_init_point || preferencia.init_point;
+      const tokenDeTeste = mercadoPagoAccessToken.value().startsWith("TEST-");
+      const checkoutUrl = tokenDeTeste ? preferencia.sandbox_init_point : preferencia.init_point;
       if (!checkoutUrl) throw new Error("Preferência criada sem URL de checkout.");
 
       await pedidoRef.update({
@@ -158,54 +297,67 @@ exports.criarPreferencia = onCall(
   },
 );
 
+exports.consultarPedido = onCall(
+  {
+    region: REGION,
+    maxInstances: 2,
+    secrets: [mercadoPagoAccessToken],
+    cors: SITE_ORIGINS,
+  },
+  async (request) => {
+    const pedidoId = texto(request.data?.pedidoId, 120);
+    const paymentId = texto(request.data?.paymentId, 80);
+    if (!pedidoId || !paymentId) {
+      throw new HttpsError("invalid-argument", "Referência de pagamento incompleta.");
+    }
+
+    try {
+      return await processarPagamento(paymentId, pedidoId);
+    } catch (error) {
+      logger.error("Falha ao consultar pedido", { pedidoId, paymentId, error: error.message });
+      throw new HttpsError("failed-precondition", "O pagamento ainda não pôde ser confirmado.");
+    }
+  },
+);
+
 exports.mercadoPagoWebhook = onRequest(
-  { region: REGION, secrets: [mercadoPagoAccessToken], cors: false },
+  {
+    region: REGION,
+    maxInstances: 2,
+    secrets: [mercadoPagoAccessToken, mercadoPagoWebhookSecret],
+    cors: false,
+  },
   async (request, response) => {
     if (request.method !== "POST") {
       response.status(405).send("Method Not Allowed");
       return;
     }
 
-    const paymentId = String(request.body?.data?.id || request.query["data.id"] || request.query.id || "");
+    if (request.body?.type && request.body.type !== "payment") {
+      response.status(200).send("ignored");
+      return;
+    }
+
+    const paymentId = String(request.query["data.id"] || request.body?.data?.id || request.query.id || "");
     if (!paymentId) {
       response.status(200).send("ignored");
       return;
     }
 
+    const assinaturaValida = assinaturaWebhookValida(
+      request.get("x-signature"),
+      request.get("x-request-id"),
+      paymentId,
+      mercadoPagoWebhookSecret.value(),
+    );
+    if (!assinaturaValida) {
+      logger.warn("Webhook do Mercado Pago com assinatura inválida", { paymentId });
+      response.status(401).send("invalid signature");
+      return;
+    }
+
     try {
-      const payment = await mercadoPago(`/v1/payments/${encodeURIComponent(paymentId)}`);
-      const pedidoId = texto(payment.external_reference || payment.metadata?.pedido_id, 120);
-      if (!pedidoId) {
-        response.status(200).send("ignored");
-        return;
-      }
-
-      const pedidoRef = db.collection("pedidos").doc(pedidoId);
-      await db.runTransaction(async (transaction) => {
-        const pedidoDoc = await transaction.get(pedidoRef);
-        if (!pedidoDoc.exists) return;
-
-        const pedido = pedidoDoc.data();
-        const valorRecebido = Number(payment.transaction_amount || 0);
-        const valorEsperado = Number(pedido.valor || 0);
-        const statusRecebido = texto(payment.status, 40) || "unknown";
-        const valorConfere = Math.abs(valorRecebido - valorEsperado) < 0.001;
-        const statusSeguro = statusRecebido === "approved" && !valorConfere ? "manual_review" : statusRecebido;
-
-        transaction.update(pedidoRef, {
-          status: statusSeguro,
-          paymentId: String(payment.id),
-          paymentStatus: statusRecebido,
-          paymentStatusDetail: texto(payment.status_detail, 100) || null,
-          paymentMethod: texto(payment.payment_type_id, 60) || null,
-          valorRecebido,
-          valorConfere,
-          pagoEm: payment.date_approved || null,
-          atualizadoEm: FieldValue.serverTimestamp(),
-          webhookProcessadoEm: FieldValue.serverTimestamp(),
-        });
-      });
-
+      await processarPagamento(paymentId);
       response.status(200).send("ok");
     } catch (error) {
       logger.error("Falha ao processar webhook", { paymentId, error: error.message });

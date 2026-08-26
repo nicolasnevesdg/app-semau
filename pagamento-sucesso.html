@@ -36,14 +36,22 @@
                 </article>
                 <article>
                     <span>2</span>
-                    <div><h2>Ingresso no seu e-mail</h2><p>Você receberá o token de acesso assim que a emissão for concluída.</p></div>
+                    <div><h2>Credencial liberada na hora</h2><p>Seu token aparecerá nesta página assim que a aprovação for confirmada.</p></div>
                 </article>
             </div>
 
             <div class="retorno-aviso">
                 <i class="ph-bold ph-info" aria-hidden="true"></i>
-                <p>Esta tela é informativa. O ingresso só será emitido após a confirmação do pagamento pelo sistema.</p>
+                <p id="retorno-confirmacao-status">Confirmando seu pagamento e emitindo a credencial...</p>
             </div>
+
+            <section id="retorno-credencial" class="retorno-credencial" hidden aria-labelledby="retorno-credencial-titulo">
+                <span>Credencial liberada</span>
+                <h2 id="retorno-credencial-titulo">Seu token de acesso</h2>
+                <strong id="retorno-token" aria-label="Token do ingresso"></strong>
+                <p>Entre no app usando <b id="retorno-email"></b> e o token acima.</p>
+                <a href="index.html#login" class="retorno-acao primaria">Abrir minha credencial</a>
+            </section>
 
             <div class="retorno-acoes">
                 <a href="index.html" class="retorno-acao primaria">Voltar ao site</a>
@@ -53,6 +61,6 @@
 
         <footer class="retorno-rodape">XVI SEMAU <span>•</span> 2026</footer>
     </main>
-    <script src="js/pagamento-retorno.js"></script>
+    <script type="module" src="js/pagamento-retorno.js"></script>
 </body>
 </html>
