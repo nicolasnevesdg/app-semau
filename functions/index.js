@@ -142,6 +142,71 @@ function assinaturaWebhookValida(xSignature, xRequestId, dataId, secret) {
   return calculada.length === recebida.length && timingSafeEqual(calculada, recebida);
 }
 
+async function enviarEmailIngressoSeNecessario({ pedidoId, nome, email, token }) {
+  const configuracaoDoc = await db.collection("configuracoes").doc("emailIngresso").get();
+  const configuracao = configuracaoDoc.data() || {};
+  const publicKey = texto(configuracao.publicKey, 160);
+  const serviceId = texto(configuracao.serviceId, 120);
+  const templateId = texto(configuracao.templateId, 120);
+  if (configuracao.ativo !== true || !publicKey || !serviceId || !templateId) {
+    return { status: "desativado" };
+  }
+
+  const inscritoRef = db.collection("inscritos").doc(pedidoId);
+  const reservado = await db.runTransaction(async (transaction) => {
+    const inscritoDoc = await transaction.get(inscritoRef);
+    if (!inscritoDoc.exists) return false;
+    const dados = inscritoDoc.data();
+    if (dados.emailIngressoStatus === "enviado") return false;
+    const tentativaAnterior = dados.emailIngressoTentativaEm?.toMillis?.() || 0;
+    if (dados.emailIngressoStatus === "enviando" && Date.now() - tentativaAnterior < 5 * 60 * 1000) return false;
+    transaction.update(inscritoRef, {
+      emailIngressoStatus: "enviando",
+      emailIngressoTentativaEm: FieldValue.serverTimestamp(),
+      atualizadoEm: FieldValue.serverTimestamp(),
+    });
+    return true;
+  });
+
+  if (!reservado) return { status: "ignorado" };
+
+  try {
+    const resposta = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        template_params: {
+          to_name: nome,
+          to_email: email,
+          user_token: token,
+          site_url: SITE_URL,
+          instagram_url: "https://www.instagram.com/semauufrrj/",
+        },
+      }),
+    });
+    if (!resposta.ok) {
+      const detalhe = texto(await resposta.text(), 240);
+      throw new Error("EmailJS respondeu com status " + resposta.status + ": " + detalhe);
+    }
+    await inscritoRef.update({
+      emailIngressoStatus: "enviado",
+      emailIngressoEnviadoEm: FieldValue.serverTimestamp(),
+      emailIngressoErro: FieldValue.delete(),
+      atualizadoEm: FieldValue.serverTimestamp(),
+    });
+    return { status: "enviado" };
+  } catch (error) {
+    await inscritoRef.update({
+      emailIngressoStatus: "falhou",
+      emailIngressoErro: texto(error.message, 240),
+      atualizadoEm: FieldValue.serverTimestamp(),
+    });
+    throw error;
+  }
+}
 async function processarPagamento(paymentId, pedidoEsperado = "") {
   const payment = await mercadoPago(`/v1/payments/${encodeURIComponent(paymentId)}`);
   const pedidoId = texto(payment.external_reference || payment.metadata?.pedido_id, 120);
@@ -153,7 +218,7 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
   const inscritoRef = db.collection("inscritos").doc(pedidoId);
   const tokenNovo = await gerarTokenIngresso();
 
-  return db.runTransaction(async (transaction) => {
+  const resultado = await db.runTransaction(async (transaction) => {
     const [pedidoDoc, inscritoDoc] = await Promise.all([
       transaction.get(pedidoRef),
       transaction.get(inscritoRef),
@@ -236,6 +301,15 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       email: pagamentoAprovado ? pedido.email : null,
     };
   });
+
+  if (resultado.aprovado) {
+    try {
+      await enviarEmailIngressoSeNecessario(resultado);
+    } catch (error) {
+      logger.error("Falha ao enviar e-mail do ingresso", { pedidoId, error: error.message });
+    }
+  }
+  return resultado;
 }
 
 exports.criarPreferencia = onCall(

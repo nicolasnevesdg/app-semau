@@ -51,7 +51,41 @@
     .admin-agenda-conteudo p { margin: 3px 0 0; color: #68686f; font-size: 12px; line-height: 1.45; }
     .admin-agenda-conteudo strong { color: #3d3d42; }
     .admin-agenda-pendente { color: #b66a23; font-weight: 700; }
+    .admin-acoes-inscrito { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-ficha-inscrito, .btn-email-inscrito { min-height: 46px; border-radius: 12px; padding: 12px 14px; border: 0; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .btn-ficha-inscrito { background: #f2f5fb; color: var(--cor-primaria); border: 1px solid #dce4f3; }
+    .btn-email-inscrito { background: var(--cor-secundaria); color: #fff; }
+    .btn-ficha-inscrito:hover, .btn-email-inscrito:hover { transform: translateY(-1px); filter: brightness(1.03); }
+
+    .modal-ficha-overlay { position: fixed; inset: 0; z-index: 12000; background: rgba(18, 24, 34, 0.72); backdrop-filter: blur(8px); padding: 20px; display: flex; align-items: center; justify-content: center; }
+    .modal-ficha-overlay[hidden] { display: none; }
+    .modal-ficha { width: min(100%, 560px); max-height: min(88vh, 820px); overflow: auto; background: #f7f8fa; border-radius: 26px; box-shadow: 0 28px 80px rgba(0,0,0,0.3); }
+    .modal-ficha-topo { position: sticky; top: 0; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; background: rgba(255,255,255,0.96); border-bottom: 1px solid #e9e9ee; border-radius: 26px 26px 0 0; }
+    .modal-ficha-topo h2 { margin: 3px 0 0; color: var(--cor-primaria); font-size: 22px; line-height: 1.2; }
+    .modal-ficha-etiqueta { margin: 0; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+    .modal-ficha-fechar { width: 40px; height: 40px; flex: 0 0 auto; border: 1px solid #e5e5ea; border-radius: 12px; background: #fff; color: #555; font-size: 20px; cursor: pointer; display: grid; place-items: center; }
+    .modal-ficha-corpo { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+    .ficha-bloco { padding: 20px; background: #fff; border: 1px solid #e9e9ee; border-radius: 18px; }
+    .ficha-bloco h3 { margin: 0 0 16px; color: var(--cor-primaria); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .ficha-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+    .ficha-campo { min-width: 0; }
+    .ficha-campo.ficha-campo-largo { grid-column: 1 / -1; }
+    .ficha-campo span { display: block; margin-bottom: 4px; color: #8a8a92; font-size: 10px; font-weight: 800; letter-spacing: 0.7px; text-transform: uppercase; }
+    .ficha-campo strong { display: block; color: #34343a; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+    .ficha-campo strong.ficha-token { color: var(--cor-secundaria); letter-spacing: 2px; }
+    .ficha-presenca { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #f8f9fb; }
+    .ficha-presenca span { color: #666; font-size: 13px; font-weight: 700; }
+    .ficha-presenca strong { font-size: 17px; color: var(--cor-primaria); }
     @media (max-width: 420px) { .admin-agenda-item { grid-template-columns: 74px minmax(0, 1fr); gap: 10px; } }
+    @media (max-width: 520px) {
+        .admin-acoes-inscrito { grid-template-columns: 1fr; }
+        .modal-ficha-overlay { padding: 0; align-items: flex-end; }
+        .modal-ficha { width: 100%; max-height: 94vh; border-radius: 24px 24px 0 0; }
+        .modal-ficha-topo { border-radius: 24px 24px 0 0; padding: 20px; }
+        .modal-ficha-corpo { padding: 16px; }
+        .ficha-grade { grid-template-columns: 1fr; }
+        .ficha-campo.ficha-campo-largo { grid-column: auto; }
+    }
     /* Suaviza as barras de rolagem */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -269,6 +303,31 @@
         </div>
 
         <div class="admin-card-minimal">
+            <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Comunicação com inscritos</p>
+            <h3 style="font-size: 18px; font-weight: 800; margin: 0 0 8px; color: var(--cor-primaria);">E-mail automático do ingresso</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 18px; line-height: 1.5;">Conecte o modelo oficial da SEMAU ao EmailJS. Depois disso, o e-mail com o token será enviado quando o pagamento for aprovado.</p>
+            <label style="display:block; margin-bottom:12px; color:#555; font-size:12px; font-weight:700;">Public Key
+                <input type="text" id="emailjs-public-key" class="admin-input" autocomplete="off" placeholder="Sua Public Key" style="margin-top:6px;">
+            </label>
+            <label style="display:block; margin-bottom:12px; color:#555; font-size:12px; font-weight:700;">Service ID
+                <input type="text" id="emailjs-service-id" class="admin-input" autocomplete="off" value="default_service" style="margin-top:6px;">
+            </label>
+            <label style="display:block; margin-bottom:14px; color:#555; font-size:12px; font-weight:700;">Template ID
+                <input type="text" id="emailjs-template-id" class="admin-input" autocomplete="off" value="template_ingresso_semau" style="margin-top:6px;">
+            </label>
+            <label style="display:flex; align-items:center; justify-content:space-between; gap:18px; padding:15px 16px; margin-bottom:16px; border:1px solid #e8e8eb; border-radius:12px; color:#444; font-size:14px; font-weight:700; cursor:pointer;">
+                <span>Ativar envio após pagamento</span>
+                <input type="checkbox" id="toggle-emailjs-ativo" style="width:20px; height:20px; accent-color:var(--cor-secundaria); cursor:pointer;">
+            </label>
+            <button type="button" id="btn-salvar-emailjs" class="admin-btn-primary" style="width:100%;"><i class="ph-bold ph-envelope-simple"></i> Salvar configuração do e-mail</button>
+            <p id="status-emailjs" style="display:none; margin:14px 0 0; padding:12px; border-radius:10px; font-size:12px; line-height:1.45;"></p>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; font-size:12px; font-weight:700;">
+                <button type="button" id="btn-copiar-template-email" style="padding:0; border:0; background:none; color:var(--cor-secundaria); font:inherit; cursor:pointer;">Copiar HTML do modelo</button>
+                <a href="email-templates/ingresso-xvi-semau.html" target="_blank" rel="noopener" style="color:var(--cor-primaria);">Visualizar modelo</a>
+                <a href="https://dashboard.emailjs.com/admin/templates" target="_blank" rel="noopener" style="color:var(--cor-secundaria);">Abrir EmailJS</a>
+            </div>
+        </div>
+        <div class="admin-card-minimal">
             <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;">Agenda interna</p>
             <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 7px; color: var(--cor-primaria);">Segunda-feira · 21/09</h3>
             <p style="font-size: 12px; color: #777; margin-bottom: 22px; line-height: 1.5;">Os responsáveis abaixo são informações internas da comissão e não aparecem no site público.</p>
@@ -409,6 +468,32 @@
         </button>
     </nav>
     
+    <div id="modal-ficha-inscrito" class="modal-ficha-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-ficha-nome" hidden>
+        <article class="modal-ficha">
+            <header class="modal-ficha-topo">
+                <div>
+                    <p class="modal-ficha-etiqueta">Ficha completa do inscrito</p>
+                    <h2 id="modal-ficha-nome">Inscrito</h2>
+                </div>
+                <button type="button" id="btn-fechar-ficha" class="modal-ficha-fechar" aria-label="Fechar ficha"><i class="ph-bold ph-x"></i></button>
+            </header>
+            <div class="modal-ficha-corpo">
+                <section class="ficha-bloco">
+                    <h3><i class="ph-bold ph-identification-card"></i> Dados informados na compra</h3>
+                    <div id="ficha-dados-pessoais" class="ficha-grade"></div>
+                </section>
+                <section class="ficha-bloco">
+                    <h3><i class="ph-bold ph-ticket"></i> Ingresso e pagamento</h3>
+                    <div id="ficha-dados-ingresso" class="ficha-grade"></div>
+                </section>
+                <section class="ficha-bloco">
+                    <h3><i class="ph-bold ph-calendar-check"></i> Participação no evento</h3>
+                    <div id="ficha-resumo-presenca" class="ficha-presenca"></div>
+                    <div id="ficha-dados-evento" class="ficha-grade" style="margin-top: 16px;"></div>
+                </section>
+            </div>
+        </article>
+    </div>
     <div id="modal-camera" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.98); backdrop-filter: blur(10px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
         <h3 style="color: white; margin-bottom: 32px; font-weight: 300; font-size: 20px;">Aponte para o <b style="font-weight: 800;">QR Code</b></h3>
         <div style="position: relative; width: 100%; max-width: 350px; padding: 0 20px;">
@@ -424,12 +509,6 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="text/javascript">
-    (function() {
-        emailjs.init("SUA_CHAVE_PUBLICA_AQUI"); 
-    })();
-</script>
-
 <script type="module" src="js/admin.js"></script>
 </body>
 </html>
