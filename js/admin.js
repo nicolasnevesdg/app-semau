@@ -16,6 +16,13 @@ const selectLoteAtivo = document.getElementById('select-lote-ativo');
 const btnSalvarLote = document.getElementById('btn-salvar-lote');
 const toggleLojinhaVisivel = document.getElementById('toggle-lojinha-visivel');
 const btnSalvarLojinha = document.getElementById('btn-salvar-lojinha');
+const emailjsPublicKey = document.getElementById('emailjs-public-key');
+const emailjsServiceId = document.getElementById('emailjs-service-id');
+const emailjsTemplateId = document.getElementById('emailjs-template-id');
+const toggleEmailjsAtivo = document.getElementById('toggle-emailjs-ativo');
+const btnSalvarEmailjs = document.getElementById('btn-salvar-emailjs');
+const statusEmailjs = document.getElementById('status-emailjs');
+const btnCopiarTemplateEmail = document.getElementById('btn-copiar-template-email');
 
 const adminBuscaPax = document.getElementById('admin-busca-pax');
 const btnAdminBuscar = document.getElementById('btn-admin-buscar');
@@ -461,6 +468,82 @@ if (btnSalvarLojinha) {
     });
 }
 
+const docEmailIngressoRef = doc(db, "configuracoes", "emailIngresso");
+let configuracaoEmailIngresso = null;
+
+function mostrarStatusEmailjs(mensagem, sucesso = false) {
+    if (!statusEmailjs) return;
+    statusEmailjs.style.display = 'block';
+    statusEmailjs.style.background = sucesso ? '#eaf8ef' : '#fff1ec';
+    statusEmailjs.style.color = sucesso ? '#217a43' : '#a6522b';
+    statusEmailjs.textContent = mensagem;
+}
+
+onSnapshot(docEmailIngressoRef, (snapshot) => {
+    const dados = snapshot.data() || {};
+    configuracaoEmailIngresso = {
+        publicKey: String(dados.publicKey || '').trim(),
+        serviceId: String(dados.serviceId || 'default_service').trim(),
+        templateId: String(dados.templateId || 'template_ingresso_semau').trim(),
+        ativo: dados.ativo === true
+    };
+    if (emailjsPublicKey) emailjsPublicKey.value = configuracaoEmailIngresso.publicKey;
+    if (emailjsServiceId) emailjsServiceId.value = configuracaoEmailIngresso.serviceId;
+    if (emailjsTemplateId) emailjsTemplateId.value = configuracaoEmailIngresso.templateId;
+    if (toggleEmailjsAtivo) toggleEmailjsAtivo.checked = configuracaoEmailIngresso.ativo;
+    if (configuracaoEmailIngresso.publicKey && window.emailjs) window.emailjs.init(configuracaoEmailIngresso.publicKey);
+}, (error) => {
+    console.error('Erro ao carregar configuração do EmailJS:', error);
+    mostrarStatusEmailjs('Não foi possível carregar a configuração do e-mail.');
+});
+
+if (btnSalvarEmailjs) {
+    btnSalvarEmailjs.addEventListener('click', async () => {
+        const configuracao = {
+            publicKey: emailjsPublicKey.value.trim(),
+            serviceId: emailjsServiceId.value.trim() || 'default_service',
+            templateId: emailjsTemplateId.value.trim() || 'template_ingresso_semau',
+            ativo: toggleEmailjsAtivo.checked
+        };
+        if (configuracao.ativo && !configuracao.publicKey) {
+            mostrarStatusEmailjs('Informe a Public Key antes de ativar os envios.');
+            emailjsPublicKey.focus();
+            return;
+        }
+
+        btnSalvarEmailjs.disabled = true;
+        const textoOriginal = btnSalvarEmailjs.innerHTML;
+        btnSalvarEmailjs.textContent = 'Salvando...';
+        try {
+            await setDoc(docEmailIngressoRef, { ...configuracao, atualizadoEm: serverTimestamp() }, { merge: true });
+            configuracaoEmailIngresso = configuracao;
+            if (configuracao.publicKey && window.emailjs) window.emailjs.init(configuracao.publicKey);
+            mostrarStatusEmailjs(configuracao.ativo
+                ? 'Envio automático ativado. O botão de reenvio da base também usará este modelo.'
+                : 'Configuração salva. O envio automático permanece desativado.', true);
+        } catch (error) {
+            console.error('Erro ao salvar configuração do EmailJS:', error);
+            mostrarStatusEmailjs('Não foi possível salvar a configuração do e-mail.');
+        } finally {
+            btnSalvarEmailjs.disabled = false;
+            btnSalvarEmailjs.innerHTML = textoOriginal;
+        }
+    });
+}
+if (btnCopiarTemplateEmail) {
+    btnCopiarTemplateEmail.addEventListener('click', async () => {
+        try {
+            const resposta = await fetch('email-templates/ingresso-xvi-semau.html', { cache: 'no-store' });
+            if (!resposta.ok) throw new Error('Modelo indisponível');
+            const html = await resposta.text();
+            await navigator.clipboard.writeText(html);
+            mostrarStatusEmailjs('HTML do modelo copiado. Agora é só colar no editor do EmailJS.', true);
+        } catch (error) {
+            console.error('Erro ao copiar modelo:', error);
+            mostrarStatusEmailjs('Não foi possível copiar automaticamente. Use o link “Visualizar modelo”.');
+        }
+    });
+}
 const docConvidadosRef = doc(db, "configuracoes", "anuncios");
 const checkboxesConvidados = document.querySelectorAll('.toggle-convidado');
 
@@ -538,14 +621,148 @@ const adminBuscaLista = document.getElementById('admin-busca-lista');
 const dashTotal = document.getElementById('dash-total');
 const btnExportarExcel = document.getElementById('btn-exportar-excel');
 
-let dadosParaExcel = []; 
+let dadosParaExcel = [];
+const inscritosPorId = new Map();
+const TURNOS_PRESENCA = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
+const NOMES_TURNOS = {
+    d21_m: '21/Set · Manhã', d21_t: '21/Set · Tarde',
+    d22_m: '22/Set · Manhã', d22_t: '22/Set · Tarde',
+    d23_m: '23/Set · Manhã', d23_t: '23/Set · Tarde',
+    d24_m: '24/Set · Manhã', d24_t: '24/Set · Tarde',
+    d25_m: '25/Set · Manhã', d25_t: '25/Set · Tarde'
+};
+
+const modalFichaInscrito = document.getElementById('modal-ficha-inscrito');
+const modalFichaNome = document.getElementById('modal-ficha-nome');
+const btnFecharFicha = document.getElementById('btn-fechar-ficha');
+const fichaDadosPessoais = document.getElementById('ficha-dados-pessoais');
+const fichaDadosIngresso = document.getElementById('ficha-dados-ingresso');
+const fichaResumoPresenca = document.getElementById('ficha-resumo-presenca');
+const fichaDadosEvento = document.getElementById('ficha-dados-evento');
+let focoAntesDaFicha = null;
+
+function textoDisponivel(valor, padrao = 'Não informado') {
+    const texto = String(valor ?? '').trim();
+    return texto || padrao;
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+function formatarDataRegistro(valor) {
+    if (!valor) return 'Não registrado';
+    const data = typeof valor.toDate === 'function' ? valor.toDate() : new Date(valor);
+    if (Number.isNaN(data.getTime())) return 'Não registrado';
+    return data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function nomeDoLote(dados) {
+    if (dados.nomeLote) return dados.nomeLote;
+    return ({ social: 'Lote Social', primeiro: '1º Lote', segundo: '2º Lote' })[dados.loteIngresso] || 'Não informado';
+}
+
+function nomeDoTipo(dados) {
+    return ({ normal: 'Ingresso normal', kit: 'Ingresso com kit' })[dados.tipoIngresso]
+        || textoDisponivel(dados.nomeIngresso);
+}
+
+function nomeDoStatusPagamento(status) {
+    return ({
+        approved: 'Aprovado', pending: 'Pendente', in_process: 'Em análise', rejected: 'Recusado',
+        cancelled: 'Cancelado', refunded: 'Reembolsado', charged_back: 'Contestado', manual_review: 'Revisão manual'
+    })[status] || textoDisponivel(status);
+}
+
+function nomeDoStatusEmail(status) {
+    return ({ enviado: 'Enviado', enviando: 'Enviando', falhou: 'Falhou' })[status] || 'Ainda não enviado';
+}
+function adicionarCampoFicha(container, rotulo, valor, opcoes = {}) {
+    const campo = document.createElement('div');
+    campo.className = `ficha-campo${opcoes.largo ? ' ficha-campo-largo' : ''}`;
+    const legenda = document.createElement('span');
+    legenda.textContent = rotulo;
+    const conteudo = document.createElement('strong');
+    conteudo.textContent = textoDisponivel(valor);
+    if (opcoes.token) conteudo.classList.add('ficha-token');
+    campo.append(legenda, conteudo);
+    container.appendChild(campo);
+}
+
+function abrirFichaInscrito(idInscrito) {
+    const dados = inscritosPorId.get(idInscrito);
+    if (!dados || !modalFichaInscrito) return;
+
+    modalFichaNome.textContent = textoDisponivel(dados.nome, 'Inscrito sem nome');
+    fichaDadosPessoais.replaceChildren();
+    fichaDadosIngresso.replaceChildren();
+    fichaDadosEvento.replaceChildren();
+
+    adicionarCampoFicha(fichaDadosPessoais, 'E-mail', dados.email, { largo: true });
+    adicionarCampoFicha(fichaDadosPessoais, 'Telefone', dados.telefone);
+    adicionarCampoFicha(fichaDadosPessoais, 'Instituição', dados.instituicao);
+    adicionarCampoFicha(fichaDadosPessoais, 'Matrícula', dados.matricula);
+    adicionarCampoFicha(fichaDadosPessoais, 'Curso', dados.curso);
+    adicionarCampoFicha(fichaDadosPessoais, 'Período', dados.periodo);
+
+    adicionarCampoFicha(fichaDadosIngresso, 'Lote', nomeDoLote(dados));
+    adicionarCampoFicha(fichaDadosIngresso, 'Modalidade', nomeDoTipo(dados));
+    adicionarCampoFicha(fichaDadosIngresso, 'Token', dados.token, { token: true });
+    adicionarCampoFicha(fichaDadosIngresso, 'Pagamento', nomeDoStatusPagamento(dados.statusPagamento));
+    adicionarCampoFicha(fichaDadosIngresso, 'E-mail do ingresso', nomeDoStatusEmail(dados.emailIngressoStatus));
+    adicionarCampoFicha(fichaDadosIngresso, 'E-mail enviado em', formatarDataRegistro(dados.emailIngressoEnviadoEm));
+    adicionarCampoFicha(fichaDadosIngresso, 'Ingresso ativo', dados.ingressoAtivo === false ? 'Não' : dados.ingressoAtivo === true ? 'Sim' : 'Não informado');
+    adicionarCampoFicha(fichaDadosIngresso, 'Origem', dados.pedidoId ? 'Compra pelo site' : 'Cadastro manual');
+    adicionarCampoFicha(fichaDadosIngresso, 'ID do pedido', dados.pedidoId, { largo: true });
+    adicionarCampoFicha(fichaDadosIngresso, 'ID do pagamento', dados.paymentId, { largo: true });
+
+    const presencasConfirmadas = TURNOS_PRESENCA.filter(turno => dados[turno] === true);
+    const porcentagem = (presencasConfirmadas.length / TURNOS_PRESENCA.length) * 100;
+    fichaResumoPresenca.replaceChildren();
+    const legendaPresenca = document.createElement('span');
+    legendaPresenca.textContent = 'Presença confirmada';
+    const valorPresenca = document.createElement('strong');
+    valorPresenca.textContent = `${porcentagem}% (${presencasConfirmadas.length}/10)`;
+    fichaResumoPresenca.append(legendaPresenca, valorPresenca);
+
+    adicionarCampoFicha(fichaDadosEvento, 'Turnos presentes', presencasConfirmadas.map(turno => NOMES_TURNOS[turno]).join(' · ') || 'Nenhum', { largo: true });
+    adicionarCampoFicha(fichaDadosEvento, 'Oficinas inscritas', Array.isArray(dados.oficinas) && dados.oficinas.length ? dados.oficinas.join(' · ') : 'Nenhuma', { largo: true });
+    adicionarCampoFicha(fichaDadosEvento, 'Cadastro criado em', formatarDataRegistro(dados.criadoEm));
+    adicionarCampoFicha(fichaDadosEvento, 'Última atualização', formatarDataRegistro(dados.atualizadoEm));
+
+    focoAntesDaFicha = document.activeElement;
+    modalFichaInscrito.hidden = false;
+    document.body.style.overflow = 'hidden';
+    btnFecharFicha?.focus();
+}
+
+function fecharFichaInscrito() {
+    if (!modalFichaInscrito || modalFichaInscrito.hidden) return;
+    modalFichaInscrito.hidden = true;
+    document.body.style.overflow = '';
+    focoAntesDaFicha?.focus?.();
+}
+
+btnFecharFicha?.addEventListener('click', fecharFichaInscrito);
+modalFichaInscrito?.addEventListener('click', event => {
+    if (event.target === modalFichaInscrito) fecharFichaInscrito();
+});
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && modalFichaInscrito && !modalFichaInscrito.hidden) fecharFichaInscrito();
+});
 
 async function carregarListaInscritos() {
     if (!containerListaInscritos) return;
     
     // Novo estado de carregamento elegante
     containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px solid #e8e8eb;"><p style="color: #888; font-size: 14px; font-weight: 600; margin:0;"><i class="ph-bold ph-hourglass-high" style="margin-right: 8px;"></i> Carregando base de dados...</p></div>';
-    dadosParaExcel = []; 
+    dadosParaExcel = [];
+    inscritosPorId.clear();
     
     try {
         const querySnapshot = await getDocs(collection(db, "inscritos"));
@@ -561,6 +778,7 @@ async function carregarListaInscritos() {
 
         querySnapshot.forEach((docSnap) => {
             const dados = docSnap.data();
+            inscritosPorId.set(docSnap.id, { id: docSnap.id, ...dados });
             totalInscritos++;
             
             const turnos = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
@@ -602,6 +820,9 @@ async function carregarListaInscritos() {
                         <strong style="color: ${corPorcentagem}; font-size: 14px;">${porcentagem}% <span style="font-size: 11px; opacity: 0.6; font-weight: 600;">(${presencasConfirmadas}/10)</span></strong>
                     </div>
                     
+                    <button type="button" class="btn-ficha-inscrito" data-inscrito-id="${docSnap.id}">
+                        <i class="ph-bold ph-identification-card"></i> Ver ficha completa
+                    </button>
                     <button id="btn-email-${docSnap.id}" onclick="window.dispararEmail('${docSnap.id}', '${dados.nome}', '${dados.email}', '${dados.token}')" style="background: var(--cor-secundaria); color: #fff; text-align: center; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;">
                         <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Ingresso
                     </button>
@@ -649,6 +870,12 @@ if (adminBuscaLista) {
 
 if (containerListaInscritos) {
     containerListaInscritos.addEventListener('click', async (e) => {
+        const btnFicha = e.target.closest('.btn-ficha-inscrito');
+        if (btnFicha) {
+            abrirFichaInscrito(btnFicha.dataset.inscritoId);
+            return;
+        }
+
         const btnClicado = e.target.closest('.btn-excluir');
         if (btnClicado) {
             const cardPai = btnClicado.closest('.card-aluno-lista');
@@ -667,7 +894,12 @@ if (containerListaInscritos) {
 // EMAIL JS - COM ESTADOS VISUAIS NOVOS
 window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
     const botao = document.getElementById(`btn-email-${idBotao}`);
-    
+    if (!configuracaoEmailIngresso?.publicKey || !configuracaoEmailIngresso?.serviceId || !configuracaoEmailIngresso?.templateId || !window.emailjs) {
+        alert('Configure o EmailJS na aba de configurações antes de enviar o ingresso.');
+        return;
+    }
+
+    window.emailjs.init(configuracaoEmailIngresso.publicKey);
     if(botao) {
         botao.disabled = true;
         botao.style.backgroundColor = "#f4f5f7";
@@ -677,13 +909,21 @@ window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
 
     const parametros = { to_name: nomeAluno, to_email: emailAluno, user_token: tokenAluno };
 
-    emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', parametros)
-        .then(function() {
+    window.emailjs.send(configuracaoEmailIngresso.serviceId, configuracaoEmailIngresso.templateId, parametros)
+        .then(async function() {
             if(botao){
                 botao.style.backgroundColor = "#2ecc71";
                 botao.style.color = "#fff";
                 botao.innerHTML = '<i class="ph-bold ph-check-circle"></i> Ingresso Enviado!';
             }
+            await updateDoc(doc(db, "inscritos", idBotao), {
+                emailIngressoStatus: 'enviado',
+                emailIngressoEnviadoEm: serverTimestamp(),
+                emailIngressoErro: deleteField(),
+                atualizadoEm: serverTimestamp()
+            });
+            const dadosAtuais = inscritosPorId.get(idBotao);
+            if (dadosAtuais) inscritosPorId.set(idBotao, { ...dadosAtuais, emailIngressoStatus: 'enviado', emailIngressoEnviadoEm: new Date() });
         }, function(error) {
             if(botao){
                 botao.disabled = false;
@@ -691,6 +931,11 @@ window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
                 botao.style.color = "#fff";
                 botao.innerHTML = '<i class="ph-bold ph-warning-circle"></i> Erro. Tentar de novo';
             }
+            updateDoc(doc(db, "inscritos", idBotao), {
+                emailIngressoStatus: 'falhou',
+                emailIngressoErro: String(error?.text || error?.message || 'Falha no envio').slice(0, 240),
+                atualizadoEm: serverTimestamp()
+            }).catch(() => {});
         });
 }
 
