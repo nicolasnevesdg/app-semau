@@ -865,6 +865,15 @@
     padding: 0 30px;
 }
 
+/* A conta de prévia validada no login sempre enxerga o cronograma oficial. */
+body.acesso-cronograma-completo #container-fase1 {
+    display: none !important;
+}
+
+body.acesso-cronograma-completo #container-fase2 {
+    display: block !important;
+}
+
 .btn-dia-tab {
     position: relative;
     flex: 1;
