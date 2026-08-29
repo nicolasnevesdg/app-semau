@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/fi
 import {
     DIAS_EVENTO,
     TIPOS_ATIVIDADE_AO_VIVO,
+    VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
     clonarProgramacao,
     horarioEmMinutos,
@@ -97,6 +98,52 @@ function criarCampo(classe, rotulo, controle) {
     return campo;
 }
 
+function criarCampoDetalhe(item, propriedade, rotulo, { textarea = false, placeholder = '', limite = 500 } = {}) {
+    const controle = document.createElement(textarea ? 'textarea' : 'input');
+    if (!textarea) controle.type = 'text';
+    controle.value = item[propriedade] || '';
+    controle.maxLength = limite;
+    controle.placeholder = placeholder;
+    controle.addEventListener('input', () => {
+        item[propriedade] = controle.value;
+        marcarAlterado();
+    });
+    return criarCampo(textarea ? 'campo-detalhe campo-detalhe-largo' : 'campo-detalhe', rotulo, controle);
+}
+
+function criarCamposEspecificos(item) {
+    const bloco = document.createElement('section');
+    bloco.className = 'campos-especificos';
+
+    if (item.tipo === 'palestra') {
+        bloco.innerHTML = '<h3><i class="ph-bold ph-microphone-stage"></i> Informações da palestra</h3>';
+        const grade = document.createElement('div');
+        grade.className = 'detalhes-grade';
+        grade.append(
+            criarCampoDetalhe(item, 'convidado', 'Convidado', { placeholder: 'Nome do palestrante ou escritório', limite: 180 }),
+            criarCampoDetalhe(item, 'convidadoCargo', 'Formação / cargo', { placeholder: 'Identificação curta exibida sob o nome' }),
+            criarCampoDetalhe(item, 'convidadoBio', 'Informações sobre o convidado', { textarea: true, placeholder: 'Biografia e trajetória do convidado', limite: 8000 }),
+            criarCampoDetalhe(item, 'tema', 'Tema da palestra', { placeholder: 'Título ou tema principal' }),
+            criarCampoDetalhe(item, 'temaDescricao', 'Explicação da palestra', { textarea: true, placeholder: 'Resumo, ementa ou explicação do encontro', limite: 5000 }),
+            criarCampoDetalhe(item, 'mediador', 'Mediador(a)', { placeholder: 'Nome de quem fará a mediação', limite: 180 }),
+            criarCampoDetalhe(item, 'mediadorCargo', 'Cargo do(a) mediador(a)', { placeholder: 'Ex.: Docente do DAU/UFRRJ' })
+        );
+        bloco.appendChild(grade);
+    } else if (item.tipo === 'oficina') {
+        bloco.innerHTML = '<h3><i class="ph-bold ph-hammer"></i> Informações da oficina</h3>';
+        const grade = document.createElement('div');
+        grade.className = 'detalhes-grade';
+        grade.append(
+            criarCampoDetalhe(item, 'oficineiro', 'Oficineiro(a)', { placeholder: 'Nome de quem ministra a oficina', limite: 180 }),
+            criarCampoDetalhe(item, 'oficineiroCargo', 'Formação / cargo', { placeholder: 'Identificação curta do oficineiro' }),
+            criarCampoDetalhe(item, 'oficineiroBio', 'Informações sobre o(a) oficineiro(a)', { textarea: true, placeholder: 'Biografia e trajetória', limite: 8000 })
+        );
+        bloco.appendChild(grade);
+    }
+
+    return bloco;
+}
+
 function criarCardAtividade(item, indice) {
     const card = document.createElement('article');
     card.className = 'atividade-card';
@@ -147,22 +194,29 @@ function criarCardAtividade(item, indice) {
     const titulo = document.createElement('input');
     titulo.type = 'text';
     titulo.value = item.titulo;
-    titulo.maxLength = 140;
+    titulo.maxLength = 180;
     titulo.required = true;
     titulo.placeholder = 'Ex.: Intervalo ou Palestra com…';
     titulo.setAttribute('aria-label', `Título do item ${indice + 1}`);
 
+    const descricao = document.createElement('textarea');
+    descricao.value = item.descricao || '';
+    descricao.maxLength = 5000;
+    descricao.placeholder = 'Texto exibido no cartão desta atividade.';
+    descricao.setAttribute('aria-label', `Descrição do item ${indice + 1}`);
+
     const texto = document.createElement('textarea');
     texto.value = item.texto || '';
-    texto.maxLength = 220;
-    texto.placeholder = 'Opcional. Ex.: Voltamos às 16h. Se ficar vazio, o site cria a mensagem automaticamente.';
-    texto.setAttribute('aria-label', `Mensagem complementar do item ${indice + 1}`);
+    texto.maxLength = 500;
+    texto.placeholder = 'Opcional. Mensagem curta usada no aviso “acontecendo agora”.';
+    texto.setAttribute('aria-label', `Mensagem ao vivo do item ${indice + 1}`);
 
     const campos = [
         [inicio, 'inicio'],
         [fim, 'fim'],
         [tipo, 'tipo'],
         [titulo, 'titulo'],
+        [descricao, 'descricao'],
         [texto, 'texto']
     ];
     campos.forEach(([controle, propriedade]) => {
@@ -171,6 +225,7 @@ function criarCardAtividade(item, indice) {
             item[propriedade] = controle.value;
             marcarAlterado();
             if (propriedade === 'titulo') numero.innerHTML = `<i class="ph-bold ph-clock"></i> Item ${indice + 1}`;
+            if (propriedade === 'tipo') renderizarDia();
         });
     });
 
@@ -180,13 +235,15 @@ function criarCardAtividade(item, indice) {
         criarCampo('campo-tipo', 'Categoria', tipo),
         criarCampo('campo-titulo', 'Título exibido', titulo)
     );
-    const campoTexto = criarCampo('campo-mensagem', 'Mensagem complementar', texto);
+    const campoDescricao = criarCampo('campo-mensagem', 'Descrição exibida no cronograma', descricao);
+    grade.appendChild(campoDescricao);
+    const campoTexto = criarCampo('campo-mensagem', 'Mensagem curta para o status ao vivo', texto);
     const ajuda = document.createElement('small');
     ajuda.textContent = 'Esta mensagem aparece abaixo do título enquanto o item estiver acontecendo.';
     campoTexto.appendChild(ajuda);
     grade.appendChild(campoTexto);
 
-    card.append(topo, grade);
+    card.append(topo, grade, criarCamposEspecificos(item));
     return card;
 }
 
@@ -216,12 +273,6 @@ function validarProgramacaoParaSalvar() {
             return normalizada;
         }).sort((a, b) => horarioEmMinutos(a.inicio) - horarioEmMinutos(b.inicio));
 
-        atividades.forEach((item, indice) => {
-            const anterior = atividades[indice - 1];
-            if (anterior && horarioEmMinutos(item.inicio) < horarioEmMinutos(anterior.fim)) {
-                throw new Error(`${dia.nome}: “${anterior.titulo}” e “${item.titulo}” estão em horários sobrepostos.`);
-            }
-        });
         validada[dia.chave] = atividades;
     });
     if (!temProgramacaoValida(validada)) throw new Error('O cronograma não pode ficar completamente vazio.');
@@ -232,8 +283,9 @@ async function carregarProgramacao() {
     mostrarStatus('Carregando a programação salva…', 'info');
     try {
         const snapshot = await getDoc(docCronogramaRef);
-        const remota = normalizarProgramacao(snapshot.data()?.programacao);
-        programacaoEditavel = temProgramacaoValida(remota)
+        const dados = snapshot.data();
+        const remota = normalizarProgramacao(dados?.programacao);
+        programacaoEditavel = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(remota)
             ? remota
             : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
         renderizarTabs();
@@ -266,6 +318,7 @@ async function salvarProgramacao() {
     try {
         await setDoc(docCronogramaRef, {
             programacao: validada,
+            versaoConteudo: VERSAO_CONTEUDO_CRONOGRAMA,
             atualizadoEm: serverTimestamp()
         }, { merge: true });
         programacaoEditavel = clonarProgramacao(validada);

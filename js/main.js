@@ -1,6 +1,7 @@
 import { db } from './firebase-config.js';
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
+    VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
     clonarProgramacao,
     normalizarProgramacao,
@@ -241,13 +242,15 @@ function atualizarStatusDoEvento() {
         return;
     }
 
-    const momento = programacaoHoje.find(item =>
+    const momentos = programacaoHoje.filter(item =>
         agoraEmMinutos >= horarioEmMinutos(item.inicio) && agoraEmMinutos < horarioEmMinutos(item.fim)
     );
 
-    if (momento) {
-        const indice = programacaoHoje.indexOf(momento);
-        const proxima = programacaoHoje.slice(indice + 1).find(item => item.tipo === 'atividade');
+    if (momentos.length) {
+        const momento = momentos[0];
+        const proxima = programacaoHoje.find(item => horarioEmMinutos(item.inicio) >= horarioEmMinutos(momento.fim));
+        const tituloMomento = momentos.length > 1 ? momentos.map(item => item.titulo).join(' + ') : momento.titulo;
+        const textoMomento = momentos.map(item => item.texto).filter(Boolean).join(' · ');
 
         if (momento.tipo === 'almoco') {
             mostrarStatus({
@@ -266,8 +269,8 @@ function atualizarStatusDoEvento() {
         } else {
             mostrarStatus({
                 etiqueta: 'Acontecendo agora',
-                titulo: momento.titulo,
-                texto: momento.texto || (proxima ? `Depois, ${proxima.inicio}: ${proxima.titulo}.` : '\u00daltima atividade de hoje.'),
+                titulo: tituloMomento,
+                texto: textoMomento || (proxima ? `Depois, ${proxima.inicio}: ${proxima.titulo}.` : '\u00daltima atividade de hoje.'),
                 horario: `${momento.inicio}–${momento.fim}`
             });
         }
@@ -300,8 +303,9 @@ function atualizarStatusDoEvento() {
 }
 
 onSnapshot(doc(db, 'configuracoes', 'cronogramaAoVivo'), snapshot => {
-    const programacaoRemota = normalizarProgramacao(snapshot.data()?.programacao);
-    PROGRAMACAO_AO_VIVO = temProgramacaoValida(programacaoRemota)
+    const dados = snapshot.data();
+    const programacaoRemota = normalizarProgramacao(dados?.programacao);
+    PROGRAMACAO_AO_VIVO = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(programacaoRemota)
         ? programacaoRemota
         : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
     atualizarStatusDoEvento();

@@ -1952,6 +1952,9 @@ body.acesso-cronograma-completo #container-fase2 {
 .palestra-conteudo { margin-top: 24px; text-align: left; }
 .palestra-conteudo h4 { margin: 0 0 6px; color: #fff; font-size: 19px; line-height: 1.08; letter-spacing: -.2px; }
 :is(.schedule-card-palestra, .schedule-card-oficina, .schedule-card-evento) .palestra-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; }
+.palestra-biografia { margin-top: 17px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.13); }
+.palestra-biografia > strong { display: block; margin-bottom: 7px; color: rgba(255,255,255,.82); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+:is(.schedule-card-palestra, .schedule-card-oficina) .palestra-biografia > p { margin: 0; color: rgba(255,255,255,.59); font-size: 10px; line-height: 1.55; }
 .palestra-mesa { margin-top: 23px; padding-top: 17px; border-top: 1px solid rgba(255,255,255,.13); display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 11px; text-align: left; }
 .palestra-mesa > img { width: 42px; height: 42px; border-radius: 50%; display: block; object-fit: cover; object-position: center top; background: var(--cor-eixo-cidade); }
 .palestra-mesa > div { min-width: 0; display: grid; gap: 3px; }
