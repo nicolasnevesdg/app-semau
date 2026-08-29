@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     DIAS_EVENTO,
     TIPOS_ATIVIDADE_AO_VIVO,
@@ -10,9 +10,10 @@ import {
     normalizarAtividade,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js';
+} from './programacao-ao-vivo-config.js?v=155';
 
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
+const EMAIL_CONTA_ADMINISTRATIVA = 'admin@semauufrrj.com';
 const overlayLogin = document.getElementById('admin-login-overlay');
 const formLogin = document.getElementById('form-admin-login');
 const inputSenha = document.getElementById('admin-senha-input');
@@ -343,6 +344,20 @@ function liberarEditor() {
     }
 }
 
+async function credencialAdministrativaValida(credencial) {
+    const seguranca = await getDoc(doc(db, 'configuracoes', 'seguranca'));
+    if (seguranca.exists() && credencial === String(seguranca.data().senhaAdmin || '')) return true;
+
+    const token = credencial.toUpperCase();
+    const consulta = query(
+        collection(db, 'inscritos'),
+        where('email', '==', EMAIL_CONTA_ADMINISTRATIVA),
+        where('token', '==', token)
+    );
+    const resultado = await getDocs(consulta);
+    return resultado.docs.some(documento => documento.data().ingressoAtivo !== false);
+}
+
 formLogin.addEventListener('submit', async evento => {
     evento.preventDefault();
     const senha = inputSenha.value.trim();
@@ -350,12 +365,11 @@ formLogin.addEventListener('submit', async evento => {
     btnLogin.disabled = true;
     btnLogin.textContent = 'Verificando…';
     try {
-        const snapshot = await getDoc(doc(db, 'configuracoes', 'seguranca'));
-        if (snapshot.exists() && senha === snapshot.data().senhaAdmin) {
+        if (await credencialAdministrativaValida(senha)) {
             sessionStorage.setItem('adminLogado', 'true');
             liberarEditor();
         } else {
-            window.alert('Senha incorreta.');
+            window.alert('Senha ou token administrativo incorreto.');
             inputSenha.value = '';
             inputSenha.focus();
         }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v154';
+const CACHE_NAME = 'semau-v155';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
