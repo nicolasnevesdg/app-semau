@@ -8,7 +8,7 @@ import {
     clonarProgramacao,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=157';
+} from './programacao-ao-vivo-config.js?v=158';
 
 const gridPalestrantes = document.getElementById('grid-palestrantes');
 const gridOficinas = document.getElementById('grid-oficinas');
@@ -98,7 +98,8 @@ function renderizarPalestra(item) {
 
 function renderizarOficina(item) {
     const biografia = item.oficineiroBio ? `<div class="palestra-biografia"><strong>Sobre quem ministra</strong><p>${escaparHtml(item.oficineiroBio)}</p></div>` : '';
-    const ministrante = item.oficineiro ? `<div class="palestra-mesa oficina-ministrante"><img src="${imagemAtividade(item, 'assets/img/oficina-levantamento.png')}" alt="Foto de ${escaparHtml(item.oficineiro)}"><div><strong>${escaparHtml(item.oficineiro)}</strong><small>${escaparHtml(item.oficineiroCargo)}</small></div></div>` : '';
+    const fotoOficineiro = escaparHtml(item.oficineiroFoto || 'assets/img/professor-teste_1.png');
+    const ministrante = item.oficineiro ? `<div class="palestra-mesa oficina-ministrante"><img src="${fotoOficineiro}" alt="Foto de ${escaparHtml(item.oficineiro)}"><div><strong>${escaparHtml(item.oficineiro)}</strong><small>${escaparHtml(item.oficineiroCargo)}</small></div></div>` : '';
     return `<div class="carousel-card schedule-card schedule-card-oficina">
         <div class="palestra-capa oficina-capa"><img src="${imagemAtividade(item, 'assets/img/oficina-levantamento.png')}" alt="Imagem de ${escaparHtml(item.titulo)}"><div class="palestra-capa-topo">${horarioCard(item)}<span class="type-tag oficina">Oficina</span></div></div>
         <div class="palestra-corpo oficina-corpo"><div class="oficina-conteudo"><h3>${escaparHtml(item.titulo)}</h3>${item.descricao ? `<p>${escaparHtml(item.descricao)}</p>` : ''}${biografia}</div>${ministrante}</div>

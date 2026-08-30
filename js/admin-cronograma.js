@@ -10,7 +10,7 @@ import {
     normalizarAtividade,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=157';
+} from './programacao-ao-vivo-config.js?v=158';
 
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
 const EMAIL_CONTA_ADMINISTRATIVA = 'admin@semauufrrj.com';
@@ -138,6 +138,7 @@ function criarCamposConteudoPublico(item) {
         grade.append(
             criarCampoDetalhe(item, 'oficineiro', 'Oficineiro(a)', { placeholder: 'Nome de quem ministra a oficina', limite: 180 }),
             criarCampoDetalhe(item, 'oficineiroCargo', 'Formação / cargo', { placeholder: 'Identificação curta do oficineiro' }),
+            criarCampoDetalhe(item, 'oficineiroFoto', 'Foto do(a) oficineiro(a) (caminho ou URL)', { placeholder: 'Ex.: assets/img/oficineiro.png ou https://…', limite: 500 }),
             criarCampoDetalhe(item, 'oficineiroBio', 'Informações sobre o(a) oficineiro(a)', { textarea: true, placeholder: 'Biografia e trajetória', limite: 8000 })
         );
     }
