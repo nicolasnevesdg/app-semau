@@ -8,7 +8,7 @@ import {
     clonarProgramacao,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js';
+} from './programacao-ao-vivo-config.js?v=157';
 
 const gridPalestrantes = document.getElementById('grid-palestrantes');
 const gridOficinas = document.getElementById('grid-oficinas');

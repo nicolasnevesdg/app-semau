@@ -97,7 +97,17 @@ export function horarioEmMinutos(valor) {
     const [hora, minuto] = valor.split(':').map(Number);
     return hora * 60 + minuto;
 }
-function textoSeguro(valor, limite) { return String(valor || '').trim().replace(/\s+/g, ' ').slice(0, limite); }
+function textoSeguro(valor, limite, preservarQuebras = false) {
+    const texto = String(valor || '').replace(/\r\n?/g, '\n');
+    if (!preservarQuebras) return texto.trim().replace(/\s+/g, ' ').slice(0, limite);
+    return texto
+        .split('\n')
+        .map(linha => linha.replace(/[ \t]+/g, ' ').trim())
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+        .slice(0, limite);
+}
 export function normalizarAtividade(item) {
     const inicio = String(item?.inicio || '').trim();
     const fim = String(item?.fim || '').trim();
@@ -107,11 +117,11 @@ export function normalizarAtividade(item) {
     return {
         id: textoSeguro(item?.id, 120) || `${inicio}-${fim}-${titulo.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60)}`,
         inicio, fim, tipo, titulo,
-        descricao: textoSeguro(item?.descricao, 5000), texto: textoSeguro(item?.texto, 500),
-        convidado: textoSeguro(item?.convidado, 180), convidadoCargo: textoSeguro(item?.convidadoCargo, 500), convidadoBio: textoSeguro(item?.convidadoBio, 8000),
-        tema: textoSeguro(item?.tema, 500), temaDescricao: textoSeguro(item?.temaDescricao, 5000),
+        descricao: textoSeguro(item?.descricao, 5000, true), texto: textoSeguro(item?.texto, 500, true),
+        convidado: textoSeguro(item?.convidado, 180), convidadoCargo: textoSeguro(item?.convidadoCargo, 500), convidadoBio: textoSeguro(item?.convidadoBio, 8000, true),
+        tema: textoSeguro(item?.tema, 500), temaDescricao: textoSeguro(item?.temaDescricao, 5000, true),
         mediador: textoSeguro(item?.mediador, 180), mediadorCargo: textoSeguro(item?.mediadorCargo, 500),
-        oficineiro: textoSeguro(item?.oficineiro, 180), oficineiroCargo: textoSeguro(item?.oficineiroCargo, 500), oficineiroBio: textoSeguro(item?.oficineiroBio, 8000),
+        oficineiro: textoSeguro(item?.oficineiro, 180), oficineiroCargo: textoSeguro(item?.oficineiroCargo, 500), oficineiroBio: textoSeguro(item?.oficineiroBio, 8000, true),
         imagem: textoSeguro(item?.imagem, 500), mediadorFoto: textoSeguro(item?.mediadorFoto, 500)
     };
 }

@@ -10,7 +10,7 @@ import {
     normalizarAtividade,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=156';
+} from './programacao-ao-vivo-config.js?v=157';
 
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
 const EMAIL_CONTA_ADMINISTRATIVA = 'admin@semauufrrj.com';
