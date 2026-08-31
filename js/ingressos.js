@@ -12,9 +12,70 @@ const introLotes = document.querySelector(".planos-intro");
 const aviso = document.getElementById("compra-aviso");
 const botoes = document.querySelectorAll(".plano-botao");
 const precos = document.querySelectorAll("[data-preco-tipo]");
+const faixaPalestrantes = document.getElementById("palestrantes-faixa");
+
+const PALESTRANTES = {
+    "palestrante-01": { nome: "Ethel Pinheiro", descricao: "Arquiteta, urbanista e professora da UFRJ", imagem: "assets/palestrantes/ethel-pinheiro.png" },
+    "palestrante-02": { nome: "Ester Carro", descricao: "Arquiteta, urbanista social, professora e ativista", imagem: "assets/palestrantes/esther-carro.png" },
+    "palestrante-03": { nome: "Casé Arquitetura", descricao: "Hamilton Casé e Marcela Casé", imagem: "assets/palestrantes/case-arquitetura.png" },
+    "palestrante-04": { nome: "Thaysa Malaquias", descricao: "Arquiteta, urbanista e pesquisadora do LabLugares", imagem: "assets/palestrantes/thaysa-malaquias.png" },
+    "palestrante-05": { nome: "Rafael Zamorano", descricao: "Historiador e diretor substituto do Sítio Roberto Burle Marx", imagem: "assets/palestrantes/rafael-zamorano.png" },
+    "palestrante-06": { nome: "Convidado(a) em breve", descricao: "Palestra de quarta-feira, às 09h10", imagem: "assets/svg/em-breve.svg" },
+    "palestrante-07": { nome: "Roberto Cruz Saavedra", descricao: "Arquiteto e urbanista", imagem: "assets/palestrantes/roberto-cruz.png" },
+    "palestrante-08": { nome: "Urb.Anas", descricao: "Coletivo de arquitetas e urbanistas", imagem: "assets/svg/jean-geal.svg" },
+    "palestrante-09": { nome: "Convidado(a) em breve", descricao: "Palestra de quinta-feira, às 09h10", imagem: "assets/svg/em-breve.svg" },
+    "palestrante-10": { nome: "Pedro Rajão · Negromuro", descricao: "Integrante do coletivo Negromuro", imagem: "assets/palestrantes/pedro-rajao.png" },
+    "palestrante-11": { nome: "Verônica Natividade", descricao: "Arquiteta, pesquisadora e professora da PUC-Rio", imagem: "assets/palestrantes/veronica-natividade.png" }
+};
 
 let loteAtivo = LOTE_ATIVO_PADRAO;
 let formularioLoteSocial = "";
+
+function escaparHtml(valor) {
+    return String(valor || "").replace(/[&<>'"]/g, caractere => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+    })[caractere]);
+}
+
+function cardPalestrante(palestrante, repetido = false) {
+    const acessibilidade = repetido ? ' aria-hidden="true"' : "";
+    const alt = repetido ? "" : `Foto de ${palestrante.nome}`;
+    return `<article class="palestrante-mini"${acessibilidade}>
+        <img src="${escaparHtml(palestrante.imagem)}" alt="${escaparHtml(alt)}">
+        <h3>${escaparHtml(palestrante.nome)}</h3>
+        <p>${escaparHtml(palestrante.descricao)}</p>
+    </article>`;
+}
+
+function renderizarPalestrantes(ativos) {
+    if (!faixaPalestrantes) return;
+    const divulgados = ativos
+        .filter(id => id.startsWith("palestrante-"))
+        .map(id => PALESTRANTES[id])
+        .filter(Boolean);
+
+    if (!divulgados.length) {
+        faixaPalestrantes.classList.add("sem-palestrantes");
+        faixaPalestrantes.innerHTML = `<div class="palestrantes-em-breve">
+            <img src="assets/svg/em-breve.svg" alt="Em breve">
+        </div>`;
+        return;
+    }
+
+    faixaPalestrantes.classList.remove("sem-palestrantes");
+    const quantidadeMinima = 4;
+    const grupo = Array.from(
+        { length: Math.max(quantidadeMinima, divulgados.length) },
+        (_, indice) => divulgados[indice % divulgados.length]
+    );
+    faixaPalestrantes.innerHTML = [false, true]
+        .flatMap(repetido => grupo.map(palestrante => cardPalestrante(palestrante, repetido)))
+        .join("");
+}
 
 function formatarValor(valor) {
     return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -79,5 +140,10 @@ onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {
     formularioLoteSocial = normalizarUrlFormulario(configuracao.formularioLoteSocial);
     atualizarLotes();
 }, atualizarLotes);
+
+onSnapshot(doc(db, "configuracoes", "anuncios"), snapshot => {
+    const configuracao = snapshot.data() || {};
+    renderizarPalestrantes(Array.isArray(configuracao.ativos) ? configuracao.ativos : []);
+}, () => renderizarPalestrantes([]));
 
 atualizarLotes();
