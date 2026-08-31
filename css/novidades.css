@@ -646,6 +646,25 @@
     animation: mover-palestrantes 38s linear infinite;
 }
 
+.palestrantes-faixa.sem-palestrantes {
+    width: 100%;
+    min-height: 235px;
+    align-items: center;
+    justify-content: center;
+    animation: none;
+}
+
+.palestrantes-em-breve {
+    width: min(250px, 62vw);
+    padding: 42px 26px;
+}
+
+.palestrantes-em-breve img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 @keyframes mover-palestrantes {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
@@ -659,6 +678,8 @@
 
 .palestrante-mini img {
     width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
     margin-bottom: 20px;
     display: block;
 }

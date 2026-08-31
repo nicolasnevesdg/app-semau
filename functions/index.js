@@ -1,4 +1,5 @@
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret } = require("firebase-functions/params");
 const { logger } = require("firebase-functions");
 const { initializeApp } = require("firebase-admin/app");
@@ -15,6 +16,15 @@ const TOKEN_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REGION = "southamerica-east1";
 const SITE_URL = "https://semau.space";
 const WEBHOOK_URL = "https://southamerica-east1-app-semau-ufrrj.cloudfunctions.net/mercadoPagoWebhook";
+const FORMULARIO_LOTE_SOCIAL = "https://docs.google.com/forms/d/e/1FAIpQLSdkiRquBCk0dKTqJTZsCi2EzDCho3N2kuYUU9unm8LOmzRxPw/viewform";
+const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
+const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
+const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
+const DURACAO_CHECKOUT_MS = 15 * 60 * 1000;
+const DURACAO_RESERVA_MS = 60 * 60 * 1000;
+const STATUS_FINAIS_SEM_PAGAMENTO = new Set(["rejected", "cancelled", "refunded", "charged_back"]);
+const configuracaoGeralRef = db.collection("configuracoes").doc("geral");
+const estoqueIngressosRef = db.collection("configuracoes").doc("estoqueIngressos");
 
 const TIPOS_INGRESSO = Object.freeze({
   normal: Object.freeze({
@@ -27,8 +37,8 @@ const TIPOS_INGRESSO = Object.freeze({
   }),
 });
 const LOTES_PAGOS = Object.freeze({
-  primeiro: Object.freeze({ nome: "1º Lote", normal: 20, kit: 40 }),
-  segundo: Object.freeze({ nome: "2º Lote", normal: 25, kit: 45 }),
+  primeiro: Object.freeze({ nome: "1º Lote", normal: 25, kit: 40 }),
+  segundo: Object.freeze({ nome: "2º Lote", normal: 30, kit: 45 }),
 });
 const LOTE_ATIVO_PADRAO = "social";
 
@@ -45,11 +55,47 @@ function normalizarLoteAtivo(value) {
   return lote === "social" || LOTES_PAGOS[lote] ? lote : LOTE_ATIVO_PADRAO;
 }
 
-async function obterLoteAtivo() {
-  const configuracao = await db.collection("configuracoes").doc("geral").get();
-  const dados = configuracao.data() || {};
-  const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(dados.loteAtivo)];
-  return normalizarLoteAtivo(dados.loteIngressosAtivo || loteLegado);
+function numeroSeguro(value) {
+  const numero = Number(value);
+  return Number.isFinite(numero) && numero > 0 ? Math.floor(numero) : 0;
+}
+
+function normalizarEstoque(dados = {}, agora = Date.now()) {
+  const primeiro = dados.primeiro || {};
+  const reservas = {};
+  Object.entries(primeiro.reservas || {}).forEach(([pedidoId, reserva]) => {
+    if (
+      (reserva?.tipo === "normal" || reserva?.tipo === "kit") &&
+      Number(reserva.expiraEm || 0) > agora
+    ) {
+      reservas[pedidoId] = { tipo: reserva.tipo, expiraEm: Number(reserva.expiraEm) };
+    }
+  });
+  return {
+    normalVendidos: numeroSeguro(primeiro.normalVendidos),
+    kitVendidos: numeroSeguro(primeiro.kitVendidos),
+    normalLimite: LIMITE_PRIMEIRO_LOTE.normal,
+    kitLimite: LIMITE_PRIMEIRO_LOTE.kit,
+    reservas,
+  };
+}
+
+function quantidadeReservada(estoque, tipo) {
+  return Object.values(estoque.reservas).filter((reserva) => reserva.tipo === tipo).length;
+}
+
+function primeiroLoteEsgotado(estoque) {
+  return estoque.normalVendidos >= LIMITE_PRIMEIRO_LOTE.normal &&
+    estoque.kitVendidos >= LIMITE_PRIMEIRO_LOTE.kit;
+}
+
+function calcularLoteAtivo(configuracao = {}, estoque = {}, agora = Date.now()) {
+  if (agora < ABERTURA_LOTE_SOCIAL) return null;
+  if (agora < ENCERRAMENTO_LOTE_SOCIAL) return "social";
+  const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
+  const loteConfigurado = normalizarLoteAtivo(configuracao.loteIngressosAtivo || loteLegado);
+  if (primeiroLoteEsgotado(estoque) || loteConfigurado === "segundo") return "segundo";
+  return "primeiro";
 }
 
 function obterIngresso(lote, tipo) {
@@ -87,6 +133,79 @@ function validarDados(data) {
   if (data.aceite !== true) throw new HttpsError("failed-precondition", "É necessário aceitar os termos da inscrição.");
 
   return { lote, tipo, nome, email, telefone, instituicao, matricula, curso, periodo };
+}
+
+function dadosPedido(dados, ingresso, expiraEm) {
+  return {
+    nome: dados.nome,
+    email: dados.email,
+    telefone: dados.telefone,
+    instituicao: dados.instituicao,
+    matricula: dados.matricula,
+    curso: dados.curso,
+    periodo: dados.periodo || null,
+    loteIngresso: dados.lote,
+    nomeLote: ingresso.nomeLote,
+    tipoIngresso: dados.tipo,
+    nomeIngresso: ingresso.nome,
+    valor: ingresso.valor,
+    moeda: "BRL",
+    status: "creating_preference",
+    origem: "site",
+    reservaEstoque: dados.lote === "primeiro",
+    reservaExpiraEm: dados.lote === "primeiro" ? expiraEm : null,
+    estoqueContabilizado: false,
+    criadoEm: FieldValue.serverTimestamp(),
+    atualizadoEm: FieldValue.serverTimestamp(),
+  };
+}
+
+async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
+  const agora = Date.now();
+  const expiraEm = agora + DURACAO_RESERVA_MS;
+
+  await db.runTransaction(async (transaction) => {
+    const [configuracaoDoc, estoqueDoc] = await Promise.all([
+      transaction.get(configuracaoGeralRef),
+      transaction.get(estoqueIngressosRef),
+    ]);
+    const estoque = normalizarEstoque(estoqueDoc.data() || {}, agora);
+    const loteAtivo = calcularLoteAtivo(configuracaoDoc.data() || {}, estoque, agora);
+
+    if (loteAtivo === null) {
+      throw new HttpsError("failed-precondition", "As inscrições abrem em 01/09, ao meio-dia.");
+    }
+    if (loteAtivo === "social") {
+      throw new HttpsError("failed-precondition", "O Lote Social é realizado pelo formulário de comprovação.");
+    }
+    if (dados.lote !== loteAtivo) {
+      throw new HttpsError("failed-precondition", "Este lote não está disponível no momento.");
+    }
+
+    if (dados.lote === "primeiro") {
+      const vendidos = dados.tipo === "kit" ? estoque.kitVendidos : estoque.normalVendidos;
+      const ocupados = vendidos + quantidadeReservada(estoque, dados.tipo);
+      if (ocupados >= LIMITE_PRIMEIRO_LOTE[dados.tipo]) {
+        throw new HttpsError("resource-exhausted", `Os ingressos ${dados.tipo === "kit" ? "com kit" : "sem kit"} do 1º lote estão esgotados.`);
+      }
+      estoque.reservas[pedidoRef.id] = { tipo: dados.tipo, expiraEm };
+      transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+    }
+
+    transaction.set(pedidoRef, dadosPedido(dados, ingresso, expiraEm));
+  });
+
+  return expiraEm;
+}
+
+async function liberarReserva(pedidoId) {
+  await db.runTransaction(async (transaction) => {
+    const estoqueDoc = await transaction.get(estoqueIngressosRef);
+    const estoque = normalizarEstoque(estoqueDoc.data() || {});
+    if (!estoque.reservas[pedidoId]) return;
+    delete estoque.reservas[pedidoId];
+    transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+  });
 }
 
 async function mercadoPago(path, options = {}) {
@@ -219,24 +338,65 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
   const tokenNovo = await gerarTokenIngresso();
 
   const resultado = await db.runTransaction(async (transaction) => {
-    const [pedidoDoc, inscritoDoc] = await Promise.all([
+    const [pedidoDoc, inscritoDoc, estoqueDoc] = await Promise.all([
       transaction.get(pedidoRef),
       transaction.get(inscritoRef),
+      transaction.get(estoqueIngressosRef),
     ]);
     if (!pedidoDoc.exists) throw new Error("Pedido não encontrado.");
 
     const pedido = pedidoDoc.data();
+    const estoque = normalizarEstoque(estoqueDoc.data() || {});
     const valorRecebido = Number(payment.transaction_amount || 0);
     const valorEsperado = Number(pedido.valor || 0);
     const moedaRecebida = texto(payment.currency_id, 8).toUpperCase();
     const statusRecebido = texto(payment.status, 40) || "unknown";
     const valorConfere = Math.abs(valorRecebido - valorEsperado) < 0.001;
     const moedaConfere = moedaRecebida === "BRL";
-    const pagamentoAprovado = statusRecebido === "approved" && valorConfere && moedaConfere;
-    const statusSeguro = statusRecebido === "approved" && !pagamentoAprovado
+    const aprovadoPeloPagamento = statusRecebido === "approved" && valorConfere && moedaConfere;
+    let pagamentoAprovado = aprovadoPeloPagamento;
+    let estornoNecessario = false;
+    let estoqueMudou = false;
+    let estoqueContabilizado = pedido.estoqueContabilizado === true;
+    let statusSeguro = statusRecebido === "approved" && !aprovadoPeloPagamento
       ? "manual_review"
       : statusRecebido;
     const token = inscritoDoc.exists ? inscritoDoc.data().token : tokenNovo;
+
+    if (pagamentoAprovado && !inscritoDoc.exists && pedido.loteIngresso === "primeiro" && !estoqueContabilizado) {
+      const tipo = pedido.tipoIngresso === "kit" ? "kit" : "normal";
+      const chaveVendidos = tipo === "kit" ? "kitVendidos" : "normalVendidos";
+      if (estoque[chaveVendidos] >= LIMITE_PRIMEIRO_LOTE[tipo]) {
+        pagamentoAprovado = false;
+        estornoNecessario = true;
+        statusSeguro = "refund_required_stock_limit";
+        if (estoque.reservas[pedidoId]) {
+          delete estoque.reservas[pedidoId];
+          estoqueMudou = true;
+        }
+      } else {
+        estoque[chaveVendidos] += 1;
+        estoqueContabilizado = true;
+        estoqueMudou = true;
+      }
+    }
+
+    if (STATUS_FINAIS_SEM_PAGAMENTO.has(statusRecebido) && pedido.loteIngresso === "primeiro") {
+      if (estoque.reservas[pedidoId]) {
+        delete estoque.reservas[pedidoId];
+        estoqueMudou = true;
+      }
+      if (estoqueContabilizado && inscritoDoc.exists) {
+        const tipo = pedido.tipoIngresso === "kit" ? "kit" : "normal";
+        const chaveVendidos = tipo === "kit" ? "kitVendidos" : "normalVendidos";
+        estoque[chaveVendidos] = Math.max(0, estoque[chaveVendidos] - 1);
+        estoqueContabilizado = false;
+        estoqueMudou = true;
+      }
+    } else if (pagamentoAprovado && estoque.reservas[pedidoId]) {
+      delete estoque.reservas[pedidoId];
+      estoqueMudou = true;
+    }
 
     transaction.update(pedidoRef, {
       status: statusSeguro,
@@ -250,6 +410,7 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       moedaConfere,
       credencialEmitida: pagamentoAprovado,
       token: pagamentoAprovado ? token : pedido.token || null,
+      estoqueContabilizado,
       pagoEm: payment.date_approved || null,
       atualizadoEm: FieldValue.serverTimestamp(),
       webhookProcessadoEm: FieldValue.serverTimestamp(),
@@ -292,6 +453,18 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       });
     }
 
+    if (estoqueMudou) {
+      transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+      if (primeiroLoteEsgotado(estoque)) {
+        transaction.set(configuracaoGeralRef, {
+          loteIngressosAtivo: "segundo",
+          loteAtivo: 2,
+          faseAtual: "inscricao",
+          atualizadoEm: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+    }
+
     return {
       pedidoId,
       status: statusSeguro,
@@ -299,8 +472,34 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       token: pagamentoAprovado ? token : null,
       nome: pagamentoAprovado ? pedido.nome : null,
       email: pagamentoAprovado ? pedido.email : null,
+      estornoNecessario,
     };
   });
+
+  if (resultado.estornoNecessario) {
+    try {
+      await mercadoPago(`/v1/payments/${encodeURIComponent(paymentId)}/refunds`, {
+        method: "POST",
+        headers: { "X-Idempotency-Key": `estoque-${pedidoId}` },
+        body: "{}",
+      });
+      await pedidoRef.update({
+        status: "refunded_stock_limit",
+        credencialEmitida: false,
+        estornadoEm: FieldValue.serverTimestamp(),
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+      resultado.status = "refunded_stock_limit";
+    } catch (error) {
+      logger.error("Falha ao estornar pagamento acima do estoque", { pedidoId, paymentId, error: error.message });
+      await pedidoRef.update({
+        status: "manual_refund_required",
+        credencialEmitida: false,
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+      resultado.status = "manual_refund_required";
+    }
+  }
 
   if (resultado.aprovado) {
     try {
@@ -309,6 +508,8 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       logger.error("Falha ao enviar e-mail do ingresso", { pedidoId, error: error.message });
     }
   }
+
+  delete resultado.estornoNecessario;
   return resultado;
 }
 
@@ -321,37 +522,12 @@ exports.criarPreferencia = onCall(
   },
   async (request) => {
     const dados = validarDados(request.data || {});
-    const loteAtivo = await obterLoteAtivo();
-    if (loteAtivo === "social") {
-      throw new HttpsError("failed-precondition", "O Lote Social é realizado pelo formulário de comprovação.");
-    }
-    if (dados.lote !== loteAtivo) {
-      throw new HttpsError("failed-precondition", "Este lote não está disponível no momento.");
-    }
     const ingresso = obterIngresso(dados.lote, dados.tipo);
     const pedidoRef = db.collection("pedidos").doc();
-
-    await pedidoRef.set({
-      nome: dados.nome,
-      email: dados.email,
-      telefone: dados.telefone,
-      instituicao: dados.instituicao,
-      matricula: dados.matricula,
-      curso: dados.curso,
-      periodo: dados.periodo || null,
-      loteIngresso: dados.lote,
-      nomeLote: ingresso.nomeLote,
-      tipoIngresso: dados.tipo,
-      nomeIngresso: ingresso.nome,
-      valor: ingresso.valor,
-      moeda: "BRL",
-      status: "creating_preference",
-      origem: "site",
-      criadoEm: FieldValue.serverTimestamp(),
-      atualizadoEm: FieldValue.serverTimestamp(),
-    });
+    await criarPedidoComReserva(pedidoRef, dados, ingresso);
 
     try {
+      const agora = Date.now();
       const preferencia = await mercadoPago("/checkout/preferences", {
         method: "POST",
         body: JSON.stringify({
@@ -374,6 +550,9 @@ exports.criarPreferencia = onCall(
             failure: `${SITE_URL}/pagamento-falhou.html`,
           },
           auto_return: "approved",
+          expires: true,
+          expiration_date_from: new Date(agora).toISOString(),
+          expiration_date_to: new Date(agora + DURACAO_CHECKOUT_MS).toISOString(),
           notification_url: WEBHOOK_URL,
           external_reference: pedidoRef.id,
           statement_descriptor: "SEMAU 2026",
@@ -397,6 +576,9 @@ exports.criarPreferencia = onCall(
 
       return { pedidoId: pedidoRef.id, checkoutUrl };
     } catch (error) {
+      await liberarReserva(pedidoRef.id).catch((erroReserva) => {
+        logger.error("Falha ao liberar reserva de estoque", { pedidoId: pedidoRef.id, error: erroReserva.message });
+      });
       await pedidoRef.update({
         status: "preference_error",
         erro: texto(error.message, 240),
@@ -473,5 +655,53 @@ exports.mercadoPagoWebhook = onRequest(
       logger.error("Falha ao processar webhook", { paymentId, error: error.message });
       response.status(500).send("retry");
     }
+  },
+);
+
+async function prepararAbertura(loteIngressosAtivo) {
+  await db.runTransaction(async (transaction) => {
+    const estoqueDoc = await transaction.get(estoqueIngressosRef);
+    const estoque = normalizarEstoque(estoqueDoc.data() || {});
+    transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+    transaction.set(configuracaoGeralRef, {
+      faseAtual: "inscricao",
+      loteIngressosAtivo,
+      loteAtivo: loteIngressosAtivo === "social" ? 0 : 1,
+      formularioLoteSocial: FORMULARIO_LOTE_SOCIAL,
+      atualizadoEm: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+}
+
+function eventoDe2026() {
+  const ano = new Intl.DateTimeFormat("en", { year: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date());
+  return ano === "2026";
+}
+
+exports.abrirLoteSocial = onSchedule(
+  {
+    region: REGION,
+    schedule: "0 12 1 9 *",
+    timeZone: "America/Sao_Paulo",
+    maxInstances: 1,
+  },
+  async () => {
+    if (!eventoDe2026()) return;
+    await prepararAbertura("social");
+    logger.info("Lote Social aberto automaticamente.");
+  },
+);
+
+exports.abrirPrimeiroLote = onSchedule(
+  {
+    region: REGION,
+    schedule: "0 15 1 9 *",
+    timeZone: "America/Sao_Paulo",
+    maxInstances: 1,
+  },
+  async () => {
+    if (!eventoDe2026()) return;
+    await prepararAbertura("primeiro");
+    logger.info("1º lote aberto automaticamente.");
   },
 );

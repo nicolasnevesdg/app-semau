@@ -1,5 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { ABERTURA_LOTE_SOCIAL } from './ingressos-config.js?v=160';
 
 // Elementos do Login
 const inputEmail = document.getElementById('input-email');
@@ -10,6 +11,49 @@ const btnCronograma = document.getElementById('btn-fase-cronograma');
 const btnInscricao = document.getElementById('btn-fase-inscricao');
 const btnCredencial = document.getElementById('btn-fase-credencial');
 const docConfigRef = doc(db, "configuracoes", "geral");
+const CONTA_COM_ACESSO_COMPLETO = 'admin@semauufrrj.com';
+let faseAtualDoEvento = null;
+let faseConfiguradaDoEvento = null;
+let acessoCompletoAtivo = false;
+const INICIO_EVENTO = Date.parse('2026-09-21T08:00:00-03:00');
+
+function sincronizarFaseAutomatica() {
+    const agora = Date.now();
+    faseAtualDoEvento = agora >= ABERTURA_LOTE_SOCIAL && agora < INICIO_EVENTO
+        ? 'inscricao'
+        : faseConfiguradaDoEvento;
+    atualizarBotoesDaFase();
+}
+
+function contaTemAcessoCompleto(dadosUsuario) {
+    return dadosUsuario?.email?.trim().toLowerCase() === CONTA_COM_ACESSO_COMPLETO;
+}
+
+function atualizarBotoesDaFase() {
+    if (btnCronograma) btnCronograma.style.display = 'none';
+    if (btnInscricao) btnInscricao.style.display = 'none';
+    if (btnCredencial) btnCredencial.style.display = 'none';
+
+    if (acessoCompletoAtivo) {
+        if (btnCronograma) btnCronograma.style.display = 'flex';
+        if (btnInscricao) btnInscricao.style.display = 'flex';
+        return;
+    }
+
+    if (faseAtualDoEvento === 'cronograma' && btnCronograma) {
+        btnCronograma.style.display = 'flex';
+    } else if (faseAtualDoEvento === 'inscricao' && btnInscricao) {
+        btnInscricao.style.display = 'flex';
+    } else if (faseAtualDoEvento === 'credencial' && btnCredencial) {
+        btnCredencial.style.display = 'flex';
+    }
+}
+
+function aplicarAcessoCompleto(dadosUsuario = null) {
+    acessoCompletoAtivo = contaTemAcessoCompleto(dadosUsuario);
+    document.body.classList.toggle('acesso-cronograma-completo', acessoCompletoAtivo);
+    atualizarBotoesDaFase();
+}
 
 // Elementos do Dashboard (Ingresso)
 const userNameDisplay = document.getElementById('user-name-display');
@@ -233,8 +277,9 @@ if (btnEntrar) {
                     userPointsDisplay.textContent = dadosUsuario.pontos || 0;
                     
                     // Salva a sessão no navegador
-                    localStorage.setItem('usuarioLogadoId', docSnap.id); 
+                    localStorage.setItem('usuarioLogadoId', docSnap.id);
                     localStorage.setItem('usuarioPoints', dadosUsuario.pontos || 0);
+                    aplicarAcessoCompleto(dadosUsuario);
                     window.dispatchEvent(new Event('usuarioLoginAlterado'));
 
                     // 👇 PARTE C (1/2): Gerar o QR Code logo após o login dar certo
@@ -283,6 +328,7 @@ if (btnSair) {
     btnSair.addEventListener('click', () => {
         localStorage.removeItem('usuarioLogadoId');
         localStorage.removeItem('usuarioPoints');
+        aplicarAcessoCompleto();
         pararQrDinamico();
         window.dispatchEvent(new Event('usuarioLoginAlterado'));
 
@@ -318,9 +364,11 @@ async function verificarSessao() {
                 if (dadosUsuario.ingressoAtivo === false) {
                     localStorage.removeItem('usuarioLogadoId');
                     localStorage.removeItem('usuarioPoints');
+                    aplicarAcessoCompleto();
                     window.dispatchEvent(new Event('usuarioLoginAlterado'));
                     return;
                 }
+                aplicarAcessoCompleto(dadosUsuario);
                 userNameDisplay.textContent = dadosUsuario.nome;
                 userTokenDisplay.textContent = dadosUsuario.token;
                 userPointsDisplay.textContent = dadosUsuario.pontos || 0;
@@ -343,10 +391,17 @@ async function verificarSessao() {
                     const primeiroNome = dadosUsuario.nome.split(' ')[0]; 
                     txtBoasVindasDynamic.innerHTML = `Olá, <b style="font-weight: 800;">${primeiroNome}</b>`;
                 }
+            } else {
+                localStorage.removeItem('usuarioLogadoId');
+                localStorage.removeItem('usuarioPoints');
+                aplicarAcessoCompleto();
             }
         } catch (erro) {
+            aplicarAcessoCompleto();
             console.error("Erro ao recuperar sessão silenciosa:", erro);
         }
+    } else {
+        aplicarAcessoCompleto();
     }
 }
 
@@ -370,26 +425,15 @@ setTimeout(verificarSessao, 500);
 
 onSnapshot(docConfigRef, (docSnap) => {
     if (docSnap.exists()) {
-        const fase = docSnap.data().faseAtual;
-
-        // Esconde todos primeiro
-        if(btnCronograma) btnCronograma.style.display = 'none';
-        if(btnInscricao) btnInscricao.style.display = 'none';
-        if(btnCredencial) btnCredencial.style.display = 'none';
-
-        // Mostra só o que o admin mandou (usando 'flex' por causa do nosso SVG no CSS)
-        if (fase === 'cronograma' && btnCronograma) {
-            btnCronograma.style.display = 'flex';
-        } else if (fase === 'inscricao' && btnInscricao) {
-            btnInscricao.style.display = 'flex';
-        } else if (fase === 'credencial' && btnCredencial) {
-            btnCredencial.style.display = 'flex';
-        }
+        faseConfiguradaDoEvento = docSnap.data().faseAtual;
     } else {
         // Se o documento não existir ainda no banco, mostra o cronograma por padrão
-        if(btnCronograma) btnCronograma.style.display = 'flex';
+        faseConfiguradaDoEvento = 'cronograma';
     }
+    sincronizarFaseAutomatica();
 });
+
+setInterval(sincronizarFaseAutomatica, 30000);
 
 // ==========================================
 // MÁGICA: SENSOR DA ÁREA DO INSCRITO

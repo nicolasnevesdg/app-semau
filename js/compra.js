@@ -1,10 +1,11 @@
 import { app, db } from "./firebase-config.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 import {
     LOTES_INGRESSOS,
     TIPOS_INGRESSOS,
-    normalizarLoteAtivo,
+    disponibilidadePrimeiroLote,
+    obterLoteAutomatico,
     obterIngresso
 } from "./ingressos-config.js";
 
@@ -29,6 +30,8 @@ const botao = form.querySelector('button[type="submit"]');
 const precosOpcoes = document.querySelectorAll("[data-opcao-preco]");
 const textoBotaoPadrao = botao.innerHTML;
 let loteDisponivel = false;
+let loteConfigurado = "social";
+let estoqueIngressos = {};
 
 function formatarValor(valor, semCentavos = false) {
     return valor.toLocaleString("pt-BR", {
@@ -52,29 +55,34 @@ function mostrarStatus(mensagem, tipo = "erro") {
     status.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function bloquearLote() {
+function bloquearLote(mensagem = "Este lote não está disponível no momento. Volte à página de ingressos para consultar o lote ativo.") {
     loteDisponivel = false;
     botao.disabled = true;
     botao.textContent = "Lote indisponível";
-    mostrarStatus("Este lote não está disponível no momento. Volte à página de ingressos para consultar o lote ativo.");
+    mostrarStatus(mensagem);
 }
 
-async function verificarLoteAtivo() {
-    botao.disabled = true;
-    botao.textContent = "Verificando lote...";
-    try {
-        const snapshot = await getDoc(doc(db, "configuracoes", "geral"));
-        const loteAtivo = normalizarLoteAtivo(snapshot.data()?.loteIngressosAtivo);
-        if (loteAtivo !== loteSelecionado || !lotesPagos.includes(loteAtivo)) {
-            bloquearLote();
-            return;
-        }
-        loteDisponivel = true;
-        botao.disabled = false;
-        botao.innerHTML = textoBotaoPadrao;
-    } catch {
+function verificarLoteAtivo() {
+    const loteAtivo = obterLoteAutomatico(loteConfigurado, estoqueIngressos);
+    const disponibilidade = disponibilidadePrimeiroLote(estoqueIngressos);
+    radios.forEach(radio => {
+        radio.disabled = loteSelecionado === "primeiro" && !disponibilidade[radio.value];
+    });
+    if (loteAtivo !== loteSelecionado || !lotesPagos.includes(loteAtivo)) {
         bloquearLote();
+        return;
     }
+
+    const tipo = document.querySelector('input[name="tipoIngresso"]:checked')?.value || tipoInicial;
+    if (loteSelecionado === "primeiro" && !disponibilidade[tipo]) {
+        bloquearLote(`Os ingressos ${tipo === "kit" ? "com kit" : "sem kit"} do 1º lote estão esgotados. Escolha a outra modalidade, se ainda estiver disponível.`);
+        return;
+    }
+
+    loteDisponivel = true;
+    status.hidden = true;
+    botao.disabled = false;
+    botao.innerHTML = textoBotaoPadrao;
 }
 
 precosOpcoes.forEach(preco => {
@@ -84,7 +92,10 @@ precosOpcoes.forEach(preco => {
 radios.forEach(radio => {
     radio.checked = radio.value === tipoInicial;
     radio.addEventListener("change", () => {
-        if (radio.checked) atualizarResumo(radio.value);
+        if (radio.checked) {
+            atualizarResumo(radio.value);
+            verificarLoteAtivo();
+        }
     });
 });
 
@@ -155,3 +166,17 @@ form.addEventListener("submit", async event => {
 
 atualizarResumo(tipoInicial);
 verificarLoteAtivo();
+
+onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {
+    const configuracao = snapshot.data() || {};
+    const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
+    loteConfigurado = configuracao.loteIngressosAtivo || loteLegado || "social";
+    verificarLoteAtivo();
+}, () => bloquearLote());
+
+onSnapshot(doc(db, "configuracoes", "estoqueIngressos"), snapshot => {
+    estoqueIngressos = snapshot.data() || {};
+    verificarLoteAtivo();
+}, () => bloquearLote());
+
+setInterval(verificarLoteAtivo, 30000);

@@ -865,6 +865,15 @@
     padding: 0 30px;
 }
 
+/* A conta de prévia validada no login sempre enxerga o cronograma oficial. */
+body.acesso-cronograma-completo #container-fase1 {
+    display: none !important;
+}
+
+body.acesso-cronograma-completo #container-fase2 {
+    display: block !important;
+}
+
 .btn-dia-tab {
     position: relative;
     flex: 1;
@@ -1942,7 +1951,10 @@
 :is(.schedule-card-palestra, .schedule-card-oficina, .schedule-card-evento) .palestra-identidade p { color: rgba(255,255,255,.60); font-size: 11px; line-height: 1.35; }
 .palestra-conteudo { margin-top: 24px; text-align: left; }
 .palestra-conteudo h4 { margin: 0 0 6px; color: #fff; font-size: 19px; line-height: 1.08; letter-spacing: -.2px; }
-:is(.schedule-card-palestra, .schedule-card-oficina, .schedule-card-evento) .palestra-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; }
+:is(.schedule-card-palestra, .schedule-card-oficina, .schedule-card-evento) .palestra-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; white-space: pre-line; }
+.palestra-biografia { margin-top: 17px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,.13); }
+.palestra-biografia > strong { display: block; margin-bottom: 7px; color: rgba(255,255,255,.82); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+:is(.schedule-card-palestra, .schedule-card-oficina) .palestra-biografia > p { margin: 0; color: rgba(255,255,255,.59); font-size: 10px; line-height: 1.55; white-space: pre-line; }
 .palestra-mesa { margin-top: 23px; padding-top: 17px; border-top: 1px solid rgba(255,255,255,.13); display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 11px; text-align: left; }
 .palestra-mesa > img { width: 42px; height: 42px; border-radius: 50%; display: block; object-fit: cover; object-position: center top; background: var(--cor-eixo-cidade); }
 .palestra-mesa > div { min-width: 0; display: grid; gap: 3px; }
@@ -1953,7 +1965,7 @@
 .schedule-card-oficina .oficina-corpo { padding-top: 23px; }
 .oficina-conteudo { text-align: left; }
 .schedule-card-oficina .oficina-conteudo h3 { margin: 0 0 10px; color: #fff; font-size: 25px; line-height: 1.02; letter-spacing: -.4px; }
-.schedule-card-oficina .oficina-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; }
+.schedule-card-oficina .oficina-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; white-space: pre-line; }
 .schedule-card-oficina .oficina-ministrante { margin-top: 24px; }
 
 .cronograma-track { align-items: flex-start; }
@@ -1961,7 +1973,7 @@
 .schedule-card-evento .evento-corpo { padding-top: 23px; }
 .evento-conteudo { text-align: left; }
 .schedule-card-evento .evento-conteudo h3 { margin: 0 0 10px; color: #fff; font-size: 25px; line-height: 1.02; letter-spacing: -.4px; }
-.schedule-card-evento .evento-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; }
+.schedule-card-evento .evento-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; white-space: pre-line; }
 
 /* Status ao vivo da programação na home — papel rasgado */
 .evento-status-chamada {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v152';
+const CACHE_NAME = 'semau-v160';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -21,6 +21,7 @@ const assetsToCache = [
     './css/admin-cronograma.css',
     './css/pagamento.css',
     './js/main.js',
+    './js/schedule.js',
     './js/install-app.js',
     './js/sponsors.js',
     './js/navigation.js',
@@ -56,6 +57,15 @@ const assetsToCache = [
     './assets/svg/sticker-azulejo.svg',
     './assets/svg/sticker-estrela.svg',
     './assets/svg/jean-geal.svg',
+    './assets/svg/em-breve.svg',
+    './assets/palestrantes/ethel-pinheiro.png',
+    './assets/palestrantes/esther-carro.png',
+    './assets/palestrantes/case-arquitetura.png',
+    './assets/palestrantes/thaysa-malaquias.png',
+    './assets/palestrantes/rafael-zamorano.png',
+    './assets/palestrantes/roberto-cruz.png',
+    './assets/palestrantes/pedro-rajao.png',
+    './assets/palestrantes/veronica-natividade.png',
     './assets/img/palestrante-teste.png',
     './assets/img/professor-teste_1.png',
     './assets/img/oficina-levantamento.png',

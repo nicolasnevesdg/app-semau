@@ -1,17 +1,19 @@
 import { db } from './firebase-config.js';
-import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     DIAS_EVENTO,
     TIPOS_ATIVIDADE_AO_VIVO,
+    VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
     clonarProgramacao,
     horarioEmMinutos,
     normalizarAtividade,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js';
+} from './programacao-ao-vivo-config.js?v=158';
 
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
+const EMAIL_CONTA_ADMINISTRATIVA = 'admin@semauufrrj.com';
 const overlayLogin = document.getElementById('admin-login-overlay');
 const formLogin = document.getElementById('form-admin-login');
 const inputSenha = document.getElementById('admin-senha-input');
@@ -97,6 +99,68 @@ function criarCampo(classe, rotulo, controle) {
     return campo;
 }
 
+function criarCampoDetalhe(item, propriedade, rotulo, { textarea = false, placeholder = '', limite = 500 } = {}) {
+    const controle = document.createElement(textarea ? 'textarea' : 'input');
+    if (!textarea) controle.type = 'text';
+    controle.value = item[propriedade] || '';
+    controle.maxLength = limite;
+    controle.placeholder = placeholder;
+    controle.addEventListener('input', () => {
+        item[propriedade] = controle.value;
+        marcarAlterado();
+    });
+    return criarCampo(textarea ? 'campo-detalhe campo-detalhe-largo' : 'campo-detalhe', rotulo, controle);
+}
+
+function criarCamposConteudoPublico(item) {
+    const bloco = document.createElement('section');
+    bloco.className = 'campos-especificos conteudo-cartao-publico';
+    bloco.innerHTML = '<h3><i class="ph-bold ph-layout"></i> Conteúdo do cartão público</h3>';
+    const grade = document.createElement('div');
+    grade.className = 'detalhes-grade';
+    grade.append(
+        criarCampoDetalhe(item, 'descricao', 'Descrição geral', { textarea: true, placeholder: 'Texto exibido no cartão desta atividade.', limite: 5000 }),
+        criarCampoDetalhe(item, 'imagem', 'Imagem principal (caminho ou URL)', { placeholder: 'Ex.: assets/img/convidado.png ou https://…', limite: 500 })
+    );
+
+    if (item.tipo === 'palestra') {
+        grade.append(
+            criarCampoDetalhe(item, 'convidado', 'Convidado', { placeholder: 'Nome do palestrante ou escritório', limite: 180 }),
+            criarCampoDetalhe(item, 'convidadoCargo', 'Formação / cargo', { placeholder: 'Identificação curta exibida sob o nome' }),
+            criarCampoDetalhe(item, 'convidadoBio', 'Informações sobre o convidado', { textarea: true, placeholder: 'Biografia e trajetória do convidado', limite: 8000 }),
+            criarCampoDetalhe(item, 'tema', 'Tema da palestra', { placeholder: 'Título ou tema principal' }),
+            criarCampoDetalhe(item, 'temaDescricao', 'Explicação da palestra', { textarea: true, placeholder: 'Resumo, ementa ou explicação do encontro', limite: 5000 }),
+            criarCampoDetalhe(item, 'mediador', 'Mediador(a)', { placeholder: 'Nome de quem fará a mediação', limite: 180 }),
+            criarCampoDetalhe(item, 'mediadorCargo', 'Cargo do(a) mediador(a)', { placeholder: 'Ex.: Docente do DAU/UFRRJ' }),
+            criarCampoDetalhe(item, 'mediadorFoto', 'Foto do(a) mediador(a) (caminho ou URL)', { placeholder: 'Ex.: assets/img/mediador.png ou https://…', limite: 500 })
+        );
+    } else if (item.tipo === 'oficina') {
+        grade.append(
+            criarCampoDetalhe(item, 'oficineiro', 'Oficineiro(a)', { placeholder: 'Nome de quem ministra a oficina', limite: 180 }),
+            criarCampoDetalhe(item, 'oficineiroCargo', 'Formação / cargo', { placeholder: 'Identificação curta do oficineiro' }),
+            criarCampoDetalhe(item, 'oficineiroFoto', 'Foto do(a) oficineiro(a) (caminho ou URL)', { placeholder: 'Ex.: assets/img/oficineiro.png ou https://…', limite: 500 }),
+            criarCampoDetalhe(item, 'oficineiroBio', 'Informações sobre o(a) oficineiro(a)', { textarea: true, placeholder: 'Biografia e trajetória', limite: 8000 })
+        );
+    }
+
+    bloco.appendChild(grade);
+    return bloco;
+}
+
+function criarStatusAoVivo(item) {
+    const detalhes = document.createElement('details');
+    detalhes.className = 'detalhes-status-ao-vivo';
+    const resumo = document.createElement('summary');
+    resumo.innerHTML = '<i class="ph-bold ph-broadcast"></i> Status “acontecendo agora” <small>opcional</small>';
+    const campo = criarCampoDetalhe(item, 'texto', 'Mensagem curta durante esta atividade', {
+        textarea: true,
+        placeholder: 'Se ficar vazio, o site informa automaticamente qual é a próxima atividade.',
+        limite: 500
+    });
+    detalhes.append(resumo, campo);
+    return detalhes;
+}
+
 function criarCardAtividade(item, indice) {
     const card = document.createElement('article');
     card.className = 'atividade-card';
@@ -147,23 +211,16 @@ function criarCardAtividade(item, indice) {
     const titulo = document.createElement('input');
     titulo.type = 'text';
     titulo.value = item.titulo;
-    titulo.maxLength = 140;
+    titulo.maxLength = 180;
     titulo.required = true;
     titulo.placeholder = 'Ex.: Intervalo ou Palestra com…';
     titulo.setAttribute('aria-label', `Título do item ${indice + 1}`);
-
-    const texto = document.createElement('textarea');
-    texto.value = item.texto || '';
-    texto.maxLength = 220;
-    texto.placeholder = 'Opcional. Ex.: Voltamos às 16h. Se ficar vazio, o site cria a mensagem automaticamente.';
-    texto.setAttribute('aria-label', `Mensagem complementar do item ${indice + 1}`);
 
     const campos = [
         [inicio, 'inicio'],
         [fim, 'fim'],
         [tipo, 'tipo'],
-        [titulo, 'titulo'],
-        [texto, 'texto']
+        [titulo, 'titulo']
     ];
     campos.forEach(([controle, propriedade]) => {
         const evento = controle.tagName === 'SELECT' ? 'change' : 'input';
@@ -171,6 +228,7 @@ function criarCardAtividade(item, indice) {
             item[propriedade] = controle.value;
             marcarAlterado();
             if (propriedade === 'titulo') numero.innerHTML = `<i class="ph-bold ph-clock"></i> Item ${indice + 1}`;
+            if (propriedade === 'tipo') renderizarDia();
         });
     });
 
@@ -178,15 +236,10 @@ function criarCardAtividade(item, indice) {
         criarCampo('campo-inicio', 'Começa', inicio),
         criarCampo('campo-fim', 'Termina', fim),
         criarCampo('campo-tipo', 'Categoria', tipo),
-        criarCampo('campo-titulo', 'Título exibido', titulo)
+        criarCampo('campo-titulo', 'Título da atividade', titulo)
     );
-    const campoTexto = criarCampo('campo-mensagem', 'Mensagem complementar', texto);
-    const ajuda = document.createElement('small');
-    ajuda.textContent = 'Esta mensagem aparece abaixo do título enquanto o item estiver acontecendo.';
-    campoTexto.appendChild(ajuda);
-    grade.appendChild(campoTexto);
 
-    card.append(topo, grade);
+    card.append(topo, grade, criarCamposConteudoPublico(item), criarStatusAoVivo(item));
     return card;
 }
 
@@ -194,7 +247,7 @@ function renderizarDia() {
     const dia = rotuloDia(diaAtivo);
     const atividades = programacaoEditavel[diaAtivo];
     dataDia.textContent = `${dia.nome} · ${dia.dataCurta}`;
-    tituloDia.textContent = 'Conteúdo exibido ao vivo';
+    tituloDia.textContent = 'Cartões da página Cronograma';
     resumoDia.textContent = `${atividades.length} ${atividades.length === 1 ? 'item programado' : 'itens programados'} para este dia.`;
     listaAtividades.innerHTML = '';
     if (!atividades.length) {
@@ -216,12 +269,6 @@ function validarProgramacaoParaSalvar() {
             return normalizada;
         }).sort((a, b) => horarioEmMinutos(a.inicio) - horarioEmMinutos(b.inicio));
 
-        atividades.forEach((item, indice) => {
-            const anterior = atividades[indice - 1];
-            if (anterior && horarioEmMinutos(item.inicio) < horarioEmMinutos(anterior.fim)) {
-                throw new Error(`${dia.nome}: “${anterior.titulo}” e “${item.titulo}” estão em horários sobrepostos.`);
-            }
-        });
         validada[dia.chave] = atividades;
     });
     if (!temProgramacaoValida(validada)) throw new Error('O cronograma não pode ficar completamente vazio.');
@@ -232,8 +279,9 @@ async function carregarProgramacao() {
     mostrarStatus('Carregando a programação salva…', 'info');
     try {
         const snapshot = await getDoc(docCronogramaRef);
-        const remota = normalizarProgramacao(snapshot.data()?.programacao);
-        programacaoEditavel = temProgramacaoValida(remota)
+        const dados = snapshot.data();
+        const remota = normalizarProgramacao(dados?.programacao);
+        programacaoEditavel = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(remota)
             ? remota
             : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
         renderizarTabs();
@@ -266,6 +314,7 @@ async function salvarProgramacao() {
     try {
         await setDoc(docCronogramaRef, {
             programacao: validada,
+            versaoConteudo: VERSAO_CONTEUDO_CRONOGRAMA,
             atualizadoEm: serverTimestamp()
         }, { merge: true });
         programacaoEditavel = clonarProgramacao(validada);
@@ -290,6 +339,20 @@ function liberarEditor() {
     }
 }
 
+async function credencialAdministrativaValida(credencial) {
+    const seguranca = await getDoc(doc(db, 'configuracoes', 'seguranca'));
+    if (seguranca.exists() && credencial === String(seguranca.data().senhaAdmin || '')) return true;
+
+    const token = credencial.toUpperCase();
+    const consulta = query(
+        collection(db, 'inscritos'),
+        where('email', '==', EMAIL_CONTA_ADMINISTRATIVA),
+        where('token', '==', token)
+    );
+    const resultado = await getDocs(consulta);
+    return resultado.docs.some(documento => documento.data().ingressoAtivo !== false);
+}
+
 formLogin.addEventListener('submit', async evento => {
     evento.preventDefault();
     const senha = inputSenha.value.trim();
@@ -297,12 +360,11 @@ formLogin.addEventListener('submit', async evento => {
     btnLogin.disabled = true;
     btnLogin.textContent = 'Verificando…';
     try {
-        const snapshot = await getDoc(doc(db, 'configuracoes', 'seguranca'));
-        if (snapshot.exists() && senha === snapshot.data().senhaAdmin) {
+        if (await credencialAdministrativaValida(senha)) {
             sessionStorage.setItem('adminLogado', 'true');
             liberarEditor();
         } else {
-            window.alert('Senha incorreta.');
+            window.alert('Senha ou token administrativo incorreto.');
             inputSenha.value = '';
             inputSenha.focus();
         }
