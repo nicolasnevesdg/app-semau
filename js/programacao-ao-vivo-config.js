@@ -17,6 +17,14 @@ export const TIPOS_ATIVIDADE_AO_VIVO = Object.freeze({
 const PALESTRANTE_PADRAO = 'assets/img/palestrante-teste.png';
 const MEDIADOR_PADRAO = 'assets/img/professor-teste_1.png';
 const OFICINA_PADRAO = 'assets/img/oficina-levantamento.png';
+export const REFERENCIAS_INGRESSOS_OFICINAS = Object.freeze({
+    OF01: '22-1330-levantamento',
+    OF02: '22-1330-ceramica',
+    OF03: '23-1540-aquarela',
+    OF04: '23-1540-cuidado',
+    OF05: '24-1330-mobiliario',
+    OF06: '24-1330-mural'
+});
 const atividade = (id, inicio, fim, tipo, titulo, descricao = '', extras = {}) => Object.freeze({
     id, inicio, fim, tipo, titulo, descricao, texto: '', convidado: '', convidadoCargo: '',
     convidadoBio: '', tema: '', temaDescricao: '', mediador: '', mediadorCargo: '',
@@ -135,3 +143,28 @@ export function normalizarProgramacao(valor) {
 }
 export function clonarProgramacao(valor = PROGRAMACAO_AO_VIVO_PADRAO) { return normalizarProgramacao(valor); }
 export function temProgramacaoValida(valor) { return DIAS_EVENTO.some(({ chave }) => Array.isArray(valor?.[chave]) && valor[chave].length > 0); }
+
+function localizarAtividade(programacao, idAtividade) {
+    for (const dia of DIAS_EVENTO) {
+        const item = (programacao[dia.chave] || []).find(atividadeAtual => atividadeAtual.id === idAtividade);
+        if (item) return { item, dia };
+    }
+    return null;
+}
+
+export function montarCatalogoIngressosOficinas(programacao = PROGRAMACAO_AO_VIVO_PADRAO) {
+    const programacaoAtual = normalizarProgramacao(programacao);
+    const programacaoPadrao = normalizarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+
+    return Object.fromEntries(Object.entries(REFERENCIAS_INGRESSOS_OFICINAS).map(([codigo, idAtividade]) => {
+        const referencia = localizarAtividade(programacaoAtual, idAtividade) || localizarAtividade(programacaoPadrao, idAtividade);
+        const item = referencia?.item || {};
+        const dia = referencia?.dia;
+        return [codigo, {
+            titulo: item.titulo || 'Oficina',
+            ministrante: item.oficineiro || 'Ministrante a confirmar',
+            data: dia ? `${dia.dataCurta} · ${item.inicio}–${item.fim}` : 'Horário a confirmar',
+            imagem: item.imagem || OFICINA_PADRAO
+        }];
+    }));
+}

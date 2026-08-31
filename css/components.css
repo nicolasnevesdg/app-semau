@@ -323,7 +323,7 @@
     background-color: #d96e35;
     background-image:
         linear-gradient(115deg, var(--oficina-overlay-a, rgba(13, 55, 43, .16)), var(--oficina-overlay-b, rgba(240, 120, 44, .28))),
-        url('../assets/img/oficina-levantamento.png');
+        var(--oficina-imagem, url('../assets/img/oficina-levantamento.png'));
     background-position: center;
     background-size: cover;
     box-shadow: 0 14px 28px rgba(0, 0, 0, .16);
@@ -403,6 +403,15 @@
     text-shadow: none;
 }
 
+.ticket-oficina-ministrante {
+    max-width: 250px;
+    margin: 7px 0 0;
+    color: rgba(13, 55, 43, .72);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
 .ticket-oficina-data {
     position: absolute;
     top: 19px;
@@ -479,6 +488,8 @@
         max-width: 190px;
         font-size: 28px;
     }
+
+    .ticket-oficina-ministrante { max-width: 190px; }
 
     .ticket-oficina-info {
         padding-right: 14px;

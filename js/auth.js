@@ -1,6 +1,14 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { ABERTURA_LOTE_SOCIAL } from './ingressos-config.js?v=160';
+import { ABERTURA_LOTE_SOCIAL } from './ingressos-config.js?v=162';
+import {
+    VERSAO_CONTEUDO_CRONOGRAMA,
+    PROGRAMACAO_AO_VIVO_PADRAO,
+    clonarProgramacao,
+    montarCatalogoIngressosOficinas,
+    normalizarProgramacao,
+    temProgramacaoValida
+} from './programacao-ao-vivo-config.js?v=162';
 
 // Elementos do Login
 const inputEmail = document.getElementById('input-email');
@@ -171,29 +179,42 @@ function pararQrDinamico() {
     slotQrRenderizado = null;
 }
 
-// ==========================================
-// CATÁLOGO DE OFICINAS (As 6 oficinas)
-// ==========================================
-const catalogoOficinas = {
-    "OF01": { titulo: "Oficina de Levantamento", data: "22/Set - 13:30" },
-    "OF02": { titulo: "Oficina de Cerâmica", data: "22/Set - 13:30" },
-    "OF03": { titulo: "Oficina de Aquarela", data: "23/Set - 15:40" },
-    "OF04": { titulo: "Jogo do Cuidado", data: "23/Set - 15:40" },
-    "OF05": { titulo: "Oficina de Mobiliário", data: "24/Set - 13:30" },
-    "OF06": { titulo: "Oficina de Pintura de Mural", data: "24/Set - 13:30" }
-};
-
 const containerOficinas = document.getElementById('container-oficinas');
 const listaOficinas = document.getElementById('lista-oficinas');
+const docCronogramaOficinasRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
+let catalogoOficinas = montarCatalogoIngressosOficinas(PROGRAMACAO_AO_VIVO_PADRAO);
+let sessaoOficinasAtual = null;
+
+function escaparHtml(valor) {
+    return String(valor || '').replace(/[&<>'"]/g, caractere => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[caractere]);
+}
+
+function normalizarImagemOficina(valor) {
+    try {
+        const url = new URL(String(valor || 'assets/img/oficina-levantamento.png').trim(), window.location.href);
+        return url.protocol === 'http:' || url.protocol === 'https:'
+            ? url.href
+            : new URL('assets/img/oficina-levantamento.png', window.location.href).href;
+    } catch {
+        return new URL('assets/img/oficina-levantamento.png', window.location.href).href;
+    }
+}
 
 // ==========================================
 // FUNÇÃO: DESENHAR INGRESSOS DAS OFICINAS
 // ==========================================
 function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
+    const oficinasValidas = Array.isArray(oficinasDoAluno)
+        ? [...new Set(oficinasDoAluno.map(String))].filter(idOficina => catalogoOficinas[idOficina])
+        : [];
+    sessaoOficinasAtual = tokenUsuario ? { token: tokenUsuario, oficinas: oficinasValidas } : null;
 
     // Se o aluno não tiver oficinas (ou se o campo não existir), esconde a área
-    if (!oficinasDoAluno || oficinasDoAluno.length === 0) {
+    if (oficinasValidas.length === 0) {
         if(containerOficinas) containerOficinas.style.display = 'none';
+        if(listaOficinas) listaOficinas.innerHTML = '';
         return;
     }
 
@@ -202,9 +223,8 @@ function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
     if(listaOficinas) listaOficinas.innerHTML = ''; 
 
     // Passa por cada oficina que o aluno tem e cria o ingresso
-    oficinasDoAluno.forEach((idOficina) => {
+    oficinasValidas.forEach((idOficina) => {
         const oficina = catalogoOficinas[idOficina];
-        if (!oficina) return; // Se o ID não existir no catálogo, ignora
 
         const divId = `qr-${idOficina}`; // ID único pra caixa do QR Code
         const tokenDaOficina = `${tokenUsuario}-${idOficina}`; // O segredo da segurança (Ex: QC8YS-OF01)
@@ -213,20 +233,24 @@ function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
             <div class="ticket-oficina" data-oficina="${idOficina}">
                 <div class="ticket-oficina-info">
                     <span class="tag-oficina">${idOficina}</span>
-                    <h4 class="ticket-oficina-titulo">${oficina.titulo}</h4>
-                    <p class="ticket-oficina-data">${oficina.data}</p>
+                    <h4 class="ticket-oficina-titulo">${escaparHtml(oficina.titulo)}</h4>
+                    <p class="ticket-oficina-ministrante">Com ${escaparHtml(oficina.ministrante)}</p>
+                    <p class="ticket-oficina-data">${escaparHtml(oficina.data)}</p>
                 </div>
                 <div class="ticket-oficina-qr">
                     <div id="${divId}"></div>
                 </div>
             </div>
         `;
-        
-        listaOficinas.insertAdjacentHTML('beforeend', cardHTML);
 
+        listaOficinas.insertAdjacentHTML('beforeend', cardHTML);
+        const ticket = listaOficinas.lastElementChild;
+        ticket?.style.setProperty('--oficina-imagem', `url("${normalizarImagemOficina(oficina.imagem)}")`);
         // Dá um tempinho mínimo (100ms) pro HTML renderizar e depois desenha o QR Code dentro dele
         setTimeout(() => {
             const containerOficina = document.getElementById(divId);
+            if (!containerOficina) return;
+            containerOficina.innerHTML = '';
             new QRCode(containerOficina, {
                 text: tokenDaOficina,
                 width: 58,
@@ -241,6 +265,18 @@ function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
         }, 100);
     });
 }
+
+onSnapshot(docCronogramaOficinasRef, snapshot => {
+    const dados = snapshot.data();
+    const programacaoRemota = normalizarProgramacao(dados?.programacao);
+    const programacao = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(programacaoRemota)
+        ? programacaoRemota
+        : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+    catalogoOficinas = montarCatalogoIngressosOficinas(programacao);
+    if (sessaoOficinasAtual?.token) {
+        renderizarOficinas(sessaoOficinasAtual.token, sessaoOficinasAtual.oficinas);
+    }
+}, error => console.warn('Não foi possível sincronizar os ingressos das oficinas.', error));
 
 // ==========================================
 // 1. LÓGICA DE LOGIN (ENTRAR)
@@ -329,6 +365,7 @@ if (btnSair) {
         localStorage.removeItem('usuarioLogadoId');
         localStorage.removeItem('usuarioPoints');
         aplicarAcessoCompleto();
+        renderizarOficinas('', []);
         pararQrDinamico();
         window.dispatchEvent(new Event('usuarioLoginAlterado'));
 
