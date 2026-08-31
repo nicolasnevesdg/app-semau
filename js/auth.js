@@ -1,5 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { ABERTURA_LOTE_SOCIAL } from './ingressos-config.js?v=160';
 
 // Elementos do Login
 const inputEmail = document.getElementById('input-email');
@@ -12,7 +13,17 @@ const btnCredencial = document.getElementById('btn-fase-credencial');
 const docConfigRef = doc(db, "configuracoes", "geral");
 const CONTA_COM_ACESSO_COMPLETO = 'admin@semauufrrj.com';
 let faseAtualDoEvento = null;
+let faseConfiguradaDoEvento = null;
 let acessoCompletoAtivo = false;
+const INICIO_EVENTO = Date.parse('2026-09-21T08:00:00-03:00');
+
+function sincronizarFaseAutomatica() {
+    const agora = Date.now();
+    faseAtualDoEvento = agora >= ABERTURA_LOTE_SOCIAL && agora < INICIO_EVENTO
+        ? 'inscricao'
+        : faseConfiguradaDoEvento;
+    atualizarBotoesDaFase();
+}
 
 function contaTemAcessoCompleto(dadosUsuario) {
     return dadosUsuario?.email?.trim().toLowerCase() === CONTA_COM_ACESSO_COMPLETO;
@@ -414,13 +425,15 @@ setTimeout(verificarSessao, 500);
 
 onSnapshot(docConfigRef, (docSnap) => {
     if (docSnap.exists()) {
-        faseAtualDoEvento = docSnap.data().faseAtual;
+        faseConfiguradaDoEvento = docSnap.data().faseAtual;
     } else {
         // Se o documento não existir ainda no banco, mostra o cronograma por padrão
-        faseAtualDoEvento = 'cronograma';
+        faseConfiguradaDoEvento = 'cronograma';
     }
-    atualizarBotoesDaFase();
+    sincronizarFaseAutomatica();
 });
+
+setInterval(sincronizarFaseAutomatica, 30000);
 
 // ==========================================
 // MÁGICA: SENSOR DA ÁREA DO INSCRITO

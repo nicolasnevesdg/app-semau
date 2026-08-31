@@ -1,9 +1,12 @@
 import { db } from "./firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
-    LOTE_ATIVO_PADRAO,
+    ABERTURA_LOTE_SOCIAL,
+    ENCERRAMENTO_LOTE_SOCIAL,
+    FORMULARIO_LOTE_SOCIAL,
     LOTES_INGRESSOS,
-    normalizarLoteAtivo,
+    disponibilidadePrimeiroLote,
+    obterLoteAutomatico,
     normalizarUrlFormulario
 } from "./ingressos-config.js";
 
@@ -28,8 +31,10 @@ const PALESTRANTES = {
     "palestrante-11": { nome: "Verônica Natividade", descricao: "Arquiteta, pesquisadora e professora da PUC-Rio", imagem: "assets/palestrantes/veronica-natividade.png" }
 };
 
-let loteAtivo = LOTE_ATIVO_PADRAO;
-let formularioLoteSocial = "";
+let loteAtivo = null;
+let loteConfigurado = "social";
+let estoqueIngressos = {};
+let formularioLoteSocial = FORMULARIO_LOTE_SOCIAL;
 
 function escaparHtml(valor) {
     return String(valor || "").replace(/[&<>'"]/g, caractere => ({
@@ -82,18 +87,24 @@ function formatarValor(valor) {
 }
 
 function atualizarLotes() {
-    const lote = LOTES_INGRESSOS[loteAtivo];
+    const agora = Date.now();
+    loteAtivo = obterLoteAutomatico(loteConfigurado, estoqueIngressos, agora);
+    const lote = LOTES_INGRESSOS[loteAtivo || "social"];
+    const vendasAbertas = Boolean(loteAtivo);
     const fluxoSocial = lote.fluxo === "formulario";
+    const disponibilidade = disponibilidadePrimeiroLote(estoqueIngressos, agora);
 
     lotes.forEach(card => {
         const chave = card.dataset.lote;
         const chaves = Object.keys(LOTES_INGRESSOS);
-        const ativo = chave === loteAtivo;
-        const encerrado = chaves.indexOf(chave) < chaves.indexOf(loteAtivo);
+        const ativo = vendasAbertas && chave === loteAtivo;
+        const encerrado = vendasAbertas && chaves.indexOf(chave) < chaves.indexOf(loteAtivo);
         card.classList.toggle("lote-ativo", ativo);
         card.classList.toggle("lote-inativo", !ativo);
         const status = card.querySelector("b");
-        if (status) status.textContent = ativo ? "Ativo" : encerrado ? "Encerrado" : "Em breve";
+        if (!status) return;
+        if (!vendasAbertas && chave === "social") status.textContent = "Abre às 12h";
+        else status.textContent = ativo ? "Ativo" : encerrado ? "Encerrado" : "Em breve";
     });
 
     precos.forEach(preco => {
@@ -101,20 +112,35 @@ function atualizarLotes() {
     });
 
     botoes.forEach(botao => {
+        const tipo = botao.dataset.tipo === "kit" ? "kit" : "normal";
+        if (!vendasAbertas) {
+            botao.disabled = true;
+            botao.textContent = "Inscrições abrem às 12h";
+            return;
+        }
         if (fluxoSocial) {
             botao.disabled = !formularioLoteSocial;
             botao.textContent = formularioLoteSocial ? "Solicitar ingresso social" : "Formulário em breve";
+        } else if (loteAtivo === "primeiro" && !disponibilidade[tipo]) {
+            botao.disabled = true;
+            botao.textContent = "Esgotado no 1º lote";
         } else {
             botao.disabled = false;
             botao.textContent = botao.dataset.tipo === "kit" ? "Quero o ingresso com kit" : "Escolher ingresso";
         }
     });
 
-    if (fluxoSocial) {
-        introLotes.textContent = "O Lote Social é destinado a estudantes cotistas e exige o envio do comprovante de matrícula pelo formulário.";
+    if (!vendasAbertas) {
+        introLotes.textContent = "O Lote Social abre automaticamente em 01/09, ao meio-dia, e fica disponível até 15h.";
+        aviso.textContent = "Serão 10 ingressos sociais. Depois das 15h, o 1º lote abre automaticamente.";
+    } else if (fluxoSocial) {
+        introLotes.textContent = "Lote Social: 10 ingressos para estudantes cotistas, mediante envio do comprovante de matrícula.";
         aviso.textContent = formularioLoteSocial
-            ? "Você será direcionado ao formulário de comprovação do Lote Social."
+            ? "O formulário fica disponível hoje, das 12h às 15h."
             : "Assim que o formulário do Lote Social for publicado, os botões serão liberados aqui.";
+    } else if (loteAtivo === "primeiro") {
+        introLotes.textContent = "1º lote limitado a 10 ingressos sem kit e 10 ingressos com kit.";
+        aviso.textContent = "Pagamento seguro pelo Mercado Pago. Cada modalidade fica indisponível quando suas 10 vagas forem ocupadas.";
     } else {
         introLotes.textContent = `${lote.nome} disponível. Escolha seu ingresso abaixo.`;
         aviso.textContent = "Pagamento seguro pelo Mercado Pago. A credencial é emitida após a aprovação.";
@@ -124,6 +150,7 @@ function atualizarLotes() {
 botoes.forEach(botao => {
     botao.addEventListener("click", () => {
         const tipo = botao.dataset.tipo === "kit" ? "kit" : "normal";
+        if (!loteAtivo) return;
         const lote = LOTES_INGRESSOS[loteAtivo];
         if (lote.fluxo === "formulario") {
             if (formularioLoteSocial) window.location.assign(formularioLoteSocial);
@@ -136,8 +163,13 @@ botoes.forEach(botao => {
 onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {
     const configuracao = snapshot.data() || {};
     const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
-    loteAtivo = normalizarLoteAtivo(configuracao.loteIngressosAtivo || loteLegado);
-    formularioLoteSocial = normalizarUrlFormulario(configuracao.formularioLoteSocial);
+    loteConfigurado = configuracao.loteIngressosAtivo || loteLegado || "social";
+    formularioLoteSocial = normalizarUrlFormulario(configuracao.formularioLoteSocial) || FORMULARIO_LOTE_SOCIAL;
+    atualizarLotes();
+}, atualizarLotes);
+
+onSnapshot(doc(db, "configuracoes", "estoqueIngressos"), snapshot => {
+    estoqueIngressos = snapshot.data() || {};
     atualizarLotes();
 }, atualizarLotes);
 
@@ -147,3 +179,8 @@ onSnapshot(doc(db, "configuracoes", "anuncios"), snapshot => {
 }, () => renderizarPalestrantes([]));
 
 atualizarLotes();
+setInterval(atualizarLotes, 30000);
+[ABERTURA_LOTE_SOCIAL, ENCERRAMENTO_LOTE_SOCIAL].forEach(limite => {
+    const espera = limite - Date.now();
+    if (espera > 0 && espera < 2147483647) setTimeout(atualizarLotes, espera + 250);
+});
