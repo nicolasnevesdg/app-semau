@@ -8,11 +8,9 @@ import {
     disponibilidadePrimeiroLote,
     obterLoteAutomatico,
     normalizarUrlFormulario
-} from "./ingressos-config.js";
+} from "./ingressos-config.js?v=161";
 
 const lotes = document.querySelectorAll(".lote-card");
-const introLotes = document.querySelector(".planos-intro");
-const aviso = document.getElementById("compra-aviso");
 const botoes = document.querySelectorAll(".plano-botao");
 const precos = document.querySelectorAll("[data-preco-tipo]");
 const faixaPalestrantes = document.getElementById("palestrantes-faixa");
@@ -130,21 +128,6 @@ function atualizarLotes() {
         }
     });
 
-    if (!vendasAbertas) {
-        introLotes.textContent = "O Lote Social abre automaticamente em 01/09, ao meio-dia, e fica disponível até 15h.";
-        aviso.textContent = "Serão 10 ingressos sociais. Depois das 15h, o 1º lote abre automaticamente.";
-    } else if (fluxoSocial) {
-        introLotes.textContent = "Lote Social: 10 ingressos para estudantes cotistas, mediante envio do comprovante de matrícula.";
-        aviso.textContent = formularioLoteSocial
-            ? "O formulário fica disponível hoje, das 12h às 15h."
-            : "Assim que o formulário do Lote Social for publicado, os botões serão liberados aqui.";
-    } else if (loteAtivo === "primeiro") {
-        introLotes.textContent = "1º lote limitado a 10 ingressos sem kit e 10 ingressos com kit.";
-        aviso.textContent = "Pagamento seguro pelo Mercado Pago. Cada modalidade fica indisponível quando suas 10 vagas forem ocupadas.";
-    } else {
-        introLotes.textContent = `${lote.nome} disponível. Escolha seu ingresso abaixo.`;
-        aviso.textContent = "Pagamento seguro pelo Mercado Pago. A credencial é emitida após a aprovação.";
-    }
 }
 
 botoes.forEach(botao => {
