@@ -232,6 +232,12 @@
     text-transform: uppercase;
 }
 
+.produto-selo-esgotado {
+    background: var(--cor-secundaria);
+    box-shadow: 0 5px 12px rgba(13, 55, 43, 0.2);
+    font-size: 8px;
+}
+
 .produto-foto {
     width: 100%;
     height: 100%;
