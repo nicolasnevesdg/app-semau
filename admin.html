@@ -76,6 +76,15 @@
 
     html.ficha-modal-aberta, body.ficha-modal-aberta { overflow: hidden !important; overscroll-behavior: none; }
     body.ficha-modal-aberta { touch-action: none; }
+    html.camera-modal-aberta, body.camera-modal-aberta { overflow: hidden !important; overscroll-behavior: none; }
+    body.camera-modal-aberta { position: fixed; inset-inline: 0; width: 100%; touch-action: none; }
+    #modal-camera { position: fixed !important; inset: 0 !important; z-index: 13000 !important; width: 100vw !important; min-width: 100vw !important; max-width: none !important; height: 100vh !important; height: 100dvh !important; margin: 0 !important; padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)) !important; box-sizing: border-box; overflow: hidden; overscroll-behavior: none; touch-action: none; }
+    .modal-camera-conteudo { width: min(100%, 390px); max-height: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 24px; overflow-y: auto; overscroll-behavior: contain; touch-action: auto; scrollbar-width: none; }
+    .modal-camera-conteudo::-webkit-scrollbar { display: none; }
+    .modal-camera-titulo { margin: 0; color: #fff; font-size: 20px; font-weight: 300; text-align: center; }
+    #leitor-qrcode { width: 100%; min-height: 260px; overflow: hidden; border: 2px solid rgba(255,255,255,.2); border-radius: 24px; background: #050505; }
+    #leitor-qrcode video { display: block; width: 100% !important; max-height: min(62vh, 620px); max-height: min(62dvh, 620px); object-fit: cover; }
+    #btn-fechar-camera { width: 100%; flex: 0 0 auto; border: 0; border-radius: 16px; padding: 16px; background: #e06d53; color: #fff; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
     .modal-ficha-overlay { position: fixed; inset: 0; z-index: 12000; width: 100vw; height: 100vh; height: 100dvh; background: rgba(18, 24, 34, 0.72); backdrop-filter: blur(8px); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: center; overflow: hidden; overscroll-behavior: none; touch-action: none; }
     .modal-ficha-overlay[hidden] { display: none; }
     .modal-ficha { width: min(100%, 600px); max-height: min(calc(100vh - 32px), 820px); max-height: min(calc(100dvh - 32px), 820px); display: flex; flex-direction: column; overflow: hidden; background: #f7f8fa; border-radius: 26px; box-shadow: 0 28px 80px rgba(0,0,0,0.3); touch-action: auto; }
@@ -562,11 +571,11 @@
             </form>
         </article>
     </div>
-    <div id="modal-camera" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.98); backdrop-filter: blur(10px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
-        <h3 style="color: white; margin-bottom: 32px; font-weight: 300; font-size: 20px;">Aponte para o <b style="font-weight: 800;">QR Code</b></h3>
-        <div style="position: relative; width: 100%; max-width: 350px; padding: 0 20px;">
-            <div id="leitor-qrcode" style="width: 100%; border-radius: 24px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);"></div>
-            <button id="btn-fechar-camera" style="width: calc(100% - 40px); position: absolute; bottom: -80px; left: 20px; background: #e06d53; color: white; border: none; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 16px; cursor: pointer;">
+    <div id="modal-camera" role="dialog" aria-modal="true" aria-labelledby="modal-camera-titulo" style="display: none; background: rgba(0,0,0,0.98); backdrop-filter: blur(10px); flex-direction: column; justify-content: center; align-items: center;">
+        <div class="modal-camera-conteudo">
+            <h3 id="modal-camera-titulo" class="modal-camera-titulo">Aponte para o <b style="font-weight: 800;">QR Code</b></h3>
+            <div id="leitor-qrcode"></div>
+            <button id="btn-fechar-camera" type="button">
                 Cancelar Leitura
             </button>
         </div>
@@ -577,7 +586,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="module" src="js/admin.js?v=20260901-1"></script>
+<script type="module" src="js/admin.js?v=20260901-2"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

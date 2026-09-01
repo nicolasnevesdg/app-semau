@@ -127,10 +127,33 @@ if (btnAdminCadastrar) {
 // ==========================================
 const modalCamera = document.getElementById('modal-camera');
 const btnFecharCamera = document.getElementById('btn-fechar-camera');
+let rolagemAntesDaCamera = 0;
+
+// O painel usa um contêiner estreito no celular. Fora dele, o overlay fixo passa
+// a ocupar a janela inteira, inclusive as áreas laterais e atrás da navegação.
+if (modalCamera && modalCamera.parentElement !== document.body) {
+    document.body.appendChild(modalCamera);
+}
+
+function abrirInterfaceCamera() {
+    rolagemAntesDaCamera = window.scrollY;
+    document.body.style.top = `-${rolagemAntesDaCamera}px`;
+    document.documentElement.classList.add('camera-modal-aberta');
+    document.body.classList.add('camera-modal-aberta');
+    modalCamera.style.display = 'flex';
+}
+
+function fecharInterfaceCamera() {
+    modalCamera.style.display = 'none';
+    document.documentElement.classList.remove('camera-modal-aberta');
+    document.body.classList.remove('camera-modal-aberta');
+    document.body.style.top = '';
+    window.scrollTo(0, rolagemAntesDaCamera);
+}
 
 if (btnAbrirCamera) {
     btnAbrirCamera.addEventListener('click', () => {
-        modalCamera.style.display = 'flex';
+        abrirInterfaceCamera();
         if (!leitor) leitor = new Html5Qrcode("leitor-qrcode");
         
         leitor.start(
@@ -152,9 +175,13 @@ if (btnAbrirCamera) {
 
 function desligarCamera() {
     if (leitor) {
-        leitor.stop().then(() => { modalCamera.style.display = 'none'; }).catch(err => { modalCamera.style.display = 'none'; });
+        try {
+            Promise.resolve(leitor.stop()).catch(() => {}).finally(fecharInterfaceCamera);
+        } catch (_) {
+            fecharInterfaceCamera();
+        }
     } else {
-        modalCamera.style.display = 'none';
+        fecharInterfaceCamera();
     }
 }
 if (btnFecharCamera) btnFecharCamera.addEventListener('click', desligarCamera);
