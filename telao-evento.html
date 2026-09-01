@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d372b">
+    <title>Telão do Evento — XVI SEMAU</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/telao-evento.css?v=20260901-1">
+</head>
+<body>
+    <main class="telao-evento" id="telao-evento">
+        <div class="telao-cenario" aria-hidden="true">
+            <img class="sticker sticker-cadeira-topo" src="assets/svg/sticker-cadeira.svg" alt="">
+            <img class="sticker sticker-palmeira" src="assets/svg/sticker-palmeira.svg" alt="">
+            <img class="sticker sticker-estrela" src="assets/svg/sticker-estrela.svg" alt="">
+            <img class="sticker sticker-selo" src="assets/svg/sticker-selo.svg" alt="">
+        </div>
+
+        <header class="telao-cabecalho">
+            <div class="telao-controles" aria-label="Controles da apresentação">
+                <button type="button" id="btn-anterior" aria-label="Slide anterior">←</button>
+                <button type="button" id="btn-pausar" aria-label="Pausar apresentação">Pausar</button>
+                <button type="button" id="btn-proximo" aria-label="Próximo slide">→</button>
+                <button type="button" id="btn-tela-cheia-evento">Tela cheia</button>
+            </div>
+        </header>
+
+        <div class="slides" aria-live="polite">
+            <section class="slide slide-boas-vindas ativo" data-slide="boas-vindas">
+                <img class="slide-logo" src="assets/svg/logo-cn-02.svg" alt="XVI SEMAU">
+                <p class="slide-etiqueta">O lugar que nos habita</p>
+                <h1>Seja bem-vindo!</h1>
+                <p class="slide-texto">Uma semana para encontrar ideias, pessoas e novas formas de imaginar nossas cidades.</p>
+            </section>
+
+            <section class="slide slide-patrocinadores" data-slide="patrocinadores" hidden>
+                <p class="slide-etiqueta">Patrocínio & apoio</p>
+                <h2>Juntos nesta edição.</h2>
+                <div id="patrocinadores-telao" class="patrocinadores-telao"></div>
+            </section>
+
+            <section class="slide slide-lojinha" data-slide="lojinha" hidden>
+                <div class="slide-coluna-texto">
+                    <p class="slide-etiqueta">Leve a XVI com você</p>
+                    <img class="lojinha-logo" src="assets/svg/lojinha-xvi.svg" alt="Lojinha XVI">
+                    <p class="slide-texto">Camisas, baralho, ímãs e bottons da edição. Compre presencialmente durante o evento ou pelo app.</p>
+                    <span class="slide-link">semau.space · abra a Lojinha</span>
+                </div>
+                <div class="produto-composicao" aria-hidden="true">
+                    <img src="assets/lojinha-xvi/Camisa_01.png" alt="">
+                    <img src="assets/lojinha-xvi/baralho/baralho-capa.jpg" alt="">
+                    <img src="assets/lojinha-xvi/ima/ima-capa.jpg" alt="">
+                </div>
+            </section>
+
+            <section class="slide slide-app" data-slide="app" hidden>
+                <div class="qr-moldura"><div id="qrcode-app-telao" aria-label="QR Code para semau.space"></div></div>
+                <div class="slide-coluna-texto">
+                    <p class="slide-etiqueta">Tudo na palma da mão</p>
+                    <h2>O evento inteiro mora no app.</h2>
+                    <p class="slide-texto">Programação ao vivo, credencial, presença, jogos, sorteios e lojinha.</p>
+                    <span class="slide-link">Aponte a câmera · semau.space</span>
+                </div>
+            </section>
+
+            <section class="slide slide-jogos" data-slide="jogos" hidden>
+                <div class="jogos-celular-reserva" aria-hidden="true"></div>
+                <div class="slide-coluna-texto">
+                    <p class="slide-etiqueta">Game zone</p>
+                    <h2>Jogue. Pontue. Concorra.</h2>
+                    <p class="slide-texto">Participe dos jogos no app e acumule pontos para concorrer a prêmios no fim do evento.</p>
+                    <span class="slide-link">Entre em semau.space e abra Jogos</span>
+                </div>
+            </section>
+
+            <section class="slide slide-sorteios" data-slide="sorteios" hidden>
+                <div class="slide-coluna-texto">
+                    <p class="slide-etiqueta">Sorteios ao vivo</p>
+                    <h2>Seu nome pode aparecer no telão.</h2>
+                    <p class="slide-texto">Teremos sorteios durante toda a programação.</p>
+                    <div class="regras-sorteio">
+                        <span>Uma pessoa não ganha duas vezes</span>
+                        <span>Só participa quem marcou presença</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="telao-rodape-evento">
+            <p>XVI Semana Acadêmica de Arquitetura e Urbanismo</p>
+        </footer>
+    </main>
+
+    <script src="js/qrcode.min.js"></script>
+    <script type="module" src="js/telao-evento.js?v=20260901-1"></script>
+</body>
+</html>

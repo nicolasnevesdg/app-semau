@@ -149,7 +149,17 @@
                 <p id="admin-token-gerado" style="font-size: 32px; font-family: var(--fonte-textos); font-weight: 800; color: var(--cor-secundaria); letter-spacing: 6px; margin: 0;">---</p>
             </div>
         </div>
-        
+
+        <div class="admin-card-minimal">
+            <h2 style="color: var(--cor-primaria); font-size: 20px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="ph-bold ph-presentation-chart" style="color: var(--cor-secundaria);"></i> Telão do evento
+            </h2>
+            <p style="margin: 0 0 20px; color: #777; font-size: 13px; line-height: 1.5;">Abra a apresentação automática em uma janela separada para exibir no projetor.</p>
+            <button id="btn-abrir-telao-evento" class="admin-btn-secondary" style="width: 100%; background: var(--cor-primaria);">
+                <i class="ph-bold ph-monitor-play"></i> Abrir telão do evento
+            </button>
+        </div>
+
         <div class="admin-card-minimal">
             <h2 style="color: var(--cor-primaria); font-size: 20px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
                 <i class="ph-bold ph-gift" style="color: var(--cor-secundaria);"></i> Sorteador
@@ -170,7 +180,7 @@
             </select>
 
             <button id="btn-abrir-telao" class="admin-btn-secondary" style="width: 100%; margin-bottom: 10px; background: var(--cor-primaria);">
-                <i class="ph-bold ph-monitor-play"></i> Abrir tela do telão
+                <i class="ph-bold ph-monitor-play"></i> Abrir telão do sorteio
             </button>
             <p id="status-telao" style="margin: 0 0 16px; color: #888; font-size: 12px; font-weight: 600; text-align: center;">Tela do telão desconectada</p>
             <button id="btn-admin-sortear" class="admin-btn-secondary" style="width: 100%;">Sortear Agora 🎲</button>
@@ -537,6 +547,6 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="module" src="js/admin.js?v=20260831-4"></script>
+<script type="module" src="js/admin.js?v=20260901-1"></script>
 </body>
 </html>

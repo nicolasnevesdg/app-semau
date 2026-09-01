@@ -38,6 +38,7 @@ const botoesOficinaAdmin = document.querySelectorAll('.btn-oficina-admin');
 const btnAdminSortear = document.getElementById('btn-admin-sortear');
 const sorteioResultado = document.getElementById('sorteio-resultado');
 const btnAbrirTelao = document.getElementById('btn-abrir-telao');
+const btnAbrirTelaoEvento = document.getElementById('btn-abrir-telao-evento');
 const statusTelao = document.getElementById('status-telao');
 
 let idAlunoSelecionado = null;
@@ -353,7 +354,18 @@ if (btnAbrirTelao) {
     });
 }
 
-const selectSorteioTurno = document.getElementById('select-sorteio-turno'); 
+if (btnAbrirTelaoEvento) {
+    btnAbrirTelaoEvento.addEventListener('click', () => {
+        const janelaTelaoEvento = window.open('telao-evento.html', 'semau-telao-evento', 'width=1600,height=900,resizable=yes');
+        if (!janelaTelaoEvento) {
+            alert('O navegador bloqueou a nova janela. Autorize pop-ups para abrir o telão do evento.');
+            return;
+        }
+        janelaTelaoEvento.focus();
+    });
+}
+
+const selectSorteioTurno = document.getElementById('select-sorteio-turno');
 
 if (btnAdminSortear) {
     btnAdminSortear.addEventListener('click', async () => {
