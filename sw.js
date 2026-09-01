@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v170-filtro-modalidades';
+const CACHE_NAME = 'semau-v171-reserva-7-minutos';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [

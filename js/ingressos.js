@@ -6,9 +6,10 @@ import {
     FORMULARIO_LOTE_SOCIAL,
     LOTES_INGRESSOS,
     disponibilidadePrimeiroLote,
+    disponibilidadeSegundoLote,
     obterLoteAutomatico,
     normalizarUrlFormulario
-} from "./ingressos-config.js?v=169";
+} from "./ingressos-config.js?v=171";
 
 const lotes = document.querySelectorAll(".lote-card");
 const botoes = document.querySelectorAll(".plano-botao");
@@ -90,7 +91,8 @@ function atualizarLotes() {
     const lote = LOTES_INGRESSOS[loteAtivo || "social"];
     const vendasAbertas = Boolean(loteAtivo);
     const fluxoSocial = lote.fluxo === "formulario";
-    const disponibilidade = disponibilidadePrimeiroLote(estoqueIngressos, agora);
+    const disponibilidadePrimeiro = disponibilidadePrimeiroLote(estoqueIngressos, agora);
+    const disponibilidadeSegundo = disponibilidadeSegundoLote(estoqueIngressos, agora);
 
     lotes.forEach(card => {
         const chave = card.dataset.lote;
@@ -124,9 +126,12 @@ function atualizarLotes() {
         if (fluxoSocial) {
             botao.disabled = !formularioLoteSocial;
             botao.textContent = formularioLoteSocial ? "Solicitar ingresso social" : "Formulário em breve";
-        } else if (loteAtivo === "primeiro" && !disponibilidade[tipo]) {
+        } else if (loteAtivo === "primeiro" && !disponibilidadePrimeiro[tipo]) {
             botao.disabled = true;
             botao.textContent = "Esgotado no 1º lote";
+        } else if (loteAtivo === "segundo" && !disponibilidadeSegundo[tipo]) {
+            botao.disabled = true;
+            botao.textContent = "Esgotado no 2º lote";
         } else {
             botao.disabled = false;
             botao.textContent = botao.dataset.tipo === "kit" ? "Quero o ingresso com kit" : "Escolher ingresso";

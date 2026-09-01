@@ -20,7 +20,8 @@ const FORMULARIO_LOTE_SOCIAL = "https://docs.google.com/forms/d/e/1FAIpQLSdkiRqu
 const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
 const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
 const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
-const DURACAO_CHECKOUT_MS = 15 * 60 * 1000;
+const LIMITE_KIT_SEGUNDO_LOTE = 50;
+const DURACAO_CHECKOUT_MS = 7 * 60 * 1000;
 const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
 const DURACAO_RESERVA_MS = DURACAO_CHECKOUT_MS;
 const STATUS_FINAIS_SEM_PAGAMENTO = new Set(["rejected", "cancelled", "refunded", "charged_back"]);
@@ -61,10 +62,10 @@ function numeroSeguro(value) {
   return Number.isFinite(numero) && numero > 0 ? Math.floor(numero) : 0;
 }
 
-function normalizarEstoque(dados = {}, agora = Date.now()) {
-  const primeiro = dados.primeiro || {};
+function normalizarEstoque(dados = {}, agora = Date.now(), lote = "primeiro") {
+  const estoqueLote = dados[lote] || {};
   const reservas = {};
-  Object.entries(primeiro.reservas || {}).forEach(([pedidoId, reserva]) => {
+  Object.entries(estoqueLote.reservas || {}).forEach(([pedidoId, reserva]) => {
     const expiraEmOriginal = Number(reserva?.expiraEm || 0);
     const criadaEm = Number(reserva?.criadaEm || 0) || expiraEmOriginal - DURACAO_RESERVA_ANTIGA_MS;
     const expiraEm = Math.min(expiraEmOriginal, criadaEm + DURACAO_RESERVA_MS);
@@ -75,11 +76,14 @@ function normalizarEstoque(dados = {}, agora = Date.now()) {
       reservas[pedidoId] = { tipo: reserva.tipo, criadaEm, expiraEm };
     }
   });
+  const limites = lote === "primeiro"
+    ? LIMITE_PRIMEIRO_LOTE
+    : { normal: null, kit: LIMITE_KIT_SEGUNDO_LOTE };
   return {
-    normalVendidos: numeroSeguro(primeiro.normalVendidos),
-    kitVendidos: numeroSeguro(primeiro.kitVendidos),
-    normalLimite: LIMITE_PRIMEIRO_LOTE.normal,
-    kitLimite: LIMITE_PRIMEIRO_LOTE.kit,
+    normalVendidos: numeroSeguro(estoqueLote.normalVendidos),
+    kitVendidos: numeroSeguro(estoqueLote.kitVendidos),
+    normalLimite: limites.normal,
+    kitLimite: limites.kit,
     reservas,
   };
 }
@@ -140,6 +144,7 @@ function validarDados(data) {
 }
 
 function dadosPedido(dados, ingresso, expiraEm) {
+  const reservaEstoque = dados.lote === "primeiro" || (dados.lote === "segundo" && dados.tipo === "kit");
   return {
     nome: dados.nome,
     email: dados.email,
@@ -156,8 +161,8 @@ function dadosPedido(dados, ingresso, expiraEm) {
     moeda: "BRL",
     status: "creating_preference",
     origem: "site",
-    reservaEstoque: dados.lote === "primeiro",
-    reservaExpiraEm: dados.lote === "primeiro" ? expiraEm : null,
+    reservaEstoque,
+    reservaExpiraEm: reservaEstoque ? expiraEm : null,
     estoqueContabilizado: false,
     criadoEm: FieldValue.serverTimestamp(),
     atualizadoEm: FieldValue.serverTimestamp(),
@@ -173,8 +178,10 @@ async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
       transaction.get(configuracaoGeralRef),
       transaction.get(estoqueIngressosRef),
     ]);
-    const estoque = normalizarEstoque(estoqueDoc.data() || {}, agora);
-    const loteAtivo = calcularLoteAtivo(configuracaoDoc.data() || {}, estoque, agora);
+    const dadosEstoque = estoqueDoc.data() || {};
+    const estoquePrimeiro = normalizarEstoque(dadosEstoque, agora, "primeiro");
+    const estoqueSegundo = normalizarEstoque(dadosEstoque, agora, "segundo");
+    const loteAtivo = calcularLoteAtivo(configuracaoDoc.data() || {}, estoquePrimeiro, agora);
 
     if (loteAtivo === null) {
       throw new HttpsError("failed-precondition", "As inscrições abrem em 01/09, ao meio-dia.");
@@ -187,13 +194,22 @@ async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
     }
 
     if (dados.lote === "primeiro") {
-      const vendidos = dados.tipo === "kit" ? estoque.kitVendidos : estoque.normalVendidos;
-      const ocupados = vendidos + quantidadeReservada(estoque, dados.tipo);
+      const vendidos = dados.tipo === "kit" ? estoquePrimeiro.kitVendidos : estoquePrimeiro.normalVendidos;
+      const ocupados = vendidos + quantidadeReservada(estoquePrimeiro, dados.tipo);
       if (ocupados >= LIMITE_PRIMEIRO_LOTE[dados.tipo]) {
         throw new HttpsError("resource-exhausted", `Os ingressos ${dados.tipo === "kit" ? "com kit" : "sem kit"} do 1º lote estão esgotados.`);
       }
-      estoque.reservas[pedidoRef.id] = { tipo: dados.tipo, criadaEm: agora, expiraEm };
-      transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+      estoquePrimeiro.reservas[pedidoRef.id] = { tipo: dados.tipo, criadaEm: agora, expiraEm };
+      transaction.set(estoqueIngressosRef, { primeiro: estoquePrimeiro, atualizadoEm: FieldValue.serverTimestamp() }, { merge: true });
+    }
+
+    if (dados.lote === "segundo" && dados.tipo === "kit") {
+      const ocupados = estoqueSegundo.kitVendidos + quantidadeReservada(estoqueSegundo, "kit");
+      if (ocupados >= LIMITE_KIT_SEGUNDO_LOTE) {
+        throw new HttpsError("resource-exhausted", "Os ingressos com kit do 2º lote estão esgotados.");
+      }
+      estoqueSegundo.reservas[pedidoRef.id] = { tipo: "kit", criadaEm: agora, expiraEm };
+      transaction.set(estoqueIngressosRef, { segundo: estoqueSegundo, atualizadoEm: FieldValue.serverTimestamp() }, { merge: true });
     }
 
     transaction.set(pedidoRef, dadosPedido(dados, ingresso, expiraEm));
@@ -205,10 +221,24 @@ async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
 async function liberarReserva(pedidoId) {
   await db.runTransaction(async (transaction) => {
     const estoqueDoc = await transaction.get(estoqueIngressosRef);
-    const estoque = normalizarEstoque(estoqueDoc.data() || {});
-    if (!estoque.reservas[pedidoId]) return;
-    delete estoque.reservas[pedidoId];
-    transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+    const dadosEstoque = estoqueDoc.data() || {};
+    const estoquePrimeiro = normalizarEstoque(dadosEstoque, Date.now(), "primeiro");
+    const estoqueSegundo = normalizarEstoque(dadosEstoque, Date.now(), "segundo");
+    let mudou = false;
+    if (estoquePrimeiro.reservas[pedidoId]) {
+      delete estoquePrimeiro.reservas[pedidoId];
+      mudou = true;
+    }
+    if (estoqueSegundo.reservas[pedidoId]) {
+      delete estoqueSegundo.reservas[pedidoId];
+      mudou = true;
+    }
+    if (!mudou) return;
+    transaction.set(estoqueIngressosRef, {
+      primeiro: estoquePrimeiro,
+      segundo: estoqueSegundo,
+      atualizadoEm: FieldValue.serverTimestamp(),
+    }, { merge: true });
   });
 }
 
@@ -350,7 +380,9 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
     if (!pedidoDoc.exists) throw new Error("Pedido não encontrado.");
 
     const pedido = pedidoDoc.data();
-    const estoque = normalizarEstoque(estoqueDoc.data() || {});
+    const dadosEstoque = estoqueDoc.data() || {};
+    const estoquePrimeiro = normalizarEstoque(dadosEstoque, Date.now(), "primeiro");
+    const estoqueSegundo = normalizarEstoque(dadosEstoque, Date.now(), "segundo");
     const valorRecebido = Number(payment.transaction_amount || 0);
     const valorEsperado = Number(pedido.valor || 0);
     const moedaRecebida = texto(payment.currency_id, 8).toUpperCase();
@@ -366,39 +398,56 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       ? "manual_review"
       : statusRecebido;
     const token = inscritoDoc.exists ? inscritoDoc.data().token : tokenNovo;
+    const tipoEstoque = pedido.tipoIngresso === "kit" ? "kit" : "normal";
+    const chaveVendidos = tipoEstoque === "kit" ? "kitVendidos" : "normalVendidos";
+    const loteEstoque = pedido.loteIngresso === "primeiro"
+      ? "primeiro"
+      : pedido.loteIngresso === "segundo" && tipoEstoque === "kit"
+        ? "segundo"
+        : null;
+    const estoquePedido = loteEstoque === "primeiro"
+      ? estoquePrimeiro
+      : loteEstoque === "segundo"
+        ? estoqueSegundo
+        : null;
+    const limiteEstoque = loteEstoque === "primeiro"
+      ? LIMITE_PRIMEIRO_LOTE[tipoEstoque]
+      : loteEstoque === "segundo"
+        ? LIMITE_KIT_SEGUNDO_LOTE
+        : null;
 
-    if (pagamentoAprovado && !inscritoDoc.exists && pedido.loteIngresso === "primeiro" && !estoqueContabilizado) {
-      const tipo = pedido.tipoIngresso === "kit" ? "kit" : "normal";
-      const chaveVendidos = tipo === "kit" ? "kitVendidos" : "normalVendidos";
-      if (estoque[chaveVendidos] >= LIMITE_PRIMEIRO_LOTE[tipo]) {
+    if (pagamentoAprovado && !inscritoDoc.exists && estoquePedido && !estoqueContabilizado) {
+      const temReserva = Boolean(estoquePedido.reservas[pedidoId]);
+      const reservasAtivas = quantidadeReservada(estoquePedido, tipoEstoque);
+      const limiteOcupado = estoquePedido[chaveVendidos] >= limiteEstoque ||
+        (!temReserva && estoquePedido[chaveVendidos] + reservasAtivas >= limiteEstoque);
+      if (limiteOcupado) {
         pagamentoAprovado = false;
         estornoNecessario = true;
         statusSeguro = "refund_required_stock_limit";
-        if (estoque.reservas[pedidoId]) {
-          delete estoque.reservas[pedidoId];
+        if (estoquePedido.reservas[pedidoId]) {
+          delete estoquePedido.reservas[pedidoId];
           estoqueMudou = true;
         }
       } else {
-        estoque[chaveVendidos] += 1;
+        estoquePedido[chaveVendidos] += 1;
         estoqueContabilizado = true;
         estoqueMudou = true;
       }
     }
 
-    if (STATUS_FINAIS_SEM_PAGAMENTO.has(statusRecebido) && pedido.loteIngresso === "primeiro") {
-      if (estoque.reservas[pedidoId]) {
-        delete estoque.reservas[pedidoId];
+    if (STATUS_FINAIS_SEM_PAGAMENTO.has(statusRecebido) && estoquePedido) {
+      if (estoquePedido.reservas[pedidoId]) {
+        delete estoquePedido.reservas[pedidoId];
         estoqueMudou = true;
       }
       if (estoqueContabilizado && inscritoDoc.exists) {
-        const tipo = pedido.tipoIngresso === "kit" ? "kit" : "normal";
-        const chaveVendidos = tipo === "kit" ? "kitVendidos" : "normalVendidos";
-        estoque[chaveVendidos] = Math.max(0, estoque[chaveVendidos] - 1);
+        estoquePedido[chaveVendidos] = Math.max(0, estoquePedido[chaveVendidos] - 1);
         estoqueContabilizado = false;
         estoqueMudou = true;
       }
-    } else if (pagamentoAprovado && estoque.reservas[pedidoId]) {
-      delete estoque.reservas[pedidoId];
+    } else if (pagamentoAprovado && estoquePedido?.reservas[pedidoId]) {
+      delete estoquePedido.reservas[pedidoId];
       estoqueMudou = true;
     }
 
@@ -458,8 +507,12 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
     }
 
     if (estoqueMudou) {
-      transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
-      if (primeiroLoteEsgotado(estoque)) {
+      transaction.set(estoqueIngressosRef, {
+        primeiro: estoquePrimeiro,
+        segundo: estoqueSegundo,
+        atualizadoEm: FieldValue.serverTimestamp(),
+      }, { merge: true });
+      if (primeiroLoteEsgotado(estoquePrimeiro)) {
         transaction.set(configuracaoGeralRef, {
           loteIngressosAtivo: "segundo",
           loteAtivo: 2,
@@ -528,7 +581,7 @@ exports.criarPreferencia = onCall(
     const dados = validarDados(request.data || {});
     const ingresso = obterIngresso(dados.lote, dados.tipo);
     const pedidoRef = db.collection("pedidos").doc();
-    await criarPedidoComReserva(pedidoRef, dados, ingresso);
+    const reservaExpiraEm = await criarPedidoComReserva(pedidoRef, dados, ingresso);
 
     try {
       const agora = Date.now();
@@ -556,7 +609,7 @@ exports.criarPreferencia = onCall(
           auto_return: "approved",
           expires: true,
           expiration_date_from: new Date(agora).toISOString(),
-          expiration_date_to: new Date(agora + DURACAO_CHECKOUT_MS).toISOString(),
+          expiration_date_to: new Date(reservaExpiraEm).toISOString(),
           notification_url: WEBHOOK_URL,
           external_reference: pedidoRef.id,
           statement_descriptor: "SEMAU 2026",
@@ -578,7 +631,7 @@ exports.criarPreferencia = onCall(
         atualizadoEm: FieldValue.serverTimestamp(),
       });
 
-      return { pedidoId: pedidoRef.id, checkoutUrl };
+      return { pedidoId: pedidoRef.id, checkoutUrl, reservaExpiraEm };
     } catch (error) {
       await liberarReserva(pedidoRef.id).catch((erroReserva) => {
         logger.error("Falha ao liberar reserva de estoque", { pedidoId: pedidoRef.id, error: erroReserva.message });
@@ -666,7 +719,7 @@ async function prepararAbertura(loteIngressosAtivo) {
   await db.runTransaction(async (transaction) => {
     const estoqueDoc = await transaction.get(estoqueIngressosRef);
     const estoque = normalizarEstoque(estoqueDoc.data() || {});
-    transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
+    transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() }, { merge: true });
     transaction.set(configuracaoGeralRef, {
       faseAtual: "inscricao",
       loteIngressosAtivo,

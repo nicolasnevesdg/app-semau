@@ -5,9 +5,10 @@ import {
     LOTES_INGRESSOS,
     TIPOS_INGRESSOS,
     disponibilidadePrimeiroLote,
+    disponibilidadeSegundoLote,
     obterLoteAutomatico,
     obterIngresso
-} from "./ingressos-config.js?v=169";
+} from "./ingressos-config.js?v=171";
 
 const functions = getFunctions(app, "southamerica-east1");
 const criarPreferencia = httpsCallable(functions, "criarPreferencia");
@@ -26,12 +27,18 @@ const telefone = document.getElementById("compra-telefone");
 const nome = document.getElementById("compra-nome");
 const matricula = document.getElementById("compra-matricula");
 const status = document.getElementById("compra-status");
+const temporizador = document.getElementById("compra-temporizador");
+const contagem = document.getElementById("compra-contagem");
 const botao = form.querySelector('button[type="submit"]');
 const precosOpcoes = document.querySelectorAll("[data-opcao-preco]");
 const textoBotaoPadrao = botao.innerHTML;
 let loteDisponivel = false;
 let loteConfigurado = "social";
 let estoqueIngressos = {};
+const DURACAO_ETAPA_COMPRA_MS = 7 * 60 * 1000;
+const etapaCompraExpiraEm = Date.now() + DURACAO_ETAPA_COMPRA_MS;
+let etapaCompraEsgotada = false;
+let intervaloContagem = null;
 
 function formatarValor(valor, semCentavos = false) {
     return valor.toLocaleString("pt-BR", {
@@ -55,18 +62,24 @@ function mostrarStatus(mensagem, tipo = "erro") {
     status.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function bloquearLote(mensagem = "Este lote não está disponível no momento. Volte à página de ingressos para consultar o lote ativo.") {
+function bloquearLote(mensagem = "Este lote não está disponível no momento. Volte à página de ingressos para consultar o lote ativo.", textoBotao = "Lote indisponível") {
     loteDisponivel = false;
     botao.disabled = true;
-    botao.textContent = "Lote indisponível";
+    botao.textContent = textoBotao;
     mostrarStatus(mensagem);
 }
 
 function verificarLoteAtivo() {
+    if (etapaCompraEsgotada) {
+        bloquearLote("O tempo desta etapa terminou. Volte aos ingressos e abra a compra novamente para conferir a disponibilidade atual.", "Tempo esgotado");
+        return;
+    }
     const loteAtivo = obterLoteAutomatico(loteConfigurado, estoqueIngressos);
-    const disponibilidade = disponibilidadePrimeiroLote(estoqueIngressos);
+    const disponibilidadePrimeiro = disponibilidadePrimeiroLote(estoqueIngressos);
+    const disponibilidadeSegundo = disponibilidadeSegundoLote(estoqueIngressos);
     radios.forEach(radio => {
-        radio.disabled = loteSelecionado === "primeiro" && !disponibilidade[radio.value];
+        radio.disabled = (loteSelecionado === "primeiro" && !disponibilidadePrimeiro[radio.value]) ||
+            (loteSelecionado === "segundo" && !disponibilidadeSegundo[radio.value]);
     });
     if (loteAtivo !== loteSelecionado || !lotesPagos.includes(loteAtivo)) {
         bloquearLote();
@@ -74,8 +87,12 @@ function verificarLoteAtivo() {
     }
 
     const tipo = document.querySelector('input[name="tipoIngresso"]:checked')?.value || tipoInicial;
-    if (loteSelecionado === "primeiro" && !disponibilidade[tipo]) {
+    if (loteSelecionado === "primeiro" && !disponibilidadePrimeiro[tipo]) {
         bloquearLote(`Os ingressos ${tipo === "kit" ? "com kit" : "sem kit"} do 1º lote estão esgotados. Escolha a outra modalidade, se ainda estiver disponível.`);
+        return;
+    }
+    if (loteSelecionado === "segundo" && !disponibilidadeSegundo[tipo]) {
+        bloquearLote("Os ingressos com kit do 2º lote estão esgotados. Escolha o ingresso sem kit.");
         return;
     }
 
@@ -83,6 +100,19 @@ function verificarLoteAtivo() {
     status.hidden = true;
     botao.disabled = false;
     botao.innerHTML = textoBotaoPadrao;
+}
+
+function atualizarContagem() {
+    const restante = Math.max(0, etapaCompraExpiraEm - Date.now());
+    const minutos = Math.floor(restante / 60000);
+    const segundos = Math.floor((restante % 60000) / 1000);
+    if (contagem) contagem.textContent = `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+
+    if (restante > 0) return;
+    etapaCompraEsgotada = true;
+    if (temporizador) temporizador.dataset.esgotado = "true";
+    if (intervaloContagem) window.clearInterval(intervaloContagem);
+    verificarLoteAtivo();
 }
 
 precosOpcoes.forEach(preco => {
@@ -165,6 +195,8 @@ form.addEventListener("submit", async event => {
 });
 
 atualizarResumo(tipoInicial);
+atualizarContagem();
+intervaloContagem = window.setInterval(atualizarContagem, 1000);
 verificarLoteAtivo();
 
 onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {

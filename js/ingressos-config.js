@@ -3,8 +3,9 @@ export const FORMULARIO_LOTE_SOCIAL = "https://docs.google.com/forms/d/e/1FAIpQL
 export const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
 export const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
 export const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
+export const LIMITE_KIT_SEGUNDO_LOTE = 50;
 const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
-const DURACAO_RESERVA_MS = 15 * 60 * 1000;
+const DURACAO_RESERVA_MS = 7 * 60 * 1000;
 
 export const LOTES_INGRESSOS = Object.freeze({
     social: Object.freeze({ nome: "Lote Social", normal: 15, kit: 30, fluxo: "formulario" }),
@@ -51,8 +52,8 @@ function numeroSeguro(valor) {
     return Number.isFinite(numero) && numero > 0 ? Math.floor(numero) : 0;
 }
 
-function reservasAtivas(estoque, tipo, agora) {
-    return Object.values(estoque?.primeiro?.reservas || {}).filter(reserva =>
+function reservasAtivas(estoque, lote, tipo, agora) {
+    return Object.values(estoque?.[lote]?.reservas || {}).filter(reserva =>
         reserva?.tipo === tipo && expiracaoEfetivaDaReserva(reserva) > agora
     ).length;
 }
@@ -68,11 +69,23 @@ export function disponibilidadePrimeiroLote(estoque = {}, agora = Date.now()) {
     const normalVendidos = numeroSeguro(primeiro.normalVendidos);
     const kitVendidos = numeroSeguro(primeiro.kitVendidos);
     return {
-        normal: normalVendidos + reservasAtivas(estoque, "normal", agora) < LIMITE_PRIMEIRO_LOTE.normal,
-        kit: kitVendidos + reservasAtivas(estoque, "kit", agora) < LIMITE_PRIMEIRO_LOTE.kit,
+        normal: normalVendidos + reservasAtivas(estoque, "primeiro", "normal", agora) < LIMITE_PRIMEIRO_LOTE.normal,
+        kit: kitVendidos + reservasAtivas(estoque, "primeiro", "kit", agora) < LIMITE_PRIMEIRO_LOTE.kit,
         normalVendidos,
         kitVendidos,
         esgotado: normalVendidos >= LIMITE_PRIMEIRO_LOTE.normal && kitVendidos >= LIMITE_PRIMEIRO_LOTE.kit
+    };
+}
+
+export function disponibilidadeSegundoLote(estoque = {}, agora = Date.now()) {
+    const segundo = estoque?.segundo || {};
+    const kitVendidos = numeroSeguro(segundo.kitVendidos);
+    const kitReservados = reservasAtivas(estoque, "segundo", "kit", agora);
+    return {
+        normal: true,
+        kit: kitVendidos + kitReservados < LIMITE_KIT_SEGUNDO_LOTE,
+        kitVendidos,
+        kitReservados
     };
 }
 
