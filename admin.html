@@ -57,9 +57,11 @@
     .btn-email-inscrito { background: var(--cor-secundaria); color: #fff; }
     .btn-ficha-inscrito:hover, .btn-email-inscrito:hover { transform: translateY(-1px); filter: brightness(1.03); }
 
-    .modal-ficha-overlay { position: fixed; inset: 0; z-index: 12000; width: 100%; height: 100vh; height: 100dvh; background: rgba(18, 24, 34, 0.72); backdrop-filter: blur(8px); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    html.ficha-modal-aberta, body.ficha-modal-aberta { overflow: hidden !important; overscroll-behavior: none; }
+    body.ficha-modal-aberta { touch-action: none; }
+    .modal-ficha-overlay { position: fixed; inset: 0; z-index: 12000; width: 100vw; height: 100vh; height: 100dvh; background: rgba(18, 24, 34, 0.72); backdrop-filter: blur(8px); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: center; overflow: hidden; overscroll-behavior: none; touch-action: none; }
     .modal-ficha-overlay[hidden] { display: none; }
-    .modal-ficha { width: min(100%, 600px); max-height: min(calc(100vh - 32px), 820px); max-height: min(calc(100dvh - 32px), 820px); display: flex; flex-direction: column; overflow: hidden; background: #f7f8fa; border-radius: 26px; box-shadow: 0 28px 80px rgba(0,0,0,0.3); }
+    .modal-ficha { width: min(100%, 600px); max-height: min(calc(100vh - 32px), 820px); max-height: min(calc(100dvh - 32px), 820px); display: flex; flex-direction: column; overflow: hidden; background: #f7f8fa; border-radius: 26px; box-shadow: 0 28px 80px rgba(0,0,0,0.3); touch-action: auto; }
     .modal-ficha-topo { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; background: #fff; border-bottom: 1px solid #e9e9ee; border-radius: 26px 26px 0 0; }
     .modal-ficha-topo h2 { margin: 3px 0 0; color: var(--cor-primaria); font-size: 22px; line-height: 1.2; }
     .modal-ficha-etiqueta { margin: 0; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
@@ -534,6 +536,6 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="module" src="js/admin.js?v=20260831-2"></script>
+<script type="module" src="js/admin.js?v=20260831-3"></script>
 </body>
 </html>

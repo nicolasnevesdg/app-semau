@@ -646,6 +646,12 @@ const fichaDadosEvento = document.getElementById('ficha-dados-evento');
 let focoAntesDaFicha = null;
 let idFichaInscritoAtual = null;
 
+// O aplicativo recebe zoom responsivo no celular. Fora desse contêiner, a camada
+// fixa volta a usar a janela inteira como referência e cobre toda a tela.
+if (modalFichaInscrito && modalFichaInscrito.parentElement !== document.body) {
+    document.body.appendChild(modalFichaInscrito);
+}
+
 const NOMES_LOTES = {
     social: 'Lote Social',
     primeiro: '1º Lote',
@@ -800,14 +806,16 @@ function abrirFichaInscrito(idInscrito) {
 
     focoAntesDaFicha = document.activeElement;
     modalFichaInscrito.hidden = false;
-    document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('ficha-modal-aberta');
+    document.body.classList.add('ficha-modal-aberta');
     btnFecharFicha?.focus();
 }
 
 function fecharFichaInscrito() {
     if (!modalFichaInscrito || modalFichaInscrito.hidden) return;
     modalFichaInscrito.hidden = true;
-    document.body.style.overflow = '';
+    document.documentElement.classList.remove('ficha-modal-aberta');
+    document.body.classList.remove('ficha-modal-aberta');
     idFichaInscritoAtual = null;
     focoAntesDaFicha?.focus?.();
 }
