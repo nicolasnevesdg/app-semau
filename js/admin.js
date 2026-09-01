@@ -21,6 +21,7 @@ const emailjsServiceId = document.getElementById('emailjs-service-id');
 const emailjsTemplateId = document.getElementById('emailjs-template-id');
 const toggleEmailjsAtivo = document.getElementById('toggle-emailjs-ativo');
 const btnSalvarEmailjs = document.getElementById('btn-salvar-emailjs');
+const btnRecuperarEmails = document.getElementById('btn-recuperar-emails');
 const statusEmailjs = document.getElementById('status-emailjs');
 const btnCopiarTemplateEmail = document.getElementById('btn-copiar-template-email');
 
@@ -692,6 +693,72 @@ let idFichaInscritoAtual = null;
 // fixa volta a usar a janela inteira como referência e cobre toda a tela.
 if (modalFichaInscrito && modalFichaInscrito.parentElement !== document.body) {
     document.body.appendChild(modalFichaInscrito);
+}
+
+if (btnRecuperarEmails) {
+    btnRecuperarEmails.addEventListener('click', async () => {
+        if (!configuracaoEmailIngresso?.ativo || !configuracaoEmailIngresso?.publicKey || !window.emailjs) {
+            mostrarStatusEmailjs('Ative e salve a configuração do EmailJS antes de recuperar os envios.');
+            return;
+        }
+
+        btnRecuperarEmails.disabled = true;
+        const textoOriginal = btnRecuperarEmails.innerHTML;
+        btnRecuperarEmails.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Verificando pendências...';
+        try {
+            const snapshot = await getDocs(collection(db, 'inscritos'));
+            const pendentes = snapshot.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .filter((item) => item.pedidoId && item.ingressoAtivo === true && item.statusPagamento === 'approved')
+                .filter((item) => item.emailIngressoStatus !== 'enviado' && !item.emailIngressoEnviadoEm)
+                .filter((item) => item.nome && item.email && item.token);
+
+            if (!pendentes.length) {
+                mostrarStatusEmailjs('Não há ingressos aprovados aguardando envio.', true);
+                return;
+            }
+            if (!confirm(`Foram encontrados ${pendentes.length} ingressos aprovados sem confirmação de envio. Deseja enviar agora?`)) return;
+
+            window.emailjs.init(configuracaoEmailIngresso.publicKey);
+            let enviados = 0;
+            let falhas = 0;
+            for (const item of pendentes) {
+                btnRecuperarEmails.innerHTML = `<i class="ph-bold ph-envelope-simple"></i> Enviando ${enviados + falhas + 1} de ${pendentes.length}...`;
+                try {
+                    await window.emailjs.send(configuracaoEmailIngresso.serviceId, configuracaoEmailIngresso.templateId, {
+                        to_name: item.nome,
+                        to_email: item.email,
+                        user_token: item.token,
+                        site_url: 'https://semau.space',
+                        instagram_url: 'https://www.instagram.com/semauufrrj/'
+                    });
+                    await updateDoc(doc(db, 'inscritos', item.id), {
+                        emailIngressoStatus: 'enviado',
+                        emailIngressoEnviadoEm: serverTimestamp(),
+                        emailIngressoErro: deleteField(),
+                        atualizadoEm: serverTimestamp()
+                    });
+                    enviados += 1;
+                } catch (error) {
+                    falhas += 1;
+                    await updateDoc(doc(db, 'inscritos', item.id), {
+                        emailIngressoStatus: 'falhou',
+                        emailIngressoErro: String(error?.text || error?.message || 'Falha no envio').slice(0, 240),
+                        atualizadoEm: serverTimestamp()
+                    }).catch(() => {});
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1100));
+            }
+            mostrarStatusEmailjs(`${enviados} ingresso(s) enviado(s).${falhas ? ` ${falhas} envio(s) ainda falharam.` : ''}`, falhas === 0);
+            carregarListaInscritos();
+        } catch (error) {
+            console.error('Erro ao recuperar e-mails pendentes:', error);
+            mostrarStatusEmailjs('Não foi possível concluir a recuperação dos envios.');
+        } finally {
+            btnRecuperarEmails.disabled = false;
+            btnRecuperarEmails.innerHTML = textoOriginal;
+        }
+    });
 }
 
 const NOMES_LOTES = {
