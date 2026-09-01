@@ -11,6 +11,7 @@ initializeApp();
 const db = getFirestore();
 const mercadoPagoAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN");
 const mercadoPagoWebhookSecret = defineSecret("MERCADOPAGO_WEBHOOK_SECRET");
+const emailJsPrivateKey = defineSecret("EMAILJS_PRIVATE_KEY");
 const SITE_ORIGINS = ["https://semau.space", "https://www.semau.space"];
 const TOKEN_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REGION = "southamerica-east1";
@@ -331,6 +332,7 @@ async function enviarEmailIngressoSeNecessario({ pedidoId, nome, email, token })
         service_id: serviceId,
         template_id: templateId,
         user_id: publicKey,
+        accessToken: emailJsPrivateKey.value(),
         template_params: {
           to_name: nome,
           to_email: email,
@@ -650,7 +652,7 @@ exports.consultarPedido = onCall(
   {
     region: REGION,
     maxInstances: 2,
-    secrets: [mercadoPagoAccessToken],
+    secrets: [mercadoPagoAccessToken, emailJsPrivateKey],
     cors: SITE_ORIGINS,
   },
   async (request) => {
@@ -673,7 +675,7 @@ exports.mercadoPagoWebhook = onRequest(
   {
     region: REGION,
     maxInstances: 2,
-    secrets: [mercadoPagoAccessToken, mercadoPagoWebhookSecret],
+    secrets: [mercadoPagoAccessToken, mercadoPagoWebhookSecret, emailJsPrivateKey],
     cors: false,
   },
   async (request, response) => {
