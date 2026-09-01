@@ -581,8 +581,15 @@
     height: auto;
     aspect-ratio: 1 / 1;
     border-radius: 22px;
-    background: url('../assets/img/beneficio.png') center / cover no-repeat;
+    background-color: #d9ddd8;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
 }
+
+.beneficio-foto-1 { background-image: url('../assets/img/beneficio1.png'); }
+.beneficio-foto-2 { background-image: url('../assets/img/beneficio2.png'); }
+.beneficio-foto-3 { background-image: url('../assets/img/beneficio3.png'); }
 
 
 .beneficio-foto img {
