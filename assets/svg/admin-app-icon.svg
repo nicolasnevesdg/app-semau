@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">SEMAU Admin</title>
+  <desc id="description">Ícone verde com um cadeado branco e detalhe laranja.</desc>
+  <rect width="512" height="512" rx="96" fill="#0d372b"/>
+  <path d="M174 231v-45c0-48 34-84 82-84s82 36 82 84v45" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+  <rect x="116" y="214" width="280" height="220" rx="58" fill="#fff"/>
+  <circle cx="256" cy="309" r="34" fill="#f0782c"/>
+  <path d="M238 332h36l15 58h-66z" fill="#0d372b"/>
+  <circle cx="389" cy="123" r="43" fill="#809acd"/>
+  <path d="M389 91l9 23 24 9-24 9-9 23-9-23-24-9 24-9z" fill="#fff"/>
+</svg>

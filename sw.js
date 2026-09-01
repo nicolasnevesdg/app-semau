@@ -1,9 +1,10 @@
-const CACHE_NAME = 'semau-v164';
+const CACHE_NAME = 'semau-v165-admin-pwa';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
     './',
     './index.html',
+    './admin.html',
     './sorteio-telao.html',
     './ingressos.html',
     './admin-cronograma.html',
@@ -12,6 +13,7 @@ const assetsToCache = [
     './pagamento-pendente.html',
     './pagamento-sucesso.html',
     './manifest.json',
+    './manifest-admin.json',
     './css/global.css',
     './css/layout.css',
     './css/components.css',
@@ -23,6 +25,7 @@ const assetsToCache = [
     './js/main.js',
     './js/schedule.js',
     './js/install-app.js',
+    './js/install-admin-app.js',
     './js/sponsors.js',
     './js/navigation.js',
     './js/store-config.js',
@@ -49,6 +52,7 @@ const assetsToCache = [
     './assets/svg/oficinas.svg',
     './assets/svg/logo-cn-02.svg',
     './assets/svg/app-icon.svg',
+    './assets/svg/admin-app-icon.svg',
     './assets/svg/logo-cn-05.svg',
     './assets/svg/sticker-palmeira.svg',
     './assets/svg/sticker-selo.svg',

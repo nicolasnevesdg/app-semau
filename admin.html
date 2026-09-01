@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel da Organização - SEMAU</title>
+    <link rel="manifest" href="manifest-admin.json">
+    <link rel="apple-touch-icon" href="assets/svg/admin-app-icon.svg">
+    <meta name="theme-color" content="#0d372b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SEMAU Admin">
     
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -39,9 +44,20 @@
     .admin-btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(224, 109, 83, 0.2); }
 
     .admin-card-minimal {
-        background: #fff; padding: 32px; border-radius: 24px; 
+        background: #fff; padding: 32px; border-radius: 24px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); margin-bottom: 24px;
     }
+
+    .admin-install-card[hidden], .admin-install-help[hidden] { display: none !important; }
+    .admin-install-card { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 16px; border-color: rgba(13,55,43,.09); }
+    .admin-install-icon { width: 58px; height: 58px; overflow: hidden; border-radius: 17px; box-shadow: 0 8px 22px rgba(13,55,43,.16); }
+    .admin-install-icon img { width: 100%; height: 100%; display: block; }
+    .admin-install-copy { min-width: 0; }
+    .admin-install-copy span { display: block; margin-bottom: 4px; color: var(--cor-secundaria); font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+    .admin-install-copy h2 { margin: 0 0 5px; color: var(--cor-primaria); font-size: 19px; line-height: 1.15; }
+    .admin-install-copy p { margin: 0; color: #777; font-size: 12px; line-height: 1.45; }
+    .admin-install-action { grid-column: 1 / -1; width: 100%; margin-top: 2px; }
+    .admin-install-help { grid-column: 1 / -1; margin: 0; padding-top: 14px; border-top: 1px solid #ececef; color: #666; font-size: 12px; line-height: 1.5; text-align: center; }
 
     .admin-agenda-lista { display: flex; flex-direction: column; }
     .admin-agenda-item { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-top: 1px solid #ececef; }
@@ -130,6 +146,20 @@
         <p style="color: var(--cor-secundaria); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0;">Organização</p>
         <h2 style="font-size: 36px; font-weight: 800; color: var(--cor-texto); margin: 0;">PAINEL XVI SEMAU</h2>
     </div>
+
+    <section id="admin-install-card" class="admin-card-minimal admin-install-card" aria-labelledby="admin-install-title" hidden>
+        <div class="admin-install-icon" aria-hidden="true"><img src="assets/svg/admin-app-icon.svg" alt=""></div>
+        <div class="admin-install-copy">
+            <span>Aplicativo da organização</span>
+            <h2 id="admin-install-title">SEMAU Admin na tela inicial</h2>
+            <p>Acesso rápido ao painel, aos telões e ao controle do evento.</p>
+        </div>
+        <button id="btn-instalar-admin" class="admin-btn-primary admin-install-action" type="button" aria-describedby="admin-install-title">
+            <i class="ph-bold ph-download-simple" aria-hidden="true"></i>
+            <span>Instalar SEMAU Admin</span>
+        </button>
+        <p id="admin-install-help" class="admin-install-help" hidden>No Safari, toque em <i class="ph-bold ph-export" aria-hidden="true"></i> <strong>Compartilhar</strong> e depois em <strong>Adicionar à Tela de Início</strong>.</p>
+    </section>
 
     <section id="view-admin-cadastro" class="view active">
         <div class="admin-card-minimal">
@@ -548,5 +578,6 @@
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script type="module" src="js/admin.js?v=20260901-1"></script>
+<script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

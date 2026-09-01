@@ -1,0 +1,19 @@
+{
+    "id": "/admin-pwa",
+    "name": "SEMAU Admin",
+    "short_name": "SEMAU Admin",
+    "description": "Painel administrativo da XVI SEMAU.",
+    "start_url": "/admin.html?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#f4f5f7",
+    "theme_color": "#0d372b",
+    "icons": [
+        {
+            "src": "assets/svg/admin-app-icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
