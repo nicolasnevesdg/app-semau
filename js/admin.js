@@ -920,6 +920,7 @@ async function carregarListaInscritos() {
             const nomeSeguro = textoDisponivel(dados.nome, 'Inscrito sem nome');
             const emailSeguro = textoDisponivel(dados.email, 'E-mail não informado');
             const tokenSeguro = textoDisponivel(dados.token, '-----');
+            const emailJaEnviado = dados.emailIngressoStatus === 'enviado' || Boolean(dados.emailIngressoEnviadoEm);
             
             const turnos = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
             let presencasConfirmadas = 0;
@@ -963,8 +964,8 @@ async function carregarListaInscritos() {
                     <button type="button" class="btn-ficha-inscrito" data-inscrito-id="${docSnap.id}">
                         <i class="ph-bold ph-identification-card"></i> Ver ficha completa
                     </button>
-                    <button type="button" id="btn-email-${escaparHtml(docSnap.id)}" class="btn-email-inscrito" data-inscrito-id="${escaparHtml(docSnap.id)}">
-                        <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Ingresso
+                    <button type="button" id="btn-email-${escaparHtml(docSnap.id)}" class="btn-email-inscrito${emailJaEnviado ? ' btn-email-reenviar' : ''}" data-inscrito-id="${escaparHtml(docSnap.id)}">
+                        <i class="ph-bold ${emailJaEnviado ? 'ph-arrow-clockwise' : 'ph-paper-plane-tilt'}"></i> ${emailJaEnviado ? 'Enviar novamente' : 'Enviar ingresso'}
                     </button>
                 </div>
             `;
@@ -1042,6 +1043,8 @@ if (containerListaInscritos) {
 // EMAIL JS - COM ESTADOS VISUAIS NOVOS
 window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
     const botao = document.getElementById(`btn-email-${idBotao}`);
+    const dadosAntesDoEnvio = inscritosPorId.get(idBotao);
+    const jaEnviadoAntes = dadosAntesDoEnvio?.emailIngressoStatus === 'enviado' || Boolean(dadosAntesDoEnvio?.emailIngressoEnviadoEm);
     if (!configuracaoEmailIngresso?.publicKey || !configuracaoEmailIngresso?.serviceId || !configuracaoEmailIngresso?.templateId || !window.emailjs) {
         alert('Configure o EmailJS na aba de configurações antes de enviar o ingresso.');
         return;
@@ -1060,9 +1063,11 @@ window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
     window.emailjs.send(configuracaoEmailIngresso.serviceId, configuracaoEmailIngresso.templateId, parametros)
         .then(async function() {
             if(botao){
-                botao.style.backgroundColor = "#2ecc71";
-                botao.style.color = "#fff";
-                botao.innerHTML = '<i class="ph-bold ph-check-circle"></i> Ingresso Enviado!';
+                botao.disabled = false;
+                botao.style.removeProperty('background-color');
+                botao.style.removeProperty('color');
+                botao.classList.add('btn-email-reenviar');
+                botao.innerHTML = '<i class="ph-bold ph-arrow-clockwise"></i> Enviar novamente';
             }
             await updateDoc(doc(db, "inscritos", idBotao), {
                 emailIngressoStatus: 'enviado',
@@ -1075,15 +1080,20 @@ window.dispararEmail = function(idBotao, nomeAluno, emailAluno, tokenAluno) {
         }, function(error) {
             if(botao){
                 botao.disabled = false;
-                botao.style.backgroundColor = "#e06d53";
-                botao.style.color = "#fff";
-                botao.innerHTML = '<i class="ph-bold ph-warning-circle"></i> Erro. Tentar de novo';
+                botao.style.removeProperty('background-color');
+                botao.style.removeProperty('color');
+                botao.classList.toggle('btn-email-reenviar', jaEnviadoAntes);
+                botao.innerHTML = jaEnviadoAntes
+                    ? '<i class="ph-bold ph-arrow-clockwise"></i> Enviar novamente'
+                    : '<i class="ph-bold ph-warning-circle"></i> Erro. Tentar de novo';
             }
             updateDoc(doc(db, "inscritos", idBotao), {
                 emailIngressoStatus: 'falhou',
                 emailIngressoErro: String(error?.text || error?.message || 'Falha no envio').slice(0, 240),
                 atualizadoEm: serverTimestamp()
             }).catch(() => {});
+            const dadosAtuais = inscritosPorId.get(idBotao);
+            if (dadosAtuais) inscritosPorId.set(idBotao, { ...dadosAtuais, emailIngressoStatus: 'falhou' });
         });
 }
 
