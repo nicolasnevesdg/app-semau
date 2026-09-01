@@ -635,11 +635,27 @@ const NOMES_TURNOS = {
 const modalFichaInscrito = document.getElementById('modal-ficha-inscrito');
 const modalFichaNome = document.getElementById('modal-ficha-nome');
 const btnFecharFicha = document.getElementById('btn-fechar-ficha');
+const btnCancelarFicha = document.getElementById('btn-cancelar-ficha');
+const btnSalvarFicha = document.getElementById('btn-salvar-ficha');
+const formFichaInscrito = document.getElementById('form-ficha-inscrito');
+const fichaStatus = document.getElementById('ficha-status');
 const fichaDadosPessoais = document.getElementById('ficha-dados-pessoais');
 const fichaDadosIngresso = document.getElementById('ficha-dados-ingresso');
 const fichaResumoPresenca = document.getElementById('ficha-resumo-presenca');
 const fichaDadosEvento = document.getElementById('ficha-dados-evento');
 let focoAntesDaFicha = null;
+let idFichaInscritoAtual = null;
+
+const NOMES_LOTES = {
+    social: 'Lote Social',
+    primeiro: '1º Lote',
+    segundo: '2º Lote'
+};
+
+const NOMES_MODALIDADES = {
+    normal: 'Ingresso sem kit',
+    kit: 'Ingresso com kit'
+};
 
 function textoDisponivel(valor, padrao = 'Não informado') {
     const texto = String(valor ?? '').trim();
@@ -664,11 +680,11 @@ function formatarDataRegistro(valor) {
 
 function nomeDoLote(dados) {
     if (dados.nomeLote) return dados.nomeLote;
-    return ({ social: 'Lote Social', primeiro: '1º Lote', segundo: '2º Lote' })[dados.loteIngresso] || 'Não informado';
+    return NOMES_LOTES[dados.loteIngresso] || 'Não informado';
 }
 
 function nomeDoTipo(dados) {
-    return ({ normal: 'Ingresso normal', kit: 'Ingresso com kit' })[dados.tipoIngresso]
+    return NOMES_MODALIDADES[dados.tipoIngresso]
         || textoDisponivel(dados.nomeIngresso);
 }
 
@@ -683,10 +699,34 @@ function nomeDoStatusEmail(status) {
     return ({ enviado: 'Enviado', enviando: 'Enviando', falhou: 'Falhou' })[status] || 'Ainda não enviado';
 }
 function adicionarCampoFicha(container, rotulo, valor, opcoes = {}) {
-    const campo = document.createElement('div');
+    const campo = document.createElement(opcoes.editavel ? 'label' : 'div');
     campo.className = `ficha-campo${opcoes.largo ? ' ficha-campo-largo' : ''}`;
     const legenda = document.createElement('span');
     legenda.textContent = rotulo;
+
+    if (opcoes.editavel) {
+        const entrada = opcoes.opcoes ? document.createElement('select') : document.createElement('input');
+        entrada.dataset.campo = opcoes.campo;
+        entrada.value = String(valor ?? '');
+        if (!opcoes.opcoes) {
+            entrada.type = opcoes.tipo || 'text';
+            if (opcoes.placeholder) entrada.placeholder = opcoes.placeholder;
+            if (opcoes.autocomplete) entrada.autocomplete = opcoes.autocomplete;
+        } else {
+            opcoes.opcoes.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.valor;
+                option.textContent = item.rotulo;
+                entrada.appendChild(option);
+            });
+            entrada.value = String(valor ?? '');
+        }
+        if (opcoes.obrigatorio) entrada.required = true;
+        campo.append(legenda, entrada);
+        container.appendChild(campo);
+        return;
+    }
+
     const conteudo = document.createElement('strong');
     conteudo.textContent = textoDisponivel(valor);
     if (opcoes.token) conteudo.classList.add('ficha-token');
@@ -698,20 +738,43 @@ function abrirFichaInscrito(idInscrito) {
     const dados = inscritosPorId.get(idInscrito);
     if (!dados || !modalFichaInscrito) return;
 
+    idFichaInscritoAtual = idInscrito;
     modalFichaNome.textContent = textoDisponivel(dados.nome, 'Inscrito sem nome');
+    if (fichaStatus) {
+        fichaStatus.textContent = '';
+        fichaStatus.style.color = '';
+    }
     fichaDadosPessoais.replaceChildren();
     fichaDadosIngresso.replaceChildren();
     fichaDadosEvento.replaceChildren();
 
-    adicionarCampoFicha(fichaDadosPessoais, 'E-mail', dados.email, { largo: true });
-    adicionarCampoFicha(fichaDadosPessoais, 'Telefone', dados.telefone);
-    adicionarCampoFicha(fichaDadosPessoais, 'Instituição', dados.instituicao);
-    adicionarCampoFicha(fichaDadosPessoais, 'Matrícula', dados.matricula);
-    adicionarCampoFicha(fichaDadosPessoais, 'Curso', dados.curso);
-    adicionarCampoFicha(fichaDadosPessoais, 'Período', dados.periodo);
+    adicionarCampoFicha(fichaDadosPessoais, 'Nome completo', dados.nome, { editavel: true, campo: 'nome', largo: true, obrigatorio: true, autocomplete: 'name' });
+    adicionarCampoFicha(fichaDadosPessoais, 'E-mail', dados.email, { editavel: true, campo: 'email', tipo: 'email', largo: true, obrigatorio: true, autocomplete: 'email' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Telefone', dados.telefone, { editavel: true, campo: 'telefone', tipo: 'tel', autocomplete: 'tel' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Instituição', dados.instituicao, { editavel: true, campo: 'instituicao' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Matrícula', dados.matricula, { editavel: true, campo: 'matricula' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Curso', dados.curso, { editavel: true, campo: 'curso' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Período', dados.periodo, { editavel: true, campo: 'periodo' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Lote', dados.loteIngresso, {
+        editavel: true,
+        campo: 'loteIngresso',
+        opcoes: [
+            { valor: '', rotulo: 'Não informado' },
+            { valor: 'social', rotulo: NOMES_LOTES.social },
+            { valor: 'primeiro', rotulo: NOMES_LOTES.primeiro },
+            { valor: 'segundo', rotulo: NOMES_LOTES.segundo }
+        ]
+    });
+    adicionarCampoFicha(fichaDadosPessoais, 'Modalidade', dados.tipoIngresso, {
+        editavel: true,
+        campo: 'tipoIngresso',
+        opcoes: [
+            { valor: '', rotulo: 'Não informada' },
+            { valor: 'normal', rotulo: NOMES_MODALIDADES.normal },
+            { valor: 'kit', rotulo: NOMES_MODALIDADES.kit }
+        ]
+    });
 
-    adicionarCampoFicha(fichaDadosIngresso, 'Lote', nomeDoLote(dados));
-    adicionarCampoFicha(fichaDadosIngresso, 'Modalidade', nomeDoTipo(dados));
     adicionarCampoFicha(fichaDadosIngresso, 'Token', dados.token, { token: true });
     adicionarCampoFicha(fichaDadosIngresso, 'Pagamento', nomeDoStatusPagamento(dados.statusPagamento));
     adicionarCampoFicha(fichaDadosIngresso, 'E-mail do ingresso', nomeDoStatusEmail(dados.emailIngressoStatus));
@@ -745,15 +808,81 @@ function fecharFichaInscrito() {
     if (!modalFichaInscrito || modalFichaInscrito.hidden) return;
     modalFichaInscrito.hidden = true;
     document.body.style.overflow = '';
+    idFichaInscritoAtual = null;
     focoAntesDaFicha?.focus?.();
 }
 
 btnFecharFicha?.addEventListener('click', fecharFichaInscrito);
+btnCancelarFicha?.addEventListener('click', fecharFichaInscrito);
 modalFichaInscrito?.addEventListener('click', event => {
     if (event.target === modalFichaInscrito) fecharFichaInscrito();
 });
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && modalFichaInscrito && !modalFichaInscrito.hidden) fecharFichaInscrito();
+});
+
+function valorEditavelFicha(campo) {
+    return formFichaInscrito?.querySelector(`[data-campo="${campo}"]`)?.value.trim() || '';
+}
+
+function atribuirCampoOpcional(atualizacao, campo, valor) {
+    atualizacao[campo] = valor || deleteField();
+}
+
+formFichaInscrito?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!idFichaInscritoAtual || !formFichaInscrito.reportValidity()) return;
+
+    const nome = valorEditavelFicha('nome');
+    const email = valorEditavelFicha('email').toLowerCase();
+    const loteIngresso = valorEditavelFicha('loteIngresso');
+    const tipoIngresso = valorEditavelFicha('tipoIngresso');
+    const idInscrito = idFichaInscritoAtual;
+
+    const atualizacao = {
+        nome,
+        email,
+        atualizadoEm: serverTimestamp()
+    };
+
+    ['telefone', 'instituicao', 'matricula', 'curso', 'periodo'].forEach(campo => {
+        atribuirCampoOpcional(atualizacao, campo, valorEditavelFicha(campo));
+    });
+    atribuirCampoOpcional(atualizacao, 'loteIngresso', loteIngresso);
+    atribuirCampoOpcional(atualizacao, 'nomeLote', NOMES_LOTES[loteIngresso] || '');
+    atribuirCampoOpcional(atualizacao, 'tipoIngresso', tipoIngresso);
+    atribuirCampoOpcional(atualizacao, 'nomeIngresso', NOMES_MODALIDADES[tipoIngresso] || '');
+
+    const textoOriginal = btnSalvarFicha?.innerHTML || 'Salvar alterações';
+    if (btnSalvarFicha) {
+        btnSalvarFicha.disabled = true;
+        btnSalvarFicha.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Salvando...';
+    }
+    if (fichaStatus) {
+        fichaStatus.textContent = 'Salvando os dados...';
+        fichaStatus.style.color = '#6f7077';
+    }
+
+    try {
+        await updateDoc(doc(db, 'inscritos', idInscrito), atualizacao);
+        await carregarListaInscritos();
+        abrirFichaInscrito(idInscrito);
+        if (fichaStatus) {
+            fichaStatus.textContent = 'Dados atualizados com sucesso.';
+            fichaStatus.style.color = '#218653';
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar a ficha:', error);
+        if (fichaStatus) {
+            fichaStatus.textContent = 'Não foi possível salvar. Tente novamente.';
+            fichaStatus.style.color = '#b63a32';
+        }
+    } finally {
+        if (btnSalvarFicha) {
+            btnSalvarFicha.disabled = false;
+            btnSalvarFicha.innerHTML = textoOriginal;
+        }
+    }
 });
 
 async function carregarListaInscritos() {
@@ -780,6 +909,9 @@ async function carregarListaInscritos() {
             const dados = docSnap.data();
             inscritosPorId.set(docSnap.id, { id: docSnap.id, ...dados });
             totalInscritos++;
+            const nomeSeguro = textoDisponivel(dados.nome, 'Inscrito sem nome');
+            const emailSeguro = textoDisponivel(dados.email, 'E-mail não informado');
+            const tokenSeguro = textoDisponivel(dados.token, '-----');
             
             const turnos = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
             let presencasConfirmadas = 0;
@@ -801,18 +933,18 @@ async function carregarListaInscritos() {
 
             // NOVO HTML DO CARTÃO - Estilo Minimalista
             const cardHTML = `
-                <div class="card-aluno-lista" data-nome="${dados.nome.toLowerCase()}" data-email="${dados.email.toLowerCase()}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div class="card-aluno-lista" data-inscrito-id="${escaparHtml(docSnap.id)}" data-nome="${escaparHtml(nomeSeguro.toLowerCase())}" data-email="${escaparHtml(emailSeguro.toLowerCase())}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                     
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                        <p style="margin: 0; font-size: 18px; font-weight: 800; color: var(--cor-primaria); line-height: 1.2; word-break: break-word;">${dados.nome}</p>
+                        <p style="margin: 0; font-size: 18px; font-weight: 800; color: var(--cor-primaria); line-height: 1.2; word-break: break-word;">${escaparHtml(nomeSeguro)}</p>
                         <button class="btn-excluir" style="background: #fffaf9; border: 1px solid #ffebeb; color: #e06d53; border-radius: 10px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; transition: 0.2s;" title="Excluir Aluno">
                             <i class="ph-bold ph-trash"></i>
                         </button>
                     </div>
                     
                     <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-envelope-simple"></i> ${dados.email}</p>
-                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-key"></i> Token: <strong style="color: var(--cor-secundaria); font-family: var(--fonte-textos); letter-spacing: 2px;">${dados.token}</strong></p>
+                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-envelope-simple"></i> ${escaparHtml(emailSeguro)}</p>
+                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-key"></i> Token: <strong style="color: var(--cor-secundaria); font-family: var(--fonte-textos); letter-spacing: 2px;">${escaparHtml(tokenSeguro)}</strong></p>
                     </div>
                     
                     <div style="background: #f9f9fb; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f0f0f5;">
@@ -823,7 +955,7 @@ async function carregarListaInscritos() {
                     <button type="button" class="btn-ficha-inscrito" data-inscrito-id="${docSnap.id}">
                         <i class="ph-bold ph-identification-card"></i> Ver ficha completa
                     </button>
-                    <button id="btn-email-${docSnap.id}" onclick="window.dispararEmail('${docSnap.id}', '${dados.nome}', '${dados.email}', '${dados.token}')" style="background: var(--cor-secundaria); color: #fff; text-align: center; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    <button type="button" id="btn-email-${escaparHtml(docSnap.id)}" class="btn-email-inscrito" data-inscrito-id="${escaparHtml(docSnap.id)}">
                         <i class="ph-bold ph-paper-plane-tilt"></i> Enviar Ingresso
                     </button>
                 </div>
@@ -876,10 +1008,18 @@ if (containerListaInscritos) {
             return;
         }
 
+        const btnEmail = e.target.closest('.btn-email-inscrito');
+        if (btnEmail) {
+            const idInscrito = btnEmail.dataset.inscritoId;
+            const dados = inscritosPorId.get(idInscrito);
+            if (dados) window.dispararEmail(idInscrito, dados.nome, dados.email, dados.token);
+            return;
+        }
+
         const btnClicado = e.target.closest('.btn-excluir');
         if (btnClicado) {
             const cardPai = btnClicado.closest('.card-aluno-lista');
-            const idDocumento = cardPai.querySelector(`button[id^='btn-email-']`).id.replace('btn-email-', ''); 
+            const idDocumento = cardPai.dataset.inscritoId;
             
             if (confirm("🚨 ATENÇÃO: Tem certeza que deseja EXCLUIR este inscrito permanentemente?")) {
                 try {

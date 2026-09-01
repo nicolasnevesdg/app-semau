@@ -73,9 +73,20 @@
     .ficha-campo span { display: block; margin-bottom: 4px; color: #8a8a92; font-size: 10px; font-weight: 800; letter-spacing: 0.7px; text-transform: uppercase; }
     .ficha-campo strong { display: block; color: #34343a; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
     .ficha-campo strong.ficha-token { color: var(--cor-secundaria); letter-spacing: 2px; }
+    .ficha-campo input, .ficha-campo select { width: 100%; min-height: 44px; padding: 11px 12px; border: 1px solid #dfe1e6; border-radius: 11px; background: #fff; color: #34343a; font: inherit; font-size: 14px; outline: none; transition: 0.2s; }
+    .ficha-campo input:focus, .ficha-campo select:focus { border-color: var(--cor-secundaria); box-shadow: 0 0 0 3px rgba(247, 112, 38, 0.13); }
+    .ficha-ajuda { margin: -7px 0 16px; color: #6f7077; font-size: 12px; line-height: 1.5; }
+    .ficha-protegido { display: flex; align-items: flex-start; gap: 8px; margin: -5px 0 16px; padding: 10px 12px; border-radius: 11px; background: #f5f7fb; color: #687184; font-size: 11px; line-height: 1.45; }
     .ficha-presenca { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #f8f9fb; }
     .ficha-presenca span { color: #666; font-size: 13px; font-weight: 700; }
     .ficha-presenca strong { font-size: 17px; color: var(--cor-primaria); }
+    .ficha-acoes { position: sticky; bottom: -22px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 10px; margin: 0 -22px -22px; padding: 16px 22px; background: rgba(255,255,255,0.97); border-top: 1px solid #e9e9ee; }
+    .ficha-status { flex: 1 1 100%; min-height: 18px; margin: 0; font-size: 12px; font-weight: 700; }
+    .ficha-status:empty { display: none; }
+    .ficha-btn { min-height: 44px; padding: 11px 16px; border-radius: 11px; border: 0; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+    .ficha-btn-secundario { background: #f0f1f4; color: #5f6068; }
+    .ficha-btn-salvar { background: var(--cor-secundaria); color: #fff; }
+    .ficha-btn:disabled { opacity: 0.62; cursor: wait; }
     @media (max-width: 420px) { .admin-agenda-item { grid-template-columns: 74px minmax(0, 1fr); gap: 10px; } }
     @media (max-width: 520px) {
         .admin-acoes-inscrito { grid-template-columns: 1fr; }
@@ -85,6 +96,8 @@
         .modal-ficha-corpo { padding: 16px; }
         .ficha-grade { grid-template-columns: 1fr; }
         .ficha-campo.ficha-campo-largo { grid-column: auto; }
+        .ficha-acoes { bottom: -16px; margin: 0 -16px -16px; padding: 14px 16px; }
+        .ficha-btn { flex: 1 1 0; }
     }
     /* Suaviza as barras de rolagem */
     ::-webkit-scrollbar { width: 8px; }
@@ -477,13 +490,15 @@
                 </div>
                 <button type="button" id="btn-fechar-ficha" class="modal-ficha-fechar" aria-label="Fechar ficha"><i class="ph-bold ph-x"></i></button>
             </header>
-            <div class="modal-ficha-corpo">
+            <form id="form-ficha-inscrito" class="modal-ficha-corpo">
                 <section class="ficha-bloco">
-                    <h3><i class="ph-bold ph-identification-card"></i> Dados informados na compra</h3>
+                    <h3><i class="ph-bold ph-pencil-simple"></i> Dados editáveis do inscrito</h3>
+                    <p class="ficha-ajuda">Preencha ou corrija aqui os dados recebidos manualmente, inclusive os cadastros do lote social.</p>
                     <div id="ficha-dados-pessoais" class="ficha-grade"></div>
                 </section>
                 <section class="ficha-bloco">
-                    <h3><i class="ph-bold ph-ticket"></i> Ingresso e pagamento</h3>
+                    <h3><i class="ph-bold ph-lock-key"></i> Dados automáticos</h3>
+                    <p class="ficha-protegido"><i class="ph-bold ph-info"></i><span>Token, pagamento, envio do ingresso e identificadores são protegidos e não podem ser alterados nesta ficha.</span></p>
                     <div id="ficha-dados-ingresso" class="ficha-grade"></div>
                 </section>
                 <section class="ficha-bloco">
@@ -491,7 +506,12 @@
                     <div id="ficha-resumo-presenca" class="ficha-presenca"></div>
                     <div id="ficha-dados-evento" class="ficha-grade" style="margin-top: 16px;"></div>
                 </section>
-            </div>
+                <footer class="ficha-acoes">
+                    <p id="ficha-status" class="ficha-status" role="status" aria-live="polite"></p>
+                    <button type="button" id="btn-cancelar-ficha" class="ficha-btn ficha-btn-secundario">Fechar</button>
+                    <button type="submit" id="btn-salvar-ficha" class="ficha-btn ficha-btn-salvar"><i class="ph-bold ph-floppy-disk"></i> Salvar alterações</button>
+                </footer>
+            </form>
         </article>
     </div>
     <div id="modal-camera" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.98); backdrop-filter: blur(10px); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
