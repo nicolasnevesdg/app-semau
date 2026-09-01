@@ -111,6 +111,11 @@ function atualizarLotes() {
 
     botoes.forEach(botao => {
         const tipo = botao.dataset.tipo === "kit" ? "kit" : "normal";
+        if (fluxoSocial && tipo === "kit") {
+            botao.disabled = true;
+            botao.textContent = "Esgotado";
+            return;
+        }
         if (!vendasAbertas) {
             botao.disabled = true;
             botao.textContent = "Inscrições abrem às 12h";

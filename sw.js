@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v167-admin-sem-agenda';
+const CACHE_NAME = 'semau-v168-social-kit-esgotado';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
