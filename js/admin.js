@@ -657,6 +657,9 @@ if(navAdConfigs) navAdConfigs.addEventListener('click', () => showAdminView(view
 // ==========================================
 const containerListaInscritos = document.getElementById('container-lista-inscritos');
 const adminBuscaLista = document.getElementById('admin-busca-lista');
+const adminFiltroModalidade = document.getElementById('admin-filtro-modalidade');
+const adminListaResultado = document.getElementById('admin-lista-resultado');
+const adminListaFiltroVazio = document.getElementById('admin-lista-filtro-vazio');
 const dashTotal = document.getElementById('dash-total');
 const btnExportarExcel = document.getElementById('btn-exportar-excel');
 
@@ -701,6 +704,85 @@ const NOMES_MODALIDADES = {
     normal: 'Ingresso sem kit',
     kit: 'Ingresso com kit'
 };
+
+const CATEGORIAS_INSCRITOS = [
+    'social-kit', 'social-normal',
+    'primeiro-kit', 'primeiro-normal',
+    'segundo-kit', 'segundo-normal',
+    'outros'
+];
+
+const NOMES_CATEGORIAS_INSCRITOS = {
+    'social-kit': 'Social · com kit',
+    'social-normal': 'Social · sem kit',
+    'primeiro-kit': '1º lote · com kit',
+    'primeiro-normal': '1º lote · sem kit',
+    'segundo-kit': '2º lote · com kit',
+    'segundo-normal': '2º lote · sem kit',
+    outros: 'Outros / não informado'
+};
+
+function textoNormalizadoParaFiltro(valor) {
+    return String(valor ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+}
+
+function loteNormalizadoDoInscrito(dados = {}) {
+    const lote = textoNormalizadoParaFiltro(dados.loteIngresso ?? dados.lote ?? dados.nomeLote);
+    if (lote === '0' || lote.includes('social')) return 'social';
+    if (lote === '1' || lote.includes('primeiro') || lote.startsWith('1º') || lote.startsWith('1°')) return 'primeiro';
+    if (lote === '2' || lote.includes('segundo') || lote.startsWith('2º') || lote.startsWith('2°')) return 'segundo';
+    return '';
+}
+
+function tipoNormalizadoDoInscrito(dados = {}) {
+    const tipo = textoNormalizadoParaFiltro(dados.tipoIngresso ?? dados.tipo ?? dados.modalidade ?? dados.nomeIngresso);
+    if (tipo === 'normal' || tipo.includes('sem kit')) return 'normal';
+    if (tipo === 'kit' || tipo.includes('com kit')) return 'kit';
+    return '';
+}
+
+function categoriaDoInscrito(dados = {}) {
+    const lote = loteNormalizadoDoInscrito(dados);
+    const tipo = tipoNormalizadoDoInscrito(dados);
+    return lote && tipo ? `${lote}-${tipo}` : 'outros';
+}
+
+function contagensVaziasDeInscritos() {
+    return Object.fromEntries(CATEGORIAS_INSCRITOS.map(categoria => [categoria, 0]));
+}
+
+function atualizarResumoModalidades(contagens = contagensVaziasDeInscritos()) {
+    document.querySelectorAll('[data-total-categoria]').forEach(elemento => {
+        elemento.textContent = contagens[elemento.dataset.totalCategoria] || 0;
+    });
+}
+
+function aplicarFiltrosDaLista() {
+    const termo = textoNormalizadoParaFiltro(adminBuscaLista?.value);
+    const categoriaSelecionada = adminFiltroModalidade?.value || 'todos';
+    let visiveis = 0;
+    const cards = document.querySelectorAll('.card-aluno-lista');
+
+    cards.forEach(card => {
+        const correspondeBusca = !termo || textoNormalizadoParaFiltro(`${card.dataset.nome} ${card.dataset.email}`).includes(termo);
+        const correspondeCategoria = categoriaSelecionada === 'todos' || card.dataset.categoria === categoriaSelecionada;
+        const visivel = correspondeBusca && correspondeCategoria;
+        card.style.display = visivel ? 'flex' : 'none';
+        if (visivel) visiveis++;
+    });
+
+    if (adminListaResultado) {
+        const total = cards.length;
+        adminListaResultado.textContent = categoriaSelecionada === 'todos' && !termo
+            ? `${total} ${total === 1 ? 'inscrito' : 'inscritos'} na base`
+            : `${visiveis} de ${total} ${total === 1 ? 'inscrito' : 'inscritos'} exibidos`;
+    }
+    if (adminListaFiltroVazio) adminListaFiltroVazio.hidden = visiveis > 0 || total === 0;
+}
 
 function textoDisponivel(valor, padrao = 'Não informado') {
     const texto = String(valor ?? '').trim();
@@ -939,6 +1021,7 @@ async function carregarListaInscritos() {
     containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px solid #e8e8eb;"><p style="color: #888; font-size: 14px; font-weight: 600; margin:0;"><i class="ph-bold ph-hourglass-high" style="margin-right: 8px;"></i> Carregando base de dados...</p></div>';
     dadosParaExcel = [];
     inscritosPorId.clear();
+    atualizarResumoModalidades();
     
     try {
         const querySnapshot = await getDocs(collection(db, "inscritos"));
@@ -946,16 +1029,20 @@ async function carregarListaInscritos() {
         if (querySnapshot.empty) {
             containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px dashed #e8e8eb;"><i class="ph-bold ph-users-slash" style="font-size: 32px; color: #ccc; margin-bottom: 12px; display: block;"></i><p style="color: #888; font-weight: 600; font-size: 14px; margin:0;">Nenhum inscrito encontrado.</p></div>';
             if(dashTotal) dashTotal.textContent = "0";
+            if (adminListaResultado) adminListaResultado.textContent = 'Nenhum inscrito na base';
             return;
         }
 
         containerListaInscritos.innerHTML = ''; 
         let totalInscritos = 0;
+        const contagensModalidades = contagensVaziasDeInscritos();
 
         querySnapshot.forEach((docSnap) => {
             const dados = docSnap.data();
+            const categoria = categoriaDoInscrito(dados);
             inscritosPorId.set(docSnap.id, { id: docSnap.id, ...dados });
             totalInscritos++;
+            contagensModalidades[categoria]++;
             const nomeSeguro = textoDisponivel(dados.nome, 'Inscrito sem nome');
             const emailSeguro = textoDisponivel(dados.email, 'E-mail não informado');
             const tokenSeguro = textoDisponivel(dados.token, '-----');
@@ -981,7 +1068,7 @@ async function carregarListaInscritos() {
 
             // NOVO HTML DO CARTÃO - Estilo Minimalista
             const cardHTML = `
-                <div class="card-aluno-lista" data-inscrito-id="${escaparHtml(docSnap.id)}" data-nome="${escaparHtml(nomeSeguro.toLowerCase())}" data-email="${escaparHtml(emailSeguro.toLowerCase())}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div class="card-aluno-lista" data-inscrito-id="${escaparHtml(docSnap.id)}" data-nome="${escaparHtml(nomeSeguro.toLowerCase())}" data-email="${escaparHtml(emailSeguro.toLowerCase())}" data-categoria="${categoria}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                     
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                         <p style="margin: 0; font-size: 18px; font-weight: 800; color: var(--cor-primaria); line-height: 1.2; word-break: break-word;">${escaparHtml(nomeSeguro)}</p>
@@ -989,7 +1076,8 @@ async function carregarListaInscritos() {
                             <i class="ph-bold ph-trash"></i>
                         </button>
                     </div>
-                    
+                    <span class="inscrito-categoria${categoria === 'outros' ? ' inscrito-categoria-outros' : ''}">${NOMES_CATEGORIAS_INSCRITOS[categoria]}</span>
+
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-envelope-simple"></i> ${escaparHtml(emailSeguro)}</p>
                         <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-key"></i> Token: <strong style="color: var(--cor-secundaria); font-family: var(--fonte-textos); letter-spacing: 2px;">${escaparHtml(tokenSeguro)}</strong></p>
@@ -1012,6 +1100,8 @@ async function carregarListaInscritos() {
         });
         
         if (dashTotal) dashTotal.textContent = totalInscritos;
+        atualizarResumoModalidades(contagensModalidades);
+        aplicarFiltrosDaLista();
 
     } catch (error) {
         containerListaInscritos.innerHTML = '<p style="color: #e06d53; text-align:center; font-weight: bold;">Erro ao carregar a lista.</p>';
@@ -1038,15 +1128,10 @@ if (btnExportarExcel) {
 }
 
 if (adminBuscaLista) {
-    adminBuscaLista.addEventListener('input', (e) => {
-        const termo = e.target.value.toLowerCase();
-        document.querySelectorAll('.card-aluno-lista').forEach(card => {
-            const nome = card.getAttribute('data-nome');
-            const email = card.getAttribute('data-email');
-            card.style.display = (nome.includes(termo) || email.includes(termo)) ? 'flex' : 'none';
-        });
-    });
+    adminBuscaLista.addEventListener('input', aplicarFiltrosDaLista);
 }
+
+adminFiltroModalidade?.addEventListener('change', aplicarFiltrosDaLista);
 
 if (containerListaInscritos) {
     containerListaInscritos.addEventListener('click', async (e) => {
