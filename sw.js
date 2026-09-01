@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v166-camera-overlay';
+const CACHE_NAME = 'semau-v167-admin-sem-agenda';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
