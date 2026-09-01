@@ -716,11 +716,16 @@
     padding: 0 34px;
 }
 
-.ingressos-kit h2 {
-    margin-bottom: 12px;
-    color: var(--cor-primaria);
-    font-size: 32px;
-    line-height: 1.02;
+.ingressos-kit-titulo-grafico {
+    width: min(68%, 310px);
+    margin: 0 auto 15px;
+    line-height: 0;
+}
+
+.ingressos-kit-titulo-grafico img {
+    display: block;
+    width: 100%;
+    height: auto;
 }
 
 .ingressos-kit p {
