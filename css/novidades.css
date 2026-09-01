@@ -704,6 +704,40 @@
     line-height: 1.35;
 }
 
+.ingressos-kit {
+    overflow: hidden;
+    padding: 48px 0 0;
+    background: var(--cor-texto);
+    color: var(--cor-primaria);
+    text-align: center;
+}
+
+.ingressos-kit-cabecalho {
+    padding: 0 34px;
+}
+
+.ingressos-kit h2 {
+    margin-bottom: 12px;
+    color: var(--cor-primaria);
+    font-size: 32px;
+    line-height: 1.02;
+}
+
+.ingressos-kit p {
+    max-width: 340px;
+    margin: 0 auto;
+    color: #656a65;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.ingressos-kit-imagem {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 24px 0 0;
+}
+
 .ingressos-planos {
     padding: 42px 0 56px;
     background: var(--cor-texto);
