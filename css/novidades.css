@@ -717,7 +717,7 @@
 }
 
 .ingressos-kit-titulo-grafico {
-    width: min(68%, 310px);
+    width: min(45%, 310px);
     margin: 0 auto 15px;
     line-height: 0;
 }
@@ -729,7 +729,7 @@
 }
 
 .ingressos-kit p {
-    max-width: 340px;
+    max-width: 240px;
     margin: 0 auto;
     color: #656a65;
     font-size: 15px;
@@ -740,7 +740,7 @@
     display: block;
     width: 100%;
     height: auto;
-    margin: 24px 0 0;
+    margin: -55px 0 0;
 }
 
 .ingressos-planos {
