@@ -3,6 +3,8 @@ export const FORMULARIO_LOTE_SOCIAL = "https://docs.google.com/forms/d/e/1FAIpQL
 export const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
 export const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
 export const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
+const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
+const DURACAO_RESERVA_MS = 15 * 60 * 1000;
 
 export const LOTES_INGRESSOS = Object.freeze({
     social: Object.freeze({ nome: "Lote Social", normal: 15, kit: 30, fluxo: "formulario" }),
@@ -51,8 +53,14 @@ function numeroSeguro(valor) {
 
 function reservasAtivas(estoque, tipo, agora) {
     return Object.values(estoque?.primeiro?.reservas || {}).filter(reserva =>
-        reserva?.tipo === tipo && Number(reserva.expiraEm || 0) > agora
+        reserva?.tipo === tipo && expiracaoEfetivaDaReserva(reserva) > agora
     ).length;
+}
+
+function expiracaoEfetivaDaReserva(reserva = {}) {
+    const expiraEmOriginal = Number(reserva.expiraEm || 0);
+    const criadaEm = Number(reserva.criadaEm || 0) || expiraEmOriginal - DURACAO_RESERVA_ANTIGA_MS;
+    return Math.min(expiraEmOriginal, criadaEm + DURACAO_RESERVA_MS);
 }
 
 export function disponibilidadePrimeiroLote(estoque = {}, agora = Date.now()) {

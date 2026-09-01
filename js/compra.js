@@ -7,7 +7,7 @@ import {
     disponibilidadePrimeiroLote,
     obterLoteAutomatico,
     obterIngresso
-} from "./ingressos-config.js";
+} from "./ingressos-config.js?v=169";
 
 const functions = getFunctions(app, "southamerica-east1");
 const criarPreferencia = httpsCallable(functions, "criarPreferencia");

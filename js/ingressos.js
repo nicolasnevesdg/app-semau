@@ -8,7 +8,7 @@ import {
     disponibilidadePrimeiroLote,
     obterLoteAutomatico,
     normalizarUrlFormulario
-} from "./ingressos-config.js?v=161";
+} from "./ingressos-config.js?v=169";
 
 const lotes = document.querySelectorAll(".lote-card");
 const botoes = document.querySelectorAll(".plano-botao");

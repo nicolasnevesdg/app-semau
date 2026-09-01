@@ -21,7 +21,8 @@ const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
 const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
 const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
 const DURACAO_CHECKOUT_MS = 15 * 60 * 1000;
-const DURACAO_RESERVA_MS = 60 * 60 * 1000;
+const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
+const DURACAO_RESERVA_MS = DURACAO_CHECKOUT_MS;
 const STATUS_FINAIS_SEM_PAGAMENTO = new Set(["rejected", "cancelled", "refunded", "charged_back"]);
 const configuracaoGeralRef = db.collection("configuracoes").doc("geral");
 const estoqueIngressosRef = db.collection("configuracoes").doc("estoqueIngressos");
@@ -64,11 +65,14 @@ function normalizarEstoque(dados = {}, agora = Date.now()) {
   const primeiro = dados.primeiro || {};
   const reservas = {};
   Object.entries(primeiro.reservas || {}).forEach(([pedidoId, reserva]) => {
+    const expiraEmOriginal = Number(reserva?.expiraEm || 0);
+    const criadaEm = Number(reserva?.criadaEm || 0) || expiraEmOriginal - DURACAO_RESERVA_ANTIGA_MS;
+    const expiraEm = Math.min(expiraEmOriginal, criadaEm + DURACAO_RESERVA_MS);
     if (
       (reserva?.tipo === "normal" || reserva?.tipo === "kit") &&
-      Number(reserva.expiraEm || 0) > agora
+      expiraEm > agora
     ) {
-      reservas[pedidoId] = { tipo: reserva.tipo, expiraEm: Number(reserva.expiraEm) };
+      reservas[pedidoId] = { tipo: reserva.tipo, criadaEm, expiraEm };
     }
   });
   return {
@@ -188,7 +192,7 @@ async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
       if (ocupados >= LIMITE_PRIMEIRO_LOTE[dados.tipo]) {
         throw new HttpsError("resource-exhausted", `Os ingressos ${dados.tipo === "kit" ? "com kit" : "sem kit"} do 1º lote estão esgotados.`);
       }
-      estoque.reservas[pedidoRef.id] = { tipo: dados.tipo, expiraEm };
+      estoque.reservas[pedidoRef.id] = { tipo: dados.tipo, criadaEm: agora, expiraEm };
       transaction.set(estoqueIngressosRef, { primeiro: estoque, atualizadoEm: FieldValue.serverTimestamp() });
     }
 
