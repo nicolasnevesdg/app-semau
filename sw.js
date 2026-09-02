@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v181-fotos-cronograma';
+const CACHE_NAME = 'semau-v182-fotos-cronograma-visiveis';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -151,7 +151,9 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
+        fetch(event.request).catch(async () =>
+            (await caches.match(event.request)) || caches.match(event.request, { ignoreSearch: true })
+        )
     );
 });
 

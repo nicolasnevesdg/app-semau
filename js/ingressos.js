@@ -15,6 +15,13 @@ const lotes = document.querySelectorAll(".lote-card");
 const botoes = document.querySelectorAll(".plano-botao");
 const precos = document.querySelectorAll("[data-preco-tipo]");
 const faixaPalestrantes = document.getElementById("palestrantes-faixa");
+const VERSAO_IMAGENS_PALESTRANTES = "20260902-1";
+
+function versionarImagemLocal(caminho) {
+    const valor = String(caminho || "").trim();
+    if (!valor || /^(?:https?:)?\/\//i.test(valor) || /^(?:data|blob):/i.test(valor)) return valor;
+    return `${valor}${valor.includes("?") ? "&" : "?"}imgv=${VERSAO_IMAGENS_PALESTRANTES}`;
+}
 
 const PALESTRANTES = {
     "palestrante-01": { nome: "Ethel Pinheiro", descricao: "Arquiteta, urbanista e professora da UFRJ", imagem: "assets/palestrantes/ethel-pinheiro.png" },
@@ -22,10 +29,10 @@ const PALESTRANTES = {
     "palestrante-03": { nome: "Casé Arquitetura", descricao: "Hamilton Casé e Marcela Casé", imagem: "assets/palestrantes/case-arquitetura.png" },
     "palestrante-04": { nome: "Thaysa Malaquias", descricao: "Arquiteta, urbanista e pesquisadora do LabLugares", imagem: "assets/palestrantes/thaysa-malaquias.png" },
     "palestrante-05": { nome: "Rafael Zamorano", descricao: "Historiador e diretor substituto do Sítio Roberto Burle Marx", imagem: "assets/palestrantes/rafael-zamorano.png" },
-    "palestrante-06": { nome: "Convidado(a) em breve", descricao: "Palestra de quarta-feira, às 09h10", imagem: "assets/svg/em-breve.svg" },
+    "palestrante-06": { nome: "Beatriz Fraga", descricao: "Palestrante da quarta-feira, às 09h10", imagem: "assets/palestrantes/beatriz-fraga.png" },
     "palestrante-07": { nome: "Roberto Cruz Saavedra", descricao: "Arquiteto e urbanista", imagem: "assets/palestrantes/roberto-cruz.png" },
-    "palestrante-08": { nome: "Urb.Anas", descricao: "Coletivo de arquitetas e urbanistas", imagem: "assets/svg/jean-geal.svg" },
-    "palestrante-09": { nome: "Convidado(a) em breve", descricao: "Palestra de quinta-feira, às 09h10", imagem: "assets/svg/em-breve.svg" },
+    "palestrante-08": { nome: "Urb.Anas", descricao: "Coletivo de arquitetas e urbanistas", imagem: "assets/palestrantes/urbanas.png" },
+    "palestrante-09": { nome: "Daniel Disitzer · Mestres da Obra", descricao: "Palestra de quinta-feira, às 09h10", imagem: "assets/img/palestrante-teste.png" },
     "palestrante-10": { nome: "Pedro Rajão · Negromuro", descricao: "Integrante do coletivo Negromuro", imagem: "assets/palestrantes/pedro-rajao.png" },
     "palestrante-11": { nome: "Verônica Natividade", descricao: "Arquiteta, pesquisadora e professora da PUC-Rio", imagem: "assets/palestrantes/veronica-natividade.png" }
 };
@@ -49,7 +56,7 @@ function cardPalestrante(palestrante, repetido = false) {
     const acessibilidade = repetido ? ' aria-hidden="true"' : "";
     const alt = repetido ? "" : `Foto de ${palestrante.nome}`;
     return `<article class="palestrante-mini"${acessibilidade}>
-        <img src="${escaparHtml(palestrante.imagem)}" alt="${escaparHtml(alt)}">
+        <img src="${escaparHtml(versionarImagemLocal(palestrante.imagem))}" alt="${escaparHtml(alt)}">
         <h3>${escaparHtml(palestrante.nome)}</h3>
         <p>${escaparHtml(palestrante.descricao)}</p>
     </article>`;
@@ -65,7 +72,7 @@ function renderizarPalestrantes(ativos) {
     if (!divulgados.length) {
         faixaPalestrantes.classList.add("sem-palestrantes");
         faixaPalestrantes.innerHTML = `<div class="palestrantes-em-breve">
-            <img src="assets/svg/em-breve.svg" alt="Em breve">
+            <img src="${versionarImagemLocal('assets/svg/em-breve.svg')}" alt="Em breve">
         </div>`;
         return;
     }

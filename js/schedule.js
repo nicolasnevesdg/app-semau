@@ -16,19 +16,26 @@ const containerFase1 = document.getElementById('container-fase1');
 const containerFase2 = document.getElementById('container-fase2');
 const docConvidadosRef = doc(db, 'configuracoes', 'anuncios');
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
+const VERSAO_IMAGENS_CRONOGRAMA = '20260902-1';
+
+function versionarImagemLocal(caminho) {
+    const valor = String(caminho || '').trim();
+    if (!valor || /^(?:https?:)?\/\//i.test(valor) || /^(?:data|blob):/i.test(valor)) return valor;
+    return `${valor}${valor.includes('?') ? '&' : '?'}imgv=${VERSAO_IMAGENS_CRONOGRAMA}`;
+}
 
 const catalogoConvidados = {
-    'palestrante-01': { nome: 'Ethel Pinheiro', descricao: 'Arquiteta, urbanista e professora da UFRJ', arquivoSvg: 'jean-geal' },
-    'palestrante-02': { nome: 'Ester Carro', descricao: 'Arquiteta, pesquisadora e professora universitária', arquivoSvg: 'jean-geal' },
-    'palestrante-03': { nome: 'Convidado(a) em breve', descricao: 'Palestra de segunda-feira, às 15h50', arquivoSvg: 'jean-geal' },
-    'palestrante-04': { nome: 'Thaysa Malaquias', descricao: 'Arquiteta, urbanista e pesquisadora do LabLugares — PROARQ/UFRJ', arquivoSvg: 'jean-geal' },
-    'palestrante-05': { nome: 'Rafael Zamorano', descricao: 'Historiador e diretor substituto do Sítio Roberto Burle Marx', arquivoSvg: 'jean-geal' },
-    'palestrante-06': { nome: 'Convidado(a) em breve', descricao: 'Palestra de quarta-feira, às 09h10', arquivoSvg: 'jean-geal' },
-    'palestrante-07': { nome: 'Roberto Cruz Saavedra', descricao: 'Arquiteto e urbanista do Cruz Saavedra Arquitetura', arquivoSvg: 'jean-geal' },
-    'palestrante-08': { nome: 'Urb.Anas', descricao: 'Coletivo de pesquisa sobre urbanismo, feminismo, gênero e interseccionalidade', arquivoSvg: 'jean-geal' },
-    'palestrante-09': { nome: 'Convidado(a) em breve', descricao: 'Palestra de quinta-feira, às 09h10', arquivoSvg: 'jean-geal' },
-    'palestrante-10': { nome: 'Pedro Rajão · Negromuro', descricao: 'Integrante do coletivo Negromuro', arquivoSvg: 'jean-geal' },
-    'palestrante-11': { nome: 'Verônica Natividade', descricao: 'Arquiteta, pesquisadora e professora da PUC-Rio', arquivoSvg: 'jean-geal' },
+    'palestrante-01': { nome: 'Ethel Pinheiro', descricao: 'Arquiteta, urbanista e professora da UFRJ', imagem: 'assets/palestrantes/ethel-pinheiro.png' },
+    'palestrante-02': { nome: 'Ester Carro', descricao: 'Arquiteta, pesquisadora e professora universitária', imagem: 'assets/palestrantes/esther-carro.png' },
+    'palestrante-03': { nome: 'Casé Arquitetura', descricao: 'Hamilton Casé e Marcela Casé', imagem: 'assets/palestrantes/case-arquitetura.png' },
+    'palestrante-04': { nome: 'Thaysa Malaquias', descricao: 'Arquiteta, urbanista e pesquisadora do LabLugares — PROARQ/UFRJ', imagem: 'assets/palestrantes/thaysa-malaquias.png' },
+    'palestrante-05': { nome: 'Rafael Zamorano', descricao: 'Historiador e diretor substituto do Sítio Roberto Burle Marx', imagem: 'assets/palestrantes/rafael-zamorano.png' },
+    'palestrante-06': { nome: 'Beatriz Fraga', descricao: 'Palestrante da quarta-feira, às 09h10', imagem: 'assets/palestrantes/beatriz-fraga.png' },
+    'palestrante-07': { nome: 'Roberto Cruz Saavedra', descricao: 'Arquiteto e urbanista do Cruz Saavedra Arquitetura', imagem: 'assets/palestrantes/roberto-cruz.png' },
+    'palestrante-08': { nome: 'Urb.Anas', descricao: 'Coletivo de pesquisa sobre urbanismo, feminismo, gênero e interseccionalidade', imagem: 'assets/palestrantes/urbanas.png' },
+    'palestrante-09': { nome: 'Daniel Disitzer · Mestres da Obra', descricao: 'Palestra de quinta-feira, às 09h10', imagem: 'assets/img/palestrante-teste.png' },
+    'palestrante-10': { nome: 'Pedro Rajão · Negromuro', descricao: 'Integrante do coletivo Negromuro', imagem: 'assets/palestrantes/pedro-rajao.png' },
+    'palestrante-11': { nome: 'Verônica Natividade', descricao: 'Arquiteta, pesquisadora e professora da PUC-Rio', imagem: 'assets/palestrantes/veronica-natividade.png' },
     'oficina-01': { nome: 'Oficina de Levantamento', descricao: 'Com Raphael Valcarce', arquivoSvg: 'jean-geal' },
     'oficina-02': { nome: 'Oficina de Cerâmica', descricao: 'Com Martha Niklaus', arquivoSvg: 'jean-geal' },
     'oficina-03': { nome: 'Oficina de Aquarela', descricao: 'Com Alberto Kaplan', arquivoSvg: 'jean-geal' },
@@ -55,7 +62,7 @@ function renderizarAnuncios(ativos) {
         const targetGrid = id.startsWith('oficina-') ? gridOficinas : gridPalestrantes;
         targetGrid?.insertAdjacentHTML('beforeend', `
             <div class="card-convidado">
-                <div class="card-convidado-foto"><img src="assets/svg/${convidado.arquivoSvg}.svg" alt="Foto de ${convidado.nome}"></div>
+                <div class="card-convidado-foto"><img src="${versionarImagemLocal(convidado.imagem || `assets/svg/${convidado.arquivoSvg}.svg`)}" alt="Foto de ${convidado.nome}"></div>
                 <div class="card-convidado-texto"><h2>${convidado.nome}</h2><p>${convidado.descricao}</p></div>
             </div>`);
     });
@@ -78,7 +85,7 @@ function escaparHtml(valor) {
 }
 
 function imagemAtividade(item, fallback) {
-    return escaparHtml(item.imagem || fallback);
+    return escaparHtml(versionarImagemLocal(item.imagem || fallback));
 }
 
 function horarioCard(item) {
@@ -89,7 +96,7 @@ function renderizarPalestra(item) {
     const tema = item.tema || item.titulo;
     const biografia = item.convidadoBio ? `<div class="palestra-biografia"><strong>Sobre o convidado</strong><p>${escaparHtml(item.convidadoBio)}</p></div>` : '';
     const explicacao = item.temaDescricao || item.descricao;
-    const mediacao = item.mediador ? `<div class="palestra-mesa"><img src="${escaparHtml(item.mediadorFoto || 'assets/img/professor-teste_1.png')}" alt="Foto de ${escaparHtml(item.mediador)}"><div><strong>${escaparHtml(item.mediador)}</strong><small>${escaparHtml(item.mediadorCargo || 'Mediação')}</small></div></div>` : '';
+    const mediacao = item.mediador ? `<div class="palestra-mesa"><img src="${escaparHtml(versionarImagemLocal(item.mediadorFoto || 'assets/img/professor-teste_1.png'))}" alt="Foto de ${escaparHtml(item.mediador)}"><div><strong>${escaparHtml(item.mediador)}</strong><small>${escaparHtml(item.mediadorCargo || 'Mediação')}</small></div></div>` : '';
     return `<div class="carousel-card schedule-card schedule-card-palestra">
         <div class="palestra-capa"><img src="${imagemAtividade(item, 'assets/img/palestrante-teste.png')}" alt="Foto de ${escaparHtml(item.convidado || item.titulo)}"><div class="palestra-capa-topo">${horarioCard(item)}<span class="type-tag palestra">Palestra</span></div></div>
         <div class="palestra-corpo"><div class="palestra-identidade"><h3>${escaparHtml(item.convidado || item.titulo)}</h3><p>${escaparHtml(item.convidadoCargo)}</p></div><div class="palestra-conteudo"><h4>${escaparHtml(tema)}</h4>${explicacao ? `<p>${escaparHtml(explicacao)}</p>` : ''}${biografia}</div>${mediacao}</div>
@@ -98,7 +105,7 @@ function renderizarPalestra(item) {
 
 function renderizarOficina(item) {
     const biografia = item.oficineiroBio ? `<div class="palestra-biografia"><strong>Sobre quem ministra</strong><p>${escaparHtml(item.oficineiroBio)}</p></div>` : '';
-    const fotoOficineiro = escaparHtml(item.oficineiroFoto || 'assets/img/professor-teste_1.png');
+    const fotoOficineiro = escaparHtml(versionarImagemLocal(item.oficineiroFoto || 'assets/img/professor-teste_1.png'));
     const ministrante = item.oficineiro ? `<div class="palestra-mesa oficina-ministrante"><img src="${fotoOficineiro}" alt="Foto de ${escaparHtml(item.oficineiro)}"><div><strong>${escaparHtml(item.oficineiro)}</strong><small>${escaparHtml(item.oficineiroCargo)}</small></div></div>` : '';
     return `<div class="carousel-card schedule-card schedule-card-oficina">
         <div class="palestra-capa oficina-capa"><img src="${imagemAtividade(item, 'assets/img/oficina-levantamento.png')}" alt="Imagem de ${escaparHtml(item.titulo)}"><div class="palestra-capa-topo">${horarioCard(item)}<span class="type-tag oficina">Oficina</span></div></div>
