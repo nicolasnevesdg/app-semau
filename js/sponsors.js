@@ -37,6 +37,8 @@ const linksPatrocinadores = {
     "euphoria-atelie.png": "https://www.instagram.com/euphoriaatelie_/",
     // Canson
     "canson.png": "https://www.instagram.com/cansonbr/",
+    // Arqstream
+    "arqstream.png": "https://www.instagram.com/arqstream/",
 };
 
 document.querySelectorAll("[data-patrocinador]").forEach(link => {

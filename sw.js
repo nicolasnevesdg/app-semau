@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v176-novos-patrocinadores';
+const CACHE_NAME = 'semau-v177-arqstream';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -124,7 +124,8 @@ const assetsToCache = [
     './assets/patrocinadores/fireprint.png',
     './assets/patrocinadores/aura.png',
     './assets/patrocinadores/euphoria-atelie.png',
-    './assets/patrocinadores/canson.png'
+    './assets/patrocinadores/canson.png',
+    './assets/patrocinadores/arqstream.png'
 ];
 
 self.addEventListener('install', event => {

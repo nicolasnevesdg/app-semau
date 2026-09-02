@@ -4,7 +4,8 @@ const patrocinadores = [
     ['venus-artesa.png', 'Vênus Artesã'], ['studio3-papelaria.png', 'Studio 3 Papelaria'], ['jardim-de-papel.png', 'Jardim de Papel'],
     ['mare-logo.png', 'Maré'], ['belas-artes.png', 'Belas Artes'], ['nut-acessorios.png', 'Nut Acessórios'],
     ['manufatura-atelie.png', 'Manufatura Ateliê'], ['precinho-ruralino.png', 'Ruralino'], ['fireprint.png', 'Fireprint Gráfica'],
-    ['aura.png', 'Arquitetura Aura'], ['euphoria-atelie.png', 'Euphoria Ateliê'], ['canson.png', 'Canson']
+    ['aura.png', 'Arquitetura Aura'], ['euphoria-atelie.png', 'Euphoria Ateliê'], ['canson.png', 'Canson'],
+    ['arqstream.png', 'Arqstream']
 ];
 
 const roteiro = [
