@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v175-kit-segundo-lote-60';
+const CACHE_NAME = 'semau-v176-novos-patrocinadores';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -120,7 +120,11 @@ const assetsToCache = [
     './assets/patrocinadores/belas-artes.png',
     './assets/patrocinadores/nut-acessorios.png',
     './assets/patrocinadores/manufatura-atelie.png',
-    './assets/patrocinadores/precinho-ruralino.png'
+    './assets/patrocinadores/precinho-ruralino.png',
+    './assets/patrocinadores/fireprint.png',
+    './assets/patrocinadores/aura.png',
+    './assets/patrocinadores/euphoria-atelie.png',
+    './assets/patrocinadores/canson.png'
 ];
 
 self.addEventListener('install', event => {

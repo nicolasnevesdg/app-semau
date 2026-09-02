@@ -29,6 +29,14 @@ const linksPatrocinadores = {
     "manufatura-atelie.png": "https://www.instagram.com/manufatur.a/",
     // Ruralino
     "precinho-ruralino.png": "https://www.instagram.com/ruralino.rj/",
+    // Fireprint Gráfica
+    "fireprint.png": "https://www.instagram.com/fireprintgrafica/",
+    // Arquitetura Aura
+    "aura.png": "https://www.instagram.com/arquitetura_aura/",
+    // Euphoria Ateliê
+    "euphoria-atelie.png": "https://www.instagram.com/euphoriaatelie_/",
+    // Canson
+    "canson.png": "https://www.instagram.com/cansonbr/",
 };
 
 document.querySelectorAll("[data-patrocinador]").forEach(link => {
