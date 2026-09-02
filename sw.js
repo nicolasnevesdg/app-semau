@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v174-checkout-unico';
+const CACHE_NAME = 'semau-v175-kit-segundo-lote-60';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
