@@ -42,6 +42,15 @@
     margin-left: -24px;
     overflow: hidden;
     position: relative;
+    cursor: grab;
+    touch-action: pan-y pinch-zoom;
+    overscroll-behavior-x: contain;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.marquee-patrocinadores.arrastando {
+    cursor: grabbing;
 }
 
 .marquee-patrocinadores::before,
@@ -72,6 +81,17 @@
     width: max-content;
     padding: 6px 24px 10px;
     animation: mover-faixa-marcas 28s linear infinite;
+}
+
+.marquee-patrocinadores.carrossel-interativo .marquee-patrocinadores-faixa {
+    animation: none;
+    will-change: transform;
+}
+
+@media (hover: hover) {
+    .marquee-patrocinadores:hover .marquee-patrocinadores-faixa {
+        animation-play-state: paused;
+    }
 }
 
 
@@ -109,6 +129,8 @@
     max-height: 100px;
     display: block;
     object-fit: contain;
+    pointer-events: none;
+    -webkit-user-drag: none;
 }
 @keyframes mover-faixa-marcas {
     from { transform: translateX(0); }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v179-novos-patrocinadores';
+const CACHE_NAME = 'semau-v180-carrossel-patrocinadores';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
