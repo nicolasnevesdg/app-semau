@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v177-arqstream';
+const CACHE_NAME = 'semau-v178-doce-carol';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -110,14 +110,11 @@ const assetsToCache = [
     './assets/patrocinadores/logifab.png',
     './assets/patrocinadores/voitto.png',
     './assets/patrocinadores/peanuts-bakery.png',
-    './assets/patrocinadores/gastrobarr-vo-sacasa-clara.png',
     './assets/patrocinadores/studio3-papelaria.png',
     './assets/patrocinadores/choco-latte.png',
     './assets/patrocinadores/venus-artesa.png',
     './assets/patrocinadores/cura-marca-branco.png',
     './assets/patrocinadores/jardim-de-papel.png',
-    './assets/patrocinadores/mare-logo.png',
-    './assets/patrocinadores/belas-artes.png',
     './assets/patrocinadores/nut-acessorios.png',
     './assets/patrocinadores/manufatura-atelie.png',
     './assets/patrocinadores/precinho-ruralino.png',
@@ -125,7 +122,8 @@ const assetsToCache = [
     './assets/patrocinadores/aura.png',
     './assets/patrocinadores/euphoria-atelie.png',
     './assets/patrocinadores/canson.png',
-    './assets/patrocinadores/arqstream.png'
+    './assets/patrocinadores/arqstream.png',
+    './assets/patrocinadores/doce-carol.png'
 ];
 
 self.addEventListener('install', event => {

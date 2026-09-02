@@ -11,18 +11,12 @@ const linksPatrocinadores = {
     "peanuts-bakery.png": "https://www.instagram.com/peanuts.bak/",
     // Choco Latte
     "choco-latte.png": "https://www.instagram.com/choco.chocolatie/",
-    // Gastrobar Vó Sacasa Clara
-    "gastrobarr-vo-sacasa-clara.png": "https://www.instagram.com/gastrobarvosacasa/",
     // Vênus Artesã
     "venus-artesa.png": "https://www.instagram.com/venusartesa/",
     // Studio 3 Papelaria
     "studio3-papelaria.png": "https://www.instagram.com/studio3.papelaria/",
     // Jardim de Papel
     "jardim-de-papel.png": "https://www.instagram.com/jardim_d_papel/",
-    // Maré
-    "mare-logo.png": "https://www.instagram.com/mare.crochet_/",
-    // Belas Artes
-    "belas-artes.png": "https://www.instagram.com/belasartesoficiall/",
     // Nut Acessórios
     "nut-acessorios.png": "https://www.instagram.com/nutacessorios_/",
     // Manufatura Ateliê
@@ -39,6 +33,8 @@ const linksPatrocinadores = {
     "canson.png": "https://www.instagram.com/cansonbr/",
     // Arqstream
     "arqstream.png": "https://www.instagram.com/arqstream/",
+    // Doce Carol
+    "doce-carol.png": "https://www.instagram.com/_doce_carol/",
 };
 
 document.querySelectorAll("[data-patrocinador]").forEach(link => {
