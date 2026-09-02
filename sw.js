@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v180-carrossel-patrocinadores';
+const CACHE_NAME = 'semau-v181-fotos-cronograma';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -70,6 +70,10 @@ const assetsToCache = [
     './assets/palestrantes/roberto-cruz.png',
     './assets/palestrantes/pedro-rajao.png',
     './assets/palestrantes/veronica-natividade.png',
+    './assets/palestrantes/beatriz-fraga.png',
+    './assets/palestrantes/urbanas.png',
+    './assets/professores/denise.png',
+    './assets/professores/sofia-eder.png',
     './assets/img/palestrante-teste.png',
     './assets/img/professor-teste_1.png',
     './assets/img/oficina-levantamento.png',
