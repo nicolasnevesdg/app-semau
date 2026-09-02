@@ -17,8 +17,6 @@ const linksPatrocinadores = {
     "studio3-papelaria.png": "https://www.instagram.com/studio3.papelaria/",
     // Jardim de Papel
     "jardim-de-papel.png": "https://www.instagram.com/jardim_d_papel/",
-    // Nut Acessórios
-    "nut-acessorios.png": "https://www.instagram.com/nutacessorios_/",
     // Manufatura Ateliê
     "manufatura-atelie.png": "https://www.instagram.com/manufatur.a/",
     // Ruralino
@@ -35,6 +33,10 @@ const linksPatrocinadores = {
     "arqstream.png": "https://www.instagram.com/arqstream/",
     // Doce Carol
     "doce-carol.png": "https://www.instagram.com/_doce_carol/",
+    // Só Fachada Podcast
+    "so-fachada.png": "https://www.instagram.com/sofachadapodcast/",
+    // JM Sacolé Gourmet
+    "jm.png": "https://www.instagram.com/jmsacolegourmet21/",
 };
 
 document.querySelectorAll("[data-patrocinador]").forEach(link => {

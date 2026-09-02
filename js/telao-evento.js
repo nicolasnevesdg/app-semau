@@ -2,10 +2,10 @@ const patrocinadores = [
     ['logifab.png', 'Logifab'], ['voitto.png', 'Voitto'], ['cura-marca-branco.png', 'Cura'],
     ['peanuts-bakery.png', 'Peanuts Bakery'], ['choco-latte.png', 'Choco Latte'],
     ['venus-artesa.png', 'Vênus Artesã'], ['studio3-papelaria.png', 'Studio 3 Papelaria'], ['jardim-de-papel.png', 'Jardim de Papel'],
-    ['nut-acessorios.png', 'Nut Acessórios'],
     ['manufatura-atelie.png', 'Manufatura Ateliê'], ['precinho-ruralino.png', 'Ruralino'], ['fireprint.png', 'Fireprint Gráfica'],
     ['aura.png', 'Arquitetura Aura'], ['euphoria-atelie.png', 'Euphoria Ateliê'], ['canson.png', 'Canson'],
-    ['arqstream.png', 'Arqstream'], ['doce-carol.png', 'Doce Carol']
+    ['arqstream.png', 'Arqstream'], ['doce-carol.png', 'Doce Carol'], ['so-fachada.png', 'Só Fachada Podcast'],
+    ['jm.png', 'JM Sacolé Gourmet']
 ];
 
 const roteiro = [
