@@ -164,29 +164,49 @@ form.addEventListener("submit", async event => {
     if (!form.reportValidity()) return;
 
     const dados = new FormData(form);
+    const dadosCompra = {
+        nome: dados.get("nome"),
+        email: dados.get("email"),
+        telefone: dados.get("telefone"),
+        instituicao: dados.get("instituicao"),
+        matricula: dados.get("matricula"),
+        curso: dados.get("curso"),
+        periodo: dados.get("periodo"),
+        loteIngresso: loteSelecionado,
+        tipoIngresso: dados.get("tipoIngresso"),
+        aceite: dados.get("aceite") === "on"
+    };
     botao.disabled = true;
     botao.textContent = "Preparando pagamento...";
 
     try {
-        const resposta = await criarPreferencia({
-            nome: dados.get("nome"),
-            email: dados.get("email"),
-            telefone: dados.get("telefone"),
-            instituicao: dados.get("instituicao"),
-            matricula: dados.get("matricula"),
-            curso: dados.get("curso"),
-            periodo: dados.get("periodo"),
-            loteIngresso: loteSelecionado,
-            tipoIngresso: dados.get("tipoIngresso"),
-            aceite: dados.get("aceite") === "on"
-        });
+        const resposta = await criarPreferencia(dadosCompra);
 
         if (!resposta.data?.checkoutUrl) throw new Error("URL de pagamento ausente.");
         window.location.assign(resposta.data.checkoutUrl);
     } catch (error) {
         console.error("Falha ao iniciar pagamento", error);
-        const mensagem = error?.message?.includes("lote")
-            ? error.message
+        if (error?.details?.motivo === "ingresso-ativo") {
+            const comprarOutro = window.confirm("Já existe um ingresso pago e ativo para este e-mail. Deseja realmente comprar outro ingresso usando o mesmo endereço?");
+            if (comprarOutro) {
+                try {
+                    botao.textContent = "Preparando compra adicional...";
+                    const respostaAdicional = await criarPreferencia({ ...dadosCompra, permitirCompraAdicional: true });
+                    if (!respostaAdicional.data?.checkoutUrl) throw new Error("URL de pagamento ausente.");
+                    window.location.assign(respostaAdicional.data.checkoutUrl);
+                    return;
+                } catch (erroAdicional) {
+                    console.error("Falha ao iniciar compra adicional", erroAdicional);
+                    mostrarStatus("Não foi possível iniciar a compra adicional agora. Tente novamente.");
+                    botao.disabled = false;
+                    botao.innerHTML = textoBotaoPadrao;
+                    return;
+                }
+            }
+        }
+        const mensagemRecebida = String(error?.message || "");
+        const mensagem = /lote|já existe um ingresso|credencial/i.test(mensagemRecebida)
+            ? mensagemRecebida
             : "Não foi possível iniciar o pagamento agora. Tente novamente.";
         mostrarStatus(mensagem);
         botao.disabled = false;

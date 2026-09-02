@@ -164,10 +164,57 @@ function dadosPedido(dados, ingresso, expiraEm) {
     origem: "site",
     reservaEstoque,
     reservaExpiraEm: reservaEstoque ? expiraEm : null,
+    checkoutExpiraEm: expiraEm,
     estoqueContabilizado: false,
     criadoEm: FieldValue.serverTimestamp(),
     atualizadoEm: FieldValue.serverTimestamp(),
   };
+}
+
+async function localizarCompraExistente(dados, permitirCompraAdicional = false) {
+  const [inscritosSnapshot, pedidosSnapshot] = await Promise.all([
+    db.collection("inscritos").where("email", "==", dados.email).limit(10).get(),
+    db.collection("pedidos").where("email", "==", dados.email).limit(20).get(),
+  ]);
+
+  const ingressoPagoAtivo = inscritosSnapshot.docs.some((documento) => {
+    const inscrito = documento.data();
+    return Boolean(inscrito.pedidoId) &&
+      inscrito.statusPagamento === "approved" &&
+      inscrito.ingressoAtivo !== false;
+  }) || pedidosSnapshot.docs.some((documento) => documento.data().status === "approved");
+  if (ingressoPagoAtivo && !permitirCompraAdicional) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Já existe um ingresso pago e ativo para este e-mail.",
+      { motivo: "ingresso-ativo" },
+    );
+  }
+
+  const agora = Date.now();
+  const pedidoPendente = pedidosSnapshot.docs
+    .map((documento) => ({ id: documento.id, ...documento.data() }))
+    .filter((pedido) => pedido.status === "pending" || pedido.status === "creating_preference")
+    .filter((pedido) => pedido.loteIngresso === dados.lote && pedido.tipoIngresso === dados.tipo)
+    .filter((pedido) => Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0) > agora && pedido.preferenceId)
+    .sort((a, b) => Number(b.checkoutExpiraEm || b.reservaExpiraEm || 0) - Number(a.checkoutExpiraEm || a.reservaExpiraEm || 0))[0];
+
+  if (!pedidoPendente) return null;
+  try {
+    const preferencia = await mercadoPago(`/checkout/preferences/${encodeURIComponent(pedidoPendente.preferenceId)}`);
+    const tokenDeTeste = mercadoPagoAccessToken.value().startsWith("TEST-");
+    const checkoutUrl = tokenDeTeste ? preferencia.sandbox_init_point : preferencia.init_point;
+    if (!checkoutUrl) return null;
+    return {
+      pedidoId: pedidoPendente.id,
+      checkoutUrl,
+      reservaExpiraEm: Number(pedidoPendente.checkoutExpiraEm || pedidoPendente.reservaExpiraEm),
+      reutilizado: true,
+    };
+  } catch (error) {
+    logger.warn("Não foi possível reutilizar o checkout pendente", { pedidoId: pedidoPendente.id, error: error.message });
+    return null;
+  }
 }
 
 async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
@@ -582,6 +629,11 @@ exports.criarPreferencia = onCall(
   async (request) => {
     const dados = validarDados(request.data || {});
     const ingresso = obterIngresso(dados.lote, dados.tipo);
+    const compraExistente = await localizarCompraExistente(
+      dados,
+      request.data?.permitirCompraAdicional === true,
+    );
+    if (compraExistente) return compraExistente;
     const pedidoRef = db.collection("pedidos").doc();
     const reservaExpiraEm = await criarPedidoComReserva(pedidoRef, dados, ingresso);
 
