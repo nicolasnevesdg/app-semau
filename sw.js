@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v183-instagram-oficial';
+const CACHE_NAME = 'semau-v184-fotos-convidados';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -74,6 +74,11 @@ const assetsToCache = [
     './assets/palestrantes/beatriz-fraga.png',
     './assets/palestrantes/urbanas.png',
     './assets/professores/denise.png',
+    './assets/professores/ana.png',
+    './assets/professores/bruna.png',
+    './assets/professores/juarez.png',
+    './assets/professores/lorena.png',
+    './assets/professores/samira.png',
     './assets/professores/sofia-eder.png',
     './assets/img/palestrante-teste.png',
     './assets/img/professor-teste_1.png',
