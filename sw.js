@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v182-fotos-cronograma-visiveis';
+const CACHE_NAME = 'semau-v183-instagram-oficial';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -23,6 +23,7 @@ const assetsToCache = [
     './css/admin-cronograma.css',
     './css/pagamento.css',
     './js/main.js',
+    './js/instagram-feed.js',
     './js/schedule.js',
     './js/install-app.js',
     './js/install-admin-app.js',

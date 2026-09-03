@@ -12,6 +12,7 @@ const db = getFirestore();
 const mercadoPagoAccessToken = defineSecret("MERCADOPAGO_ACCESS_TOKEN");
 const mercadoPagoWebhookSecret = defineSecret("MERCADOPAGO_WEBHOOK_SECRET");
 const emailJsPrivateKey = defineSecret("EMAILJS_PRIVATE_KEY");
+const instagramAccessToken = defineSecret("INSTAGRAM_ACCESS_TOKEN");
 const SITE_ORIGINS = ["https://semau.space", "https://www.semau.space"];
 const TOKEN_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REGION = "southamerica-east1";
@@ -28,6 +29,9 @@ const DURACAO_RESERVA_MS = DURACAO_CHECKOUT_MS;
 const STATUS_FINAIS_SEM_PAGAMENTO = new Set(["rejected", "cancelled", "refunded", "charged_back"]);
 const configuracaoGeralRef = db.collection("configuracoes").doc("geral");
 const estoqueIngressosRef = db.collection("configuracoes").doc("estoqueIngressos");
+const instagramFeedRef = db.collection("configuracoes").doc("instagramFeed");
+const INSTAGRAM_API_VERSION = "v25.0";
+const INSTAGRAM_PROFILE_URL = "https://www.instagram.com/semauufrrj/";
 
 const TIPOS_INGRESSO = Object.freeze({
   normal: Object.freeze({
@@ -788,6 +792,102 @@ function eventoDe2026() {
   const ano = new Intl.DateTimeFormat("en", { year: "numeric", timeZone: "America/Sao_Paulo" }).format(new Date());
   return ano === "2026";
 }
+
+async function consultarInstagram(caminho, parametros, token) {
+  const url = new URL(`https://graph.instagram.com/${INSTAGRAM_API_VERSION}/${caminho}`);
+  Object.entries(parametros).forEach(([chave, valor]) => url.searchParams.set(chave, valor));
+  const resposta = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const corpo = await resposta.json().catch(() => ({}));
+  if (!resposta.ok || corpo.error) {
+    const mensagem = texto(corpo?.error?.message || `Instagram respondeu com status ${resposta.status}`, 240);
+    throw new Error(mensagem);
+  }
+  return corpo;
+}
+
+function urlInstagramSegura(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function numeroInstagram(value) {
+  const numero = Number(value);
+  return Number.isFinite(numero) && numero >= 0 ? Math.round(numero) : null;
+}
+
+async function sincronizarFeedInstagram() {
+  const token = instagramAccessToken.value();
+  if (!token) throw new Error("O token do Instagram ainda não foi configurado.");
+
+  try {
+    const perfil = await consultarInstagram("me", {
+      fields: "user_id,username,name,profile_picture_url,followers_count,follows_count,media_count",
+    }, token);
+    const usuarioId = texto(perfil.user_id || perfil.id, 80);
+    if (!usuarioId) throw new Error("O Instagram não devolveu o identificador da conta.");
+
+    const midias = await consultarInstagram(`${usuarioId}/media`, {
+      fields: "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp",
+      limit: "18",
+    }, token);
+    const publicacoes = (Array.isArray(midias.data) ? midias.data : [])
+      .map((item) => ({
+        id: texto(item.id, 100),
+        legenda: String(item.caption || "").trim().slice(0, 2200),
+        tipo: ["IMAGE", "VIDEO", "CAROUSEL_ALBUM"].includes(item.media_type) ? item.media_type : "IMAGE",
+        imagem: urlInstagramSegura(item.media_type === "VIDEO" ? item.thumbnail_url : item.media_url),
+        link: urlInstagramSegura(item.permalink),
+        publicadoEm: texto(item.timestamp, 40) || null,
+      }))
+      .filter((item) => item.id && item.imagem && item.link);
+
+    if (!publicacoes.length) throw new Error("Nenhuma publicação com imagem foi devolvida pelo Instagram.");
+
+    await instagramFeedRef.set({
+      status: "ativo",
+      perfil: {
+        nome: texto(perfil.name, 120) || "XVI SEMAU UFRRJ",
+        usuario: texto(perfil.username, 80) || "semauufrrj",
+        foto: urlInstagramSegura(perfil.profile_picture_url),
+        publicacoes: numeroInstagram(perfil.media_count),
+        seguidores: numeroInstagram(perfil.followers_count),
+        seguindo: numeroInstagram(perfil.follows_count),
+        url: INSTAGRAM_PROFILE_URL,
+      },
+      publicacoes,
+      ultimaAtualizacao: FieldValue.serverTimestamp(),
+      ultimaTentativa: FieldValue.serverTimestamp(),
+      ultimoErro: FieldValue.delete(),
+    }, { merge: true });
+    logger.info("Feed do Instagram atualizado.", { publicacoes: publicacoes.length });
+  } catch (error) {
+    await instagramFeedRef.set({
+      status: "erro",
+      ultimaTentativa: FieldValue.serverTimestamp(),
+      ultimoErro: texto(error.message, 240),
+    }, { merge: true });
+    throw error;
+  }
+}
+
+exports.sincronizarInstagram = onSchedule(
+  {
+    region: REGION,
+    schedule: "every 2 hours",
+    timeZone: "America/Sao_Paulo",
+    maxInstances: 1,
+    secrets: [instagramAccessToken],
+  },
+  async () => {
+    await sincronizarFeedInstagram();
+  },
+);
 
 exports.abrirLoteSocial = onSchedule(
   {

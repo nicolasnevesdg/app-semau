@@ -1177,6 +1177,189 @@ body.acesso-cronograma-completo #container-fase2 {
     cursor: default;
 }
 
+/* Feed próprio abastecido pela API oficial do Instagram. */
+.instagram-section-feed-oficial {
+    height: auto;
+    min-height: 702px;
+}
+
+.insta-feed-container-oficial {
+    display: block;
+    background: #f8f9fa;
+}
+
+.instagram-feed-oficial {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f8f9fa;
+    color: #161616;
+}
+
+.instagram-feed-perfil {
+    padding: 22px 16px 20px;
+    text-align: center;
+}
+
+.instagram-feed-identidade {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.instagram-feed-avatar-moldura {
+    width: 67px;
+    height: 67px;
+    flex: 0 0 67px;
+    padding: 3px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f9ce34, #ee2a7b 55%, #6228d7);
+}
+
+.instagram-feed-avatar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 3px;
+    object-fit: cover;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.instagram-feed-nomes {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.instagram-feed-nomes strong {
+    color: #151515;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.instagram-feed-nomes small {
+    margin-top: 3px;
+    color: #858585;
+    font-size: 14px;
+}
+
+.instagram-feed-estatisticas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-bottom: 17px;
+}
+
+.instagram-feed-estatistica {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.instagram-feed-estatistica strong {
+    color: #111;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.instagram-feed-estatistica small {
+    margin-top: 2px;
+    color: #888;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.instagram-feed-seguir {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 24px;
+    border-radius: 5px;
+    background: #1597ea;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.instagram-feed-seguir i {
+    font-size: 20px;
+}
+
+.instagram-feed-grade {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    background: #fff;
+}
+
+.instagram-feed-publicacao {
+    position: relative;
+    display: block;
+    aspect-ratio: 1 / 1.24;
+    overflow: hidden;
+    background: #e8ebe9;
+}
+
+.instagram-feed-publicacao img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.instagram-feed-publicacao:active img {
+    transform: scale(1.035);
+}
+
+.instagram-feed-tipo {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    color: #fff;
+    font-size: 17px;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .45));
+}
+
+.instagram-feed-carregar {
+    width: calc(100% - 34px);
+    min-height: 43px;
+    margin: 21px 17px 23px;
+    border: 0;
+    border-radius: 5px;
+    background: #3398e8;
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+@media (max-width: 390px) {
+    .instagram-feed-perfil {
+        padding-inline: 10px;
+    }
+
+    .instagram-feed-avatar-moldura {
+        width: 59px;
+        height: 59px;
+        flex-basis: 59px;
+    }
+
+    .instagram-feed-nomes strong {
+        font-size: 17px;
+    }
+}
+
 /* Container que segura a tela toda do jogo */
 #view-runner-game {
     position: relative;
