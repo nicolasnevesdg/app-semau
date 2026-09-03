@@ -623,6 +623,39 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
   return resultado;
 }
 
+async function obterPagamentoJaConfirmado(pedidoId, paymentId) {
+  const [pedidoDoc, inscritoDoc] = await Promise.all([
+    db.collection("pedidos").doc(pedidoId).get(),
+    db.collection("inscritos").doc(pedidoId).get(),
+  ]);
+  if (!pedidoDoc.exists || !inscritoDoc.exists) return null;
+
+  const pedido = pedidoDoc.data();
+  const inscrito = inscritoDoc.data();
+  const paymentIdPedido = String(pedido.paymentId || "");
+  const paymentIdInscrito = String(inscrito.paymentId || "");
+  const pagamentoConfere = (!paymentIdPedido || paymentIdPedido === paymentId) &&
+    (!paymentIdInscrito || paymentIdInscrito === paymentId);
+  if (
+    !pagamentoConfere ||
+    pedido.status !== "approved" ||
+    inscrito.statusPagamento !== "approved" ||
+    inscrito.ingressoAtivo !== true ||
+    !inscrito.token
+  ) {
+    return null;
+  }
+
+  return {
+    pedidoId,
+    status: "approved",
+    aprovado: true,
+    token: inscrito.token,
+    nome: inscrito.nome || pedido.nome || null,
+    email: inscrito.email || pedido.email || null,
+  };
+}
+
 exports.criarPreferencia = onCall(
   {
     region: REGION,
@@ -719,6 +752,8 @@ exports.consultarPedido = onCall(
     }
 
     try {
+      const confirmado = await obterPagamentoJaConfirmado(pedidoId, paymentId);
+      if (confirmado) return confirmado;
       return await processarPagamento(paymentId, pedidoId);
     } catch (error) {
       logger.error("Falha ao consultar pedido", { pedidoId, paymentId, error: error.message });
