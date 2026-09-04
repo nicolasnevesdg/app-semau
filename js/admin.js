@@ -659,6 +659,7 @@ if(navAdConfigs) navAdConfigs.addEventListener('click', () => showAdminView(view
 const containerListaInscritos = document.getElementById('container-lista-inscritos');
 const adminBuscaLista = document.getElementById('admin-busca-lista');
 const adminFiltroModalidade = document.getElementById('admin-filtro-modalidade');
+const adminOrdenacaoLista = document.getElementById('admin-ordenacao-lista');
 const adminListaResultado = document.getElementById('admin-lista-resultado');
 const adminListaFiltroVazio = document.getElementById('admin-lista-filtro-vazio');
 const dashTotal = document.getElementById('dash-total');
@@ -828,11 +829,44 @@ function atualizarResumoModalidades(contagens = contagensVaziasDeInscritos()) {
     });
 }
 
+function dataEmMilissegundos(valor) {
+    if (!valor) return 0;
+    if (typeof valor.toMillis === 'function') return valor.toMillis();
+    if (typeof valor.toDate === 'function') return valor.toDate().getTime();
+    if (Number.isFinite(valor.seconds)) return (valor.seconds * 1000) + Math.floor((valor.nanoseconds || 0) / 1e6);
+    const data = new Date(valor);
+    return Number.isNaN(data.getTime()) ? 0 : data.getTime();
+}
+
+function compararNomeDosCards(cardA, cardB) {
+    return (cardA.dataset.nome || '').localeCompare(cardB.dataset.nome || '', 'pt-BR', { sensitivity: 'base' });
+}
+
+function ordenarCardsDaLista(cards) {
+    const ordenacao = adminOrdenacaoLista?.value || 'inscricao-desc';
+    return cards.sort((cardA, cardB) => {
+        if (ordenacao === 'nome-asc') return compararNomeDosCards(cardA, cardB);
+        if (ordenacao === 'pontos-desc') {
+            const diferenca = Number(cardB.dataset.pontos || 0) - Number(cardA.dataset.pontos || 0);
+            return diferenca || compararNomeDosCards(cardA, cardB);
+        }
+
+        const dataA = Number(cardA.dataset.inscricao || 0);
+        const dataB = Number(cardB.dataset.inscricao || 0);
+        if (!dataA && dataB) return 1;
+        if (dataA && !dataB) return -1;
+        const diferenca = ordenacao === 'inscricao-asc' ? dataA - dataB : dataB - dataA;
+        return diferenca || compararNomeDosCards(cardA, cardB);
+    });
+}
+
 function aplicarFiltrosDaLista() {
     const termo = textoNormalizadoParaFiltro(adminBuscaLista?.value);
     const categoriaSelecionada = adminFiltroModalidade?.value || 'todos';
     let visiveis = 0;
-    const cards = document.querySelectorAll('.card-aluno-lista');
+    const cards = ordenarCardsDaLista([...document.querySelectorAll('.card-aluno-lista')]);
+
+    cards.forEach(card => containerListaInscritos?.appendChild(card));
 
     cards.forEach(card => {
         const correspondeBusca = !termo || textoNormalizadoParaFiltro(`${card.dataset.nome} ${card.dataset.email}`).includes(termo);
@@ -842,8 +876,8 @@ function aplicarFiltrosDaLista() {
         if (visivel) visiveis++;
     });
 
+    const total = cards.length;
     if (adminListaResultado) {
-        const total = cards.length;
         adminListaResultado.textContent = categoriaSelecionada === 'todos' && !termo
             ? `${total} ${total === 1 ? 'inscrito' : 'inscritos'} na base`
             : `${visiveis} de ${total} ${total === 1 ? 'inscrito' : 'inscritos'} exibidos`;
@@ -1183,6 +1217,8 @@ async function carregarListaInscritos() {
             const nomeSeguro = textoDisponivel(dados.nome, 'Inscrito sem nome');
             const emailSeguro = textoDisponivel(dados.email, 'E-mail não informado');
             const tokenSeguro = textoDisponivel(dados.token, '-----');
+            const pontos = Math.max(0, Number(dados.pontos) || 0);
+            const dataInscricao = dataEmMilissegundos(dados.criadoEm);
             const emailJaEnviado = dados.emailIngressoStatus === 'enviado' || Boolean(dados.emailIngressoEnviadoEm);
             
             const turnos = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
@@ -1194,7 +1230,7 @@ async function carregarListaInscritos() {
             const oficinasFormatadas = dados.oficinas && dados.oficinas.length > 0 ? dados.oficinas.join(' | ') : 'Nenhuma';
             
             dadosParaExcel.push({
-                "Nome Completo": dados.nome, "E-mail": dados.email, "Token": dados.token,
+                "Nome Completo": dados.nome, "E-mail": dados.email, "Token": dados.token, "Pontos": pontos,
                 "Oficinas Inscritas": oficinasFormatadas, "Presença (%)": porcentagem + "%",
                 "21/Set (Manhã)": dados.d21_m ? "Presente" : "Falta", "21/Set (Tarde)": dados.d21_t ? "Presente" : "Falta",
                 "22/Set (Manhã)": dados.d22_m ? "Presente" : "Falta", "22/Set (Tarde)": dados.d22_t ? "Presente" : "Falta",
@@ -1205,7 +1241,7 @@ async function carregarListaInscritos() {
 
             // NOVO HTML DO CARTÃO - Estilo Minimalista
             const cardHTML = `
-                <div class="card-aluno-lista" data-inscrito-id="${escaparHtml(docSnap.id)}" data-nome="${escaparHtml(nomeSeguro.toLowerCase())}" data-email="${escaparHtml(emailSeguro.toLowerCase())}" data-categoria="${categoria}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div class="card-aluno-lista" data-inscrito-id="${escaparHtml(docSnap.id)}" data-nome="${escaparHtml(nomeSeguro.toLowerCase())}" data-email="${escaparHtml(emailSeguro.toLowerCase())}" data-categoria="${categoria}" data-pontos="${pontos}" data-inscricao="${dataInscricao}" style="background: #fff; border: 1px solid #e8e8eb; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
                     
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                         <p style="margin: 0; font-size: 18px; font-weight: 800; color: var(--cor-primaria); line-height: 1.2; word-break: break-word;">${escaparHtml(nomeSeguro)}</p>
@@ -1218,6 +1254,7 @@ async function carregarListaInscritos() {
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-envelope-simple"></i> ${escaparHtml(emailSeguro)}</p>
                         <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-key"></i> Token: <strong style="color: var(--cor-secundaria); font-family: var(--fonte-textos); letter-spacing: 2px;">${escaparHtml(tokenSeguro)}</strong></p>
+                        <p style="margin: 0; font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px;"><i class="ph-bold ph-star"></i> Pontos: <strong style="color: var(--cor-primaria); font-family: var(--fonte-textos);">${pontos}</strong></p>
                     </div>
                     
                     <div style="background: #f9f9fb; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f0f0f5;">
@@ -1269,6 +1306,7 @@ if (adminBuscaLista) {
 }
 
 adminFiltroModalidade?.addEventListener('change', aplicarFiltrosDaLista);
+adminOrdenacaoLista?.addEventListener('change', aplicarFiltrosDaLista);
 
 if (containerListaInscritos) {
     containerListaInscritos.addEventListener('click', async (e) => {

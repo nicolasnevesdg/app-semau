@@ -57,7 +57,7 @@
     .resumo-modalidade span { display: block; color: #767a76; font-size: 10px; font-weight: 800; line-height: 1.3; letter-spacing: .4px; text-transform: uppercase; }
     .resumo-modalidade strong { display: block; margin-top: 5px; color: var(--cor-primaria); font-size: 23px; line-height: 1; }
     .resumo-modalidade-outros { background: #fff8f2; border-color: #f4dfcf; }
-    .filtro-inscritos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 24px; }
+    .filtro-inscritos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
     .filtro-inscritos label { min-width: 0; }
     .filtro-inscritos label > span { display: block; margin: 0 0 7px; color: #696d69; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
     .filtro-inscritos .admin-input { margin: 0; }
@@ -351,6 +351,15 @@
                     </select>
                 </label>
                 <label>
+                    <span>Ordenar por</span>
+                    <select id="admin-ordenacao-lista" class="admin-input">
+                        <option value="inscricao-desc">Inscrição mais recente</option>
+                        <option value="inscricao-asc">Inscrição mais antiga</option>
+                        <option value="nome-asc">Nome de A a Z</option>
+                        <option value="pontos-desc">Maior pontuação</option>
+                    </select>
+                </label>
+                <label>
                     <span>Buscar inscrito</span>
                     <input type="search" id="admin-busca-lista" class="admin-input" placeholder="Nome ou e-mail">
                 </label>
@@ -553,7 +562,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/admin.js?v=20260903-1"></script>
+  <script type="module" src="js/admin.js?v=20260903-2"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>
