@@ -1153,6 +1153,12 @@ function renderizarOficinasFicha(oficinasSelecionadas = []) {
         checkbox.value = idOficina;
         checkbox.dataset.fichaOficina = '';
         checkbox.checked = selecionadas.has(idOficina);
+        checkbox.addEventListener('change', () => {
+            const acao = checkbox.checked ? 'INSCREVER o participante em' : 'REMOVER o participante de';
+            if (!confirm(`Tem certeza que deseja ${acao} ${rotuloOficina(idOficina)}?`)) {
+                checkbox.checked = !checkbox.checked;
+            }
+        });
 
         const textos = document.createElement('span');
         const titulo = document.createElement('strong');
