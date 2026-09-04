@@ -578,10 +578,10 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
         ingressoAtivo: true,
         statusPagamento: statusRecebido,
         d21_m: false, d21_t: false,
-        d22_m: false, d22_t: false,
+        d22_m: false,
         d23_m: false, d23_t: false,
-        d24_m: false, d24_t: false,
-        d25_m: false, d25_t: false,
+        d24_m: false,
+        d25_m: false,
         criadoEm: FieldValue.serverTimestamp(),
         atualizadoEm: FieldValue.serverTimestamp(),
       });

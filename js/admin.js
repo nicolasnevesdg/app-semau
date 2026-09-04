@@ -102,10 +102,10 @@ if (btnAdminCadastrar) {
                 token: tokenGerado,
                 pontos: 0,
                 d21_m: false, d21_t: false,
-                d22_m: false, d22_t: false,
+                d22_m: false,
                 d23_m: false, d23_t: false,
-                d24_m: false, d24_t: false,
-                d25_m: false, d25_t: false
+                d24_m: false,
+                d25_m: false
             });
 
             if(adminTokenGerado) adminTokenGerado.textContent = tokenGerado;
@@ -411,7 +411,7 @@ if (btnAdminSortear) {
                 let temPresenca = false;
 
                 if (turnoEscolhido === 'qualquer') {
-                    temPresenca = dados.d21_m || dados.d21_t || dados.d22_m || dados.d22_t || dados.d23_m || dados.d23_t || dados.d24_m || dados.d24_t || dados.d25_m || dados.d25_t;
+                    temPresenca = TURNOS_PRESENCA.some(turno => dados[turno] === true);
                 } else {
                     temPresenca = dados[turnoEscolhido] === true;
                 }
@@ -667,13 +667,13 @@ const btnExportarExcel = document.getElementById('btn-exportar-excel');
 
 let dadosParaExcel = [];
 const inscritosPorId = new Map();
-const TURNOS_PRESENCA = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
+const TURNOS_PRESENCA = ['d21_m', 'd21_t', 'd22_m', 'd23_m', 'd23_t', 'd24_m', 'd25_m'];
 const NOMES_TURNOS = {
     d21_m: '21/Set · Manhã', d21_t: '21/Set · Tarde',
-    d22_m: '22/Set · Manhã', d22_t: '22/Set · Tarde',
+    d22_m: '22/Set · Manhã',
     d23_m: '23/Set · Manhã', d23_t: '23/Set · Tarde',
-    d24_m: '24/Set · Manhã', d24_t: '24/Set · Tarde',
-    d25_m: '25/Set · Manhã', d25_t: '25/Set · Tarde'
+    d24_m: '24/Set · Manhã',
+    d25_m: '25/Set · Manhã'
 };
 
 const modalFichaInscrito = document.getElementById('modal-ficha-inscrito');
@@ -1073,12 +1073,12 @@ function abrirFichaInscrito(idInscrito) {
     adicionarCampoFicha(fichaDadosIngresso, 'ID do pagamento', dados.paymentId, { largo: true });
 
     const presencasConfirmadas = TURNOS_PRESENCA.filter(turno => dados[turno] === true);
-    const porcentagem = (presencasConfirmadas.length / TURNOS_PRESENCA.length) * 100;
+    const porcentagem = Math.round((presencasConfirmadas.length / TURNOS_PRESENCA.length) * 100);
     fichaResumoPresenca.replaceChildren();
     const legendaPresenca = document.createElement('span');
     legendaPresenca.textContent = 'Presença confirmada';
     const valorPresenca = document.createElement('strong');
-    valorPresenca.textContent = `${porcentagem}% (${presencasConfirmadas.length}/10)`;
+    valorPresenca.textContent = `${porcentagem}% (${presencasConfirmadas.length}/${TURNOS_PRESENCA.length})`;
     fichaResumoPresenca.append(legendaPresenca, valorPresenca);
 
     adicionarCampoFicha(fichaDadosEvento, 'Turnos presentes', presencasConfirmadas.map(turno => NOMES_TURNOS[turno]).join(' · ') || 'Nenhum', { largo: true });
@@ -1221,11 +1221,10 @@ async function carregarListaInscritos() {
             const dataInscricao = dataEmMilissegundos(dados.criadoEm);
             const emailJaEnviado = dados.emailIngressoStatus === 'enviado' || Boolean(dados.emailIngressoEnviadoEm);
             
-            const turnos = ['d21_m', 'd21_t', 'd22_m', 'd22_t', 'd23_m', 'd23_t', 'd24_m', 'd24_t', 'd25_m', 'd25_t'];
             let presencasConfirmadas = 0;
-            turnos.forEach(t => { if(dados[t] === true) presencasConfirmadas++; });
-            
-            const porcentagem = (presencasConfirmadas / 10) * 100;
+            TURNOS_PRESENCA.forEach(t => { if(dados[t] === true) presencasConfirmadas++; });
+
+            const porcentagem = Math.round((presencasConfirmadas / TURNOS_PRESENCA.length) * 100);
             const corPorcentagem = porcentagem >= 75 ? '#2ecc71' : '#e06d53';
             const oficinasFormatadas = dados.oficinas && dados.oficinas.length > 0 ? dados.oficinas.join(' | ') : 'Nenhuma';
             
@@ -1233,10 +1232,10 @@ async function carregarListaInscritos() {
                 "Nome Completo": dados.nome, "E-mail": dados.email, "Token": dados.token, "Pontos": pontos,
                 "Oficinas Inscritas": oficinasFormatadas, "Presença (%)": porcentagem + "%",
                 "21/Set (Manhã)": dados.d21_m ? "Presente" : "Falta", "21/Set (Tarde)": dados.d21_t ? "Presente" : "Falta",
-                "22/Set (Manhã)": dados.d22_m ? "Presente" : "Falta", "22/Set (Tarde)": dados.d22_t ? "Presente" : "Falta",
+                "22/Set (Manhã)": dados.d22_m ? "Presente" : "Falta",
                 "23/Set (Manhã)": dados.d23_m ? "Presente" : "Falta", "23/Set (Tarde)": dados.d23_t ? "Presente" : "Falta",
-                "24/Set (Manhã)": dados.d24_m ? "Presente" : "Falta", "24/Set (Tarde)": dados.d24_t ? "Presente" : "Falta",
-                "25/Set (Manhã)": dados.d25_m ? "Presente" : "Falta", "25/Set (Tarde)": dados.d25_t ? "Presente" : "Falta"
+                "24/Set (Manhã)": dados.d24_m ? "Presente" : "Falta",
+                "25/Set (Manhã)": dados.d25_m ? "Presente" : "Falta"
             });
 
             // NOVO HTML DO CARTÃO - Estilo Minimalista
@@ -1259,7 +1258,7 @@ async function carregarListaInscritos() {
                     
                     <div style="background: #f9f9fb; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f0f0f5;">
                         <span style="font-size: 13px; font-weight: 600; color: #888;">📊 Presença</span>
-                        <strong style="color: ${corPorcentagem}; font-size: 14px;">${porcentagem}% <span style="font-size: 11px; opacity: 0.6; font-weight: 600;">(${presencasConfirmadas}/10)</span></strong>
+                        <strong style="color: ${corPorcentagem}; font-size: 14px;">${porcentagem}% <span style="font-size: 11px; opacity: 0.6; font-weight: 600;">(${presencasConfirmadas}/${TURNOS_PRESENCA.length})</span></strong>
                     </div>
                     
                     <button type="button" class="btn-ficha-inscrito" data-inscrito-id="${docSnap.id}">
