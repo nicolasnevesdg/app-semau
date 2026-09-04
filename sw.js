@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v190-confirmacao-oficinas';
+const CACHE_NAME = 'semau-v191-checkin-contingencia';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [

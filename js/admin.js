@@ -54,7 +54,6 @@ const btnAbrirTelaoEvento = document.getElementById('btn-abrir-telao-evento');
 const statusTelao = document.getElementById('status-telao');
 
 let idAlunoSelecionado = null;
-let ultimaBuscaPorQr = false;
 let alunoCheckinAtual = null;
 let credencialCheckinAtual = { tipo: 'consulta', oficinaId: null };
 const INTERVALO_QR_MS = 30000;
@@ -96,6 +95,9 @@ function interpretarConteudoQr(valor) {
                 oficinaId: oficinaLegada[2],
                 legado: true
             };
+        }
+        if (/^[A-Z0-9]{5}$/i.test(texto)) {
+            return { valido: true, busca: texto.toLowerCase(), origemQr: false, tipoCredencial: 'token_manual' };
         }
         return { valido: true, busca: texto.toLowerCase(), origemQr: false, tipoCredencial: 'consulta' };
     }
@@ -260,7 +262,6 @@ if (btnAdminBuscar) {
     btnAdminBuscar.addEventListener('click', async () => {
         const leitura = interpretarConteudoQr(adminBuscaPax.value);
         if (!leitura.valido) {
-            ultimaBuscaPorQr = false;
             credencialCheckinAtual = { tipo: 'consulta', oficinaId: null };
             alunoCheckinAtual = null;
             mostrarStatusQr(leitura.mensagem, false);
@@ -269,7 +270,6 @@ if (btnAdminBuscar) {
         }
         const busca = leitura.busca;
         if (!busca) return;
-        ultimaBuscaPorQr = leitura.origemQr;
         if (leitura.origemQr) {
             const horario = leitura.geradoEm
                 ? `, gerado às ${leitura.geradoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
@@ -329,6 +329,8 @@ function atualizarEscopoCheckin(credencial) {
         adminEscopoCheckin.textContent = 'Ingresso geral lido: somente os turnos de palestras estão habilitados.';
     } else if (credencial.tipo === 'oficina') {
         adminEscopoCheckin.textContent = `${rotuloOficina(credencial.oficinaId)} lida: somente esta oficina está habilitada.`;
+    } else if (credencial.tipo === 'token_manual') {
+        adminEscopoCheckin.textContent = 'Modo de contingência por token: turnos e oficinas inscritas estão habilitados.';
     } else if (credencial.tipo === 'invalida') {
         adminEscopoCheckin.textContent = 'Este ingresso de oficina não pertence às inscrições ativas deste participante.';
     } else {
@@ -362,7 +364,9 @@ function atualizarBotaoOficinaCheckin(botao, dadosAluno, credencial) {
     const oficinasInscritas = Array.isArray(dadosAluno.oficinas) ? dadosAluno.oficinas : [];
     const inscrito = oficinasInscritas.includes(idOficina);
     botao.hidden = !inscrito;
-    botao.disabled = !inscrito || credencial.tipo !== 'oficina' || credencial.oficinaId !== idOficina;
+    const oficinaHabilitada = credencial.tipo === 'token_manual'
+        || (credencial.tipo === 'oficina' && credencial.oficinaId === idOficina);
+    botao.disabled = !inscrito || !oficinaHabilitada;
     if (!inscrito) return;
 
     const presencas = Array.isArray(dadosAluno.oficinasPresenca) ? dadosAluno.oficinasPresenca : [];
@@ -392,7 +396,7 @@ function atualizarGradeCheckin(dadosAluno, credencial) {
     botoesPresenca.forEach(botao => {
         const campoNoBanco = botao.dataset.campo;
         atualizarBotaoPresenca(botao, dadosAluno[campoNoBanco], dadosAluno[campoNoBanco + '_checkinEm']);
-        botao.disabled = credencial.tipo !== 'geral';
+        botao.disabled = credencial.tipo !== 'geral' && credencial.tipo !== 'token_manual';
     });
     botoesOficinaAdmin.forEach(botao => atualizarBotaoOficinaCheckin(botao, dadosAluno, credencial));
     if (adminOficinasVazio) {
@@ -405,7 +409,7 @@ function atualizarGradeCheckin(dadosAluno, credencial) {
 // 3. DAR PRESENÇA E OFICINAS
 // ==========================================
 const togglePresenca = async (campo, botao) => {
-    if (!idAlunoSelecionado || credencialCheckinAtual.tipo !== 'geral') {
+    if (!idAlunoSelecionado || !['geral', 'token_manual'].includes(credencialCheckinAtual.tipo)) {
         alert('Leia o QR Code do ingresso geral para alterar a presença em palestras.');
         return;
     }
@@ -415,7 +419,7 @@ const togglePresenca = async (campo, botao) => {
         const atualizacao = novoStatus ? {
             [campo]: true,
             [campo + '_checkinEm']: serverTimestamp(),
-            [campo + '_origem']: ultimaBuscaPorQr ? 'qr_dinamico' : 'manual'
+            [campo + '_origem']: credencialCheckinAtual.tipo === 'token_manual' ? 'token_manual' : 'qr_dinamico'
         } : {
             [campo]: false,
             [campo + '_checkinEm']: deleteField(),
@@ -432,7 +436,7 @@ const togglePresenca = async (campo, botao) => {
 
 botoesPresenca.forEach(botao => {
     botao.addEventListener('click', () => {
-        if (credencialCheckinAtual.tipo !== 'geral') {
+        if (!['geral', 'token_manual'].includes(credencialCheckinAtual.tipo)) {
             alert('Este controle só é liberado pelo QR Code do ingresso geral.');
             return;
         }
@@ -447,7 +451,9 @@ botoesOficinaAdmin.forEach(botao => {
     botao.addEventListener('click', async () => {
         if (!idAlunoSelecionado || !alunoCheckinAtual) return;
         const idOficina = botao.dataset.oficina;
-        if (credencialCheckinAtual.tipo !== 'oficina' || credencialCheckinAtual.oficinaId !== idOficina) {
+        const oficinaHabilitada = credencialCheckinAtual.tipo === 'token_manual'
+            || (credencialCheckinAtual.tipo === 'oficina' && credencialCheckinAtual.oficinaId === idOficina);
+        if (!oficinaHabilitada) {
             alert('Leia o QR Code desta oficina para alterar a presença nela.');
             return;
         }
@@ -475,7 +481,7 @@ botoesOficinaAdmin.forEach(botao => {
                 await updateDoc(alunoRef, {
                     oficinasPresenca: arrayUnion(idOficina),
                     [`oficinasCheckinEm.${idOficina}`]: serverTimestamp(),
-                    [`oficinasCheckinOrigem.${idOficina}`]: 'qr_oficina'
+                    [`oficinasCheckinOrigem.${idOficina}`]: credencialCheckinAtual.tipo === 'token_manual' ? 'token_manual' : 'qr_oficina'
                 });
                 alunoCheckinAtual.oficinasPresenca = [...new Set([...presencas, idOficina])];
                 alunoCheckinAtual.oficinasCheckinEm = { ...(alunoCheckinAtual.oficinasCheckinEm || {}), [idOficina]: new Date() };
