@@ -928,6 +928,23 @@ function adicionarCampoFicha(container, rotulo, valor, opcoes = {}) {
     container.appendChild(campo);
 }
 
+function atualizarCamposVinculoFicha() {
+    const seletorVinculo = formFichaInscrito?.querySelector('[data-campo="vinculoAcademico"]');
+    const semVinculo = seletorVinculo?.value === 'sem_vinculo';
+    ['instituicao', 'matricula', 'curso', 'periodo'].forEach(campo => {
+        const entrada = formFichaInscrito?.querySelector(`[data-campo="${campo}"]`);
+        if (!entrada) return;
+        entrada.disabled = semVinculo;
+        entrada.closest('.ficha-campo').hidden = semVinculo;
+    });
+    ['escolaridade', 'profissao', 'comoConheceu'].forEach(campo => {
+        const entrada = formFichaInscrito?.querySelector(`[data-campo="${campo}"]`);
+        if (!entrada) return;
+        entrada.disabled = !semVinculo;
+        entrada.closest('.ficha-campo').hidden = !semVinculo;
+    });
+}
+
 function abrirFichaInscrito(idInscrito) {
     const dados = inscritosPorId.get(idInscrito);
     if (!dados || !modalFichaInscrito) return;
@@ -945,10 +962,53 @@ function abrirFichaInscrito(idInscrito) {
     adicionarCampoFicha(fichaDadosPessoais, 'Nome completo', dados.nome, { editavel: true, campo: 'nome', largo: true, obrigatorio: true, autocomplete: 'name' });
     adicionarCampoFicha(fichaDadosPessoais, 'E-mail', dados.email, { editavel: true, campo: 'email', tipo: 'email', largo: true, obrigatorio: true, autocomplete: 'email' });
     adicionarCampoFicha(fichaDadosPessoais, 'Telefone', dados.telefone, { editavel: true, campo: 'telefone', tipo: 'tel', autocomplete: 'tel' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Vínculo acadêmico', dados.semVinculoAcademico === true ? 'sem_vinculo' : 'academico', {
+        editavel: true,
+        campo: 'vinculoAcademico',
+        largo: true,
+        opcoes: [
+            { valor: 'academico', rotulo: 'Possui vínculo acadêmico' },
+            { valor: 'sem_vinculo', rotulo: 'Não possui vínculo acadêmico atualmente' }
+        ]
+    });
     adicionarCampoFicha(fichaDadosPessoais, 'Instituição', dados.instituicao, { editavel: true, campo: 'instituicao' });
     adicionarCampoFicha(fichaDadosPessoais, 'Matrícula', dados.matricula, { editavel: true, campo: 'matricula' });
     adicionarCampoFicha(fichaDadosPessoais, 'Curso', dados.curso, { editavel: true, campo: 'curso' });
     adicionarCampoFicha(fichaDadosPessoais, 'Período', dados.periodo, { editavel: true, campo: 'periodo' });
+    adicionarCampoFicha(fichaDadosPessoais, 'Escolaridade', dados.escolaridade, {
+        editavel: true,
+        campo: 'escolaridade',
+        opcoes: [
+            { valor: '', rotulo: 'Não informada' },
+            { valor: 'fundamental', rotulo: 'Ensino fundamental' },
+            { valor: 'medio', rotulo: 'Ensino médio' },
+            { valor: 'tecnico', rotulo: 'Ensino técnico' },
+            { valor: 'graduacao_incompleta', rotulo: 'Graduação incompleta' },
+            { valor: 'graduacao_completa', rotulo: 'Graduação completa' },
+            { valor: 'especializacao', rotulo: 'Especialização / pós-graduação' },
+            { valor: 'mestrado', rotulo: 'Mestrado' },
+            { valor: 'doutorado', rotulo: 'Doutorado' },
+            { valor: 'nao_informar', rotulo: 'Prefere não informar' }
+        ]
+    });
+    adicionarCampoFicha(fichaDadosPessoais, 'Profissão ou área de atuação', dados.profissao, { editavel: true, campo: 'profissao', largo: true });
+    adicionarCampoFicha(fichaDadosPessoais, 'Como conheceu a SEMAU', dados.comoConheceu, {
+        editavel: true,
+        campo: 'comoConheceu',
+        largo: true,
+        opcoes: [
+            { valor: '', rotulo: 'Não informado' },
+            { valor: 'instagram', rotulo: 'Instagram da SEMAU' },
+            { valor: 'indicacao', rotulo: 'Indicação de amigo(a) ou colega' },
+            { valor: 'professor_instituicao', rotulo: 'Professor(a) ou instituição de ensino' },
+            { valor: 'outra_edicao', rotulo: 'Já participou de outra edição' },
+            { valor: 'parceiro', rotulo: 'Parceiro, patrocinador ou apoiador' },
+            { valor: 'pesquisa_internet', rotulo: 'Pesquisa na internet' },
+            { valor: 'outro', rotulo: 'Outra forma' }
+        ]
+    });
+    formFichaInscrito.querySelector('[data-campo="vinculoAcademico"]')?.addEventListener('change', atualizarCamposVinculoFicha);
+    atualizarCamposVinculoFicha();
     adicionarCampoFicha(fichaDadosPessoais, 'Lote', dados.loteIngresso, {
         editavel: true,
         campo: 'loteIngresso',
@@ -1033,16 +1093,26 @@ formFichaInscrito?.addEventListener('submit', async event => {
     const email = valorEditavelFicha('email').toLowerCase();
     const loteIngresso = valorEditavelFicha('loteIngresso');
     const tipoIngresso = valorEditavelFicha('tipoIngresso');
+    const semVinculoAcademico = valorEditavelFicha('vinculoAcademico') === 'sem_vinculo';
     const idInscrito = idFichaInscritoAtual;
 
     const atualizacao = {
         nome,
         email,
+        semVinculoAcademico,
         atualizadoEm: serverTimestamp()
     };
 
-    ['telefone', 'instituicao', 'matricula', 'curso', 'periodo'].forEach(campo => {
+    ['telefone'].forEach(campo => {
         atribuirCampoOpcional(atualizacao, campo, valorEditavelFicha(campo));
+    });
+    const camposAcademicos = ['instituicao', 'matricula', 'curso', 'periodo'];
+    const camposNaoAcademicos = ['escolaridade', 'profissao', 'comoConheceu'];
+    camposAcademicos.forEach(campo => {
+        atualizacao[campo] = semVinculoAcademico ? deleteField() : (valorEditavelFicha(campo) || deleteField());
+    });
+    camposNaoAcademicos.forEach(campo => {
+        atualizacao[campo] = semVinculoAcademico ? (valorEditavelFicha(campo) || deleteField()) : deleteField();
     });
     atribuirCampoOpcional(atualizacao, 'loteIngresso', loteIngresso);
     atribuirCampoOpcional(atualizacao, 'nomeLote', NOMES_LOTES[loteIngresso] || '');

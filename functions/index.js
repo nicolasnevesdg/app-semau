@@ -27,6 +27,14 @@ const DURACAO_CHECKOUT_MS = 7 * 60 * 1000;
 const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
 const DURACAO_RESERVA_MS = DURACAO_CHECKOUT_MS;
 const STATUS_FINAIS_SEM_PAGAMENTO = new Set(["rejected", "cancelled", "refunded", "charged_back"]);
+const ESCOLARIDADES_VALIDAS = new Set([
+  "fundamental", "medio", "tecnico", "graduacao_incompleta", "graduacao_completa",
+  "especializacao", "mestrado", "doutorado", "nao_informar",
+]);
+const ORIGENS_SEMAU_VALIDAS = new Set([
+  "instagram", "indicacao", "professor_instituicao", "outra_edicao",
+  "parceiro", "pesquisa_internet", "outro",
+]);
 const configuracaoGeralRef = db.collection("configuracoes").doc("geral");
 const estoqueIngressosRef = db.collection("configuracoes").doc("estoqueIngressos");
 const instagramFeedRef = db.collection("configuracoes").doc("instagramFeed");
@@ -133,6 +141,10 @@ function validarDados(data) {
   const matricula = texto(data.matricula, 20).replace(/\D/g, "");
   const curso = texto(data.curso, 100);
   const periodo = texto(data.periodo, 30);
+  const semVinculoAcademico = data.semVinculoAcademico === true;
+  const escolaridade = texto(data.escolaridade, 40);
+  const profissao = texto(data.profissao, 120);
+  const comoConheceu = texto(data.comoConheceu, 40);
 
   if (!lote) throw new HttpsError("invalid-argument", "Lote de ingresso inválido.");
   if (!tipo) throw new HttpsError("invalid-argument", "Tipo de ingresso inválido.");
@@ -140,12 +152,27 @@ function validarDados(data) {
   if (partesNome.length < 2) throw new HttpsError("invalid-argument", "Informe o nome completo, com nome e sobrenome.");
   if (!emailValido(email)) throw new HttpsError("invalid-argument", "Informe um e-mail válido.");
   if (telefone.replace(/\D/g, "").length < 10) throw new HttpsError("invalid-argument", "Informe um telefone válido.");
-  if (!instituicao) throw new HttpsError("invalid-argument", "Informe a instituição.");
-  if (!/^\d{11}$/.test(matricula)) throw new HttpsError("invalid-argument", "A matrícula deve conter exatamente 11 números.");
-  if (!curso) throw new HttpsError("invalid-argument", "Informe o curso.");
+  if (semVinculoAcademico) {
+    if (!ESCOLARIDADES_VALIDAS.has(escolaridade)) throw new HttpsError("invalid-argument", "Informe o nível de escolaridade.");
+    if (!profissao) throw new HttpsError("invalid-argument", "Informe a profissão ou área de atuação.");
+    if (!ORIGENS_SEMAU_VALIDAS.has(comoConheceu)) throw new HttpsError("invalid-argument", "Informe como conheceu a SEMAU.");
+  } else {
+    if (!instituicao) throw new HttpsError("invalid-argument", "Informe a instituição.");
+    if (!/^\d{11}$/.test(matricula)) throw new HttpsError("invalid-argument", "A matrícula deve conter exatamente 11 números.");
+    if (!curso) throw new HttpsError("invalid-argument", "Informe o curso.");
+  }
   if (data.aceite !== true) throw new HttpsError("failed-precondition", "É necessário aceitar os termos da inscrição.");
 
-  return { lote, tipo, nome, email, telefone, instituicao, matricula, curso, periodo };
+  return {
+    lote, tipo, nome, email, telefone, semVinculoAcademico,
+    instituicao: semVinculoAcademico ? "" : instituicao,
+    matricula: semVinculoAcademico ? "" : matricula,
+    curso: semVinculoAcademico ? "" : curso,
+    periodo: semVinculoAcademico ? "" : periodo,
+    escolaridade: semVinculoAcademico ? escolaridade : "",
+    profissao: semVinculoAcademico ? profissao : "",
+    comoConheceu: semVinculoAcademico ? comoConheceu : "",
+  };
 }
 
 function dadosPedido(dados, ingresso, expiraEm) {
@@ -158,6 +185,10 @@ function dadosPedido(dados, ingresso, expiraEm) {
     matricula: dados.matricula,
     curso: dados.curso,
     periodo: dados.periodo || null,
+    semVinculoAcademico: dados.semVinculoAcademico,
+    escolaridade: dados.escolaridade || null,
+    profissao: dados.profissao || null,
+    comoConheceu: dados.comoConheceu || null,
     loteIngresso: dados.lote,
     nomeLote: ingresso.nomeLote,
     tipoIngresso: dados.tipo,
@@ -531,6 +562,10 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
         matricula: pedido.matricula || null,
         curso: pedido.curso || null,
         periodo: pedido.periodo || null,
+        semVinculoAcademico: pedido.semVinculoAcademico === true,
+        escolaridade: pedido.escolaridade || null,
+        profissao: pedido.profissao || null,
+        comoConheceu: pedido.comoConheceu || null,
         loteIngresso: pedido.loteIngresso || null,
         nomeLote: pedido.nomeLote || null,
         tipoIngresso: pedido.tipoIngresso,

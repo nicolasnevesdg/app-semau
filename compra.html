@@ -47,10 +47,41 @@
                 </fieldset>
                 <fieldset>
                     <legend>Sobre você</legend>
-                    <label class="campo campo-largo" for="compra-instituicao"><span>Instituição</span><input id="compra-instituicao" name="instituicao" type="text" autocomplete="organization" required placeholder="Ex.: UFRRJ"></label>
-                    <label class="campo campo-largo" for="compra-matricula"><span>Número de matrícula</span><input id="compra-matricula" name="matricula" type="text" inputmode="numeric" required minlength="11" maxlength="11" pattern="[0-9]{11}" placeholder="Ex.: 20230051742"></label>
-                    <label class="campo" for="compra-curso"><span>Curso</span><input id="compra-curso" name="curso" type="text" required placeholder="Ex.: Arquitetura"></label>
-                    <label class="campo" for="compra-periodo"><span>Período</span><input id="compra-periodo" name="periodo" type="text" placeholder="Ex.: 6º"></label>
+                    <label class="opcao-sem-vinculo campo-largo" for="compra-sem-vinculo">
+                        <input id="compra-sem-vinculo" name="semVinculoAcademico" type="checkbox">
+                        <span><strong>Não possuo vínculo acadêmico atualmente</strong><small>Marque esta opção se você não estuda nem está matriculado(a) em uma instituição de ensino.</small></span>
+                    </label>
+                    <div id="compra-campos-academicos" class="campos-sobre-voce campo-largo">
+                        <label class="campo campo-largo" for="compra-instituicao"><span>Instituição</span><input id="compra-instituicao" name="instituicao" type="text" autocomplete="organization" required placeholder="Ex.: UFRRJ"></label>
+                        <label class="campo campo-largo" for="compra-matricula"><span>Número de matrícula</span><input id="compra-matricula" name="matricula" type="text" inputmode="numeric" required minlength="11" maxlength="11" pattern="[0-9]{11}" placeholder="Ex.: 20230051742"></label>
+                        <label class="campo" for="compra-curso"><span>Curso</span><input id="compra-curso" name="curso" type="text" required placeholder="Ex.: Arquitetura"></label>
+                        <label class="campo" for="compra-periodo"><span>Período</span><input id="compra-periodo" name="periodo" type="text" placeholder="Ex.: 6º"></label>
+                    </div>
+                    <div id="compra-campos-nao-academicos" class="campos-sobre-voce campo-largo" hidden>
+                        <label class="campo campo-largo" for="compra-escolaridade"><span>Nível de escolaridade</span><select id="compra-escolaridade" name="escolaridade" disabled>
+                            <option value="">Selecione uma opção</option>
+                            <option value="fundamental">Ensino fundamental</option>
+                            <option value="medio">Ensino médio</option>
+                            <option value="tecnico">Ensino técnico</option>
+                            <option value="graduacao_incompleta">Graduação incompleta</option>
+                            <option value="graduacao_completa">Graduação completa</option>
+                            <option value="especializacao">Especialização / pós-graduação</option>
+                            <option value="mestrado">Mestrado</option>
+                            <option value="doutorado">Doutorado</option>
+                            <option value="nao_informar">Prefiro não informar</option>
+                        </select></label>
+                        <label class="campo campo-largo" for="compra-profissao"><span>Profissão ou área de atuação</span><input id="compra-profissao" name="profissao" type="text" autocomplete="organization-title" disabled placeholder="Ex.: Designer, comerciante, servidor(a) público(a)"></label>
+                        <label class="campo campo-largo" for="compra-como-conheceu"><span>Como você conheceu a SEMAU?</span><select id="compra-como-conheceu" name="comoConheceu" disabled>
+                            <option value="">Selecione uma opção</option>
+                            <option value="instagram">Instagram da SEMAU</option>
+                            <option value="indicacao">Indicação de amigo(a) ou colega</option>
+                            <option value="professor_instituicao">Professor(a) ou instituição de ensino</option>
+                            <option value="outra_edicao">Já participei de outra edição</option>
+                            <option value="parceiro">Parceiro, patrocinador ou apoiador</option>
+                            <option value="pesquisa_internet">Pesquisa na internet</option>
+                            <option value="outro">Outra forma</option>
+                        </select></label>
+                    </div>
                 </fieldset>
                 <fieldset>
                     <legend>Escolha confirmada</legend>
@@ -66,6 +97,6 @@
             </form>
         </section>
     </main>
-    <script type="module" src="js/compra.js?v=20260901-2"></script>
+    <script type="module" src="js/compra.js?v=20260903-1"></script>
 </body>
 </html>

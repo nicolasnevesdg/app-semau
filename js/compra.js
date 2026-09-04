@@ -26,6 +26,11 @@ const emailConfirmacao = document.getElementById("compra-email-confirmacao");
 const telefone = document.getElementById("compra-telefone");
 const nome = document.getElementById("compra-nome");
 const matricula = document.getElementById("compra-matricula");
+const semVinculoAcademico = document.getElementById("compra-sem-vinculo");
+const camposAcademicos = document.getElementById("compra-campos-academicos");
+const camposNaoAcademicos = document.getElementById("compra-campos-nao-academicos");
+const entradasAcademicas = [...camposAcademicos.querySelectorAll("input, select")];
+const entradasNaoAcademicas = [...camposNaoAcademicos.querySelectorAll("input, select")];
 const status = document.getElementById("compra-status");
 const temporizador = document.getElementById("compra-temporizador");
 const contagem = document.getElementById("compra-contagem");
@@ -39,6 +44,25 @@ const DURACAO_ETAPA_COMPRA_MS = 7 * 60 * 1000;
 const etapaCompraExpiraEm = Date.now() + DURACAO_ETAPA_COMPRA_MS;
 let etapaCompraEsgotada = false;
 let intervaloContagem = null;
+
+function atualizarTipoParticipante() {
+    const semVinculo = semVinculoAcademico.checked;
+    camposAcademicos.hidden = semVinculo;
+    camposNaoAcademicos.hidden = !semVinculo;
+    camposAcademicos.setAttribute("aria-hidden", String(semVinculo));
+    camposNaoAcademicos.setAttribute("aria-hidden", String(!semVinculo));
+
+    entradasAcademicas.forEach(entrada => {
+        entrada.disabled = semVinculo;
+        entrada.required = !semVinculo && ["instituicao", "matricula", "curso"].includes(entrada.name);
+        entrada.setCustomValidity("");
+    });
+    entradasNaoAcademicas.forEach(entrada => {
+        entrada.disabled = !semVinculo;
+        entrada.required = semVinculo;
+        entrada.setCustomValidity("");
+    });
+}
 
 function formatarValor(valor, semCentavos = false) {
     return valor.toLocaleString("pt-BR", {
@@ -142,6 +166,9 @@ matricula.addEventListener("input", () => {
     matricula.setCustomValidity("");
 });
 
+semVinculoAcademico.addEventListener("change", atualizarTipoParticipante);
+atualizarTipoParticipante();
+
 nome.addEventListener("input", () => nome.setCustomValidity(""));
 emailConfirmacao.addEventListener("input", () => emailConfirmacao.setCustomValidity(""));
 
@@ -160,7 +187,7 @@ form.addEventListener("submit", async event => {
     }
     const partesNome = nome.value.trim().split(/\s+/).filter(parte => parte.length >= 2);
     if (partesNome.length < 2) nome.setCustomValidity("Informe seu nome completo, com nome e sobrenome.");
-    if (!/^\d{11}$/.test(matricula.value)) matricula.setCustomValidity("A matrícula deve conter exatamente 11 números.");
+    if (!semVinculoAcademico.checked && !/^\d{11}$/.test(matricula.value)) matricula.setCustomValidity("A matrícula deve conter exatamente 11 números.");
     if (!form.reportValidity()) return;
 
     const dados = new FormData(form);
@@ -172,6 +199,10 @@ form.addEventListener("submit", async event => {
         matricula: dados.get("matricula"),
         curso: dados.get("curso"),
         periodo: dados.get("periodo"),
+        semVinculoAcademico: semVinculoAcademico.checked,
+        escolaridade: dados.get("escolaridade"),
+        profissao: dados.get("profissao"),
+        comoConheceu: dados.get("comoConheceu"),
         loteIngresso: loteSelecionado,
         tipoIngresso: dados.get("tipoIngresso"),
         aceite: dados.get("aceite") === "on"

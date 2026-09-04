@@ -35,9 +35,18 @@
 .campo { min-width: 0; display: grid; gap: 6px; text-align: left; }
 .campo-largo { grid-column: 1 / -1; }
 .campo span { color: #56605a; font-size: 11px; font-weight: 700; }
-.campo input { width: 100%; min-width: 0; height: 45px; padding: 0 13px; border: 1px solid #dfe2de; border-radius: 12px; outline: none; background: #fafaf8; color: var(--cor-primaria); font-family: var(--fonte-textos); font-size: 13px; }
+.campo input, .campo select { width: 100%; min-width: 0; height: 45px; padding: 0 13px; border: 1px solid #dfe2de; border-radius: 12px; outline: none; background: #fafaf8; color: var(--cor-primaria); font-family: var(--fonte-textos); font-size: 13px; }
 .campo input::placeholder { color: #a0a5a0; }
-.campo input:focus { border-color: var(--cor-eixo-cidade); box-shadow: 0 0 0 3px rgba(128,154,205,.18); }
+.campo input:focus, .campo select:focus { border-color: var(--cor-eixo-cidade); box-shadow: 0 0 0 3px rgba(128,154,205,.18); }
+.campo input:disabled, .campo select:disabled { opacity: .62; cursor: not-allowed; background: #f0f1ee; }
+.campos-sobre-voce { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px 12px; }
+.campos-sobre-voce[hidden] { display: none; }
+.opcao-sem-vinculo { padding: 14px; border: 1px solid #dfe2de; border-radius: 14px; display: flex; align-items: flex-start; gap: 11px; background: #fafaf8; cursor: pointer; }
+.opcao-sem-vinculo:has(input:checked) { border-color: var(--cor-eixo-cidade); background: rgba(128,154,205,.12); }
+.opcao-sem-vinculo input { width: 18px; height: 18px; margin: 1px 0 0; flex: 0 0 auto; accent-color: var(--cor-secundaria); }
+.opcao-sem-vinculo > span { display: grid; gap: 4px; text-align: left; }
+.opcao-sem-vinculo strong { color: var(--cor-primaria); font-size: 12px; line-height: 1.3; }
+.opcao-sem-vinculo small { color: #7d837e; font-size: 9px; line-height: 1.4; }
 .opcoes-ingresso { grid-column: 1 / -1; display: grid; gap: 9px; }
 .opcao-ingresso { position: relative; padding: 14px; border: 1px solid #dfe2de; border-radius: 14px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 11px; cursor: pointer; }
 .opcao-ingresso:has(input:checked) { border-color: var(--cor-eixo-cidade); background: rgba(128,154,205,.10); }
@@ -54,7 +63,7 @@
 .pagamento-seguro p { font-size: 10px; line-height: 1.35; }
 .btn-continuar { width: 100%; min-height: 70px; padding: 14px 28px; border: 0; display: inline-flex; align-items: center; justify-content: center; gap: 9px; background-color: var(--cor-secundaria); -webkit-mask: url('../assets/svg/bg-credencial.svg') center / 100% 100% no-repeat; mask: url('../assets/svg/bg-credencial.svg') center / 100% 100% no-repeat; color: #fff; font-family: var(--fonte-textos); font-size: 15px; font-weight: 800; cursor: pointer; }
 .compra-status { padding: 15px; border: 1px solid rgba(13,55,43,.16); border-radius: 14px; background: #e5eee7; color: var(--cor-primaria); font-size: 12px; font-weight: 600; line-height: 1.45; text-align: center; }
-@media (max-width: 360px) { .form-compra fieldset { grid-template-columns: 1fr; } .campo { grid-column: 1; } }
+@media (max-width: 360px) { .form-compra fieldset, .campos-sobre-voce { grid-template-columns: 1fr; } .campo { grid-column: 1; } }
 .btn-continuar:disabled {
     opacity: 0.62;
     cursor: wait;
