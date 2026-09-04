@@ -1,5 +1,13 @@
 import { db } from './firebase-config.js';
 import { collection, doc, addDoc, getDocs, updateDoc, query, where, arrayUnion, arrayRemove, setDoc, onSnapshot, deleteDoc, getDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+    VERSAO_CONTEUDO_CRONOGRAMA,
+    PROGRAMACAO_AO_VIVO_PADRAO,
+    clonarProgramacao,
+    montarCatalogoIngressosOficinas,
+    normalizarProgramacao,
+    temProgramacaoValida
+} from './programacao-ao-vivo-config.js?v=20260903-1';
 
 // ==========================================
 // ELEMENTOS DO HTML
@@ -35,6 +43,9 @@ let leitor = null;
 
 const botoesPresenca = document.querySelectorAll('.btn-presenca');
 const botoesOficinaAdmin = document.querySelectorAll('.btn-oficina-admin');
+const adminEscopoCheckin = document.getElementById('admin-escopo-checkin');
+const adminOficinasVazio = document.getElementById('admin-oficinas-vazio');
+const fichaOficinas = document.getElementById('ficha-oficinas');
 
 const btnAdminSortear = document.getElementById('btn-admin-sortear');
 const sorteioResultado = document.getElementById('sorteio-resultado');
@@ -44,19 +55,56 @@ const statusTelao = document.getElementById('status-telao');
 
 let idAlunoSelecionado = null;
 let ultimaBuscaPorQr = false;
+let alunoCheckinAtual = null;
+let credencialCheckinAtual = { tipo: 'consulta', oficinaId: null };
 const INTERVALO_QR_MS = 30000;
 const adminQrStatus = document.getElementById('admin-qr-status');
+const docCronogramaOficinasRefAdmin = doc(db, 'configuracoes', 'cronogramaAoVivo');
+let catalogoOficinasAdmin = montarCatalogoIngressosOficinas(PROGRAMACAO_AO_VIVO_PADRAO);
+
+function oficinaExiste(idOficina) {
+    return Boolean(catalogoOficinasAdmin[idOficina]) || /^OF0[1-6]$/.test(idOficina);
+}
+
+function validarQrTemporizado(token, slot, dadosExtras = {}) {
+    const slotAtual = Math.floor(Date.now() / INTERVALO_QR_MS);
+    if (!/^[A-Z0-9]{5}$/.test(token) || !Number.isInteger(slot)) {
+        return { valido: false, mensagem: 'QR Code inválido.' };
+    }
+    if (Math.abs(slotAtual - slot) > 1) {
+        return { valido: false, mensagem: 'Este QR Code expirou. Peça ao participante para atualizar o ingresso.' };
+    }
+    return {
+        valido: true,
+        busca: token.toLowerCase(),
+        origemQr: true,
+        geradoEm: new Date(slot * INTERVALO_QR_MS),
+        ...dadosExtras
+    };
+}
 
 function interpretarConteudoQr(valor) {
     const texto = String(valor || '').trim();
-    if (!texto.startsWith('SEMAU|')) return { valido: true, busca: texto.toLowerCase(), origemQr: false };
+    if (!texto.startsWith('SEMAU|')) {
+        const oficinaLegada = texto.toUpperCase().match(/^([A-Z0-9]{5})-(OF0[1-6])$/);
+        if (oficinaLegada && oficinaExiste(oficinaLegada[2])) {
+            return {
+                valido: true,
+                busca: oficinaLegada[1].toLowerCase(),
+                origemQr: true,
+                tipoCredencial: 'oficina',
+                oficinaId: oficinaLegada[2],
+                legado: true
+            };
+        }
+        return { valido: true, busca: texto.toLowerCase(), origemQr: false, tipoCredencial: 'consulta' };
+    }
+
     const partes = texto.split('|');
-    const token = partes[1]?.trim().toUpperCase();
-    const slot = Number(partes[2]);
-    const slotAtual = Math.floor(Date.now() / INTERVALO_QR_MS);
-    if (!/^[A-Z0-9]{5}$/.test(token) || !Number.isInteger(slot)) return { valido: false, mensagem: 'QR Code inválido.' };
-    if (Math.abs(slotAtual - slot) > 1) return { valido: false, mensagem: 'Este QR Code expirou. Peça ao participante para atualizar o ingresso.' };
-    return { valido: true, busca: token.toLowerCase(), origemQr: true, geradoEm: new Date(slot * INTERVALO_QR_MS) };
+    if (partes.length === 3) {
+        return validarQrTemporizado(partes[1]?.trim().toUpperCase(), Number(partes[2]), { tipoCredencial: 'geral' });
+    }
+    return { valido: false, mensagem: 'QR Code inválido.' };
 }
 
 function mostrarStatusQr(mensagem, valido) {
@@ -66,6 +114,22 @@ function mostrarStatusQr(mensagem, valido) {
     adminQrStatus.style.color = valido ? '#217a43' : '#a33a32';
     adminQrStatus.textContent = mensagem;
 }
+
+function dadosOficina(idOficina) {
+    return catalogoOficinasAdmin[idOficina] || { titulo: 'Oficina', ministrante: 'Ministrante a confirmar', data: 'Horário a confirmar' };
+}
+
+function rotuloOficina(idOficina) {
+    return `${idOficina} · ${dadosOficina(idOficina).titulo}`;
+}
+
+function atualizarNomesOficinasCheckin() {
+    botoesOficinaAdmin.forEach(botao => {
+        botao.dataset.rotuloBase = rotuloOficina(botao.dataset.oficina);
+    });
+}
+
+atualizarNomesOficinasCheckin();
 
 if (adminNovoNome) {
     adminNovoNome.addEventListener('input', () => {
@@ -101,6 +165,8 @@ if (btnAdminCadastrar) {
                 email: email,
                 token: tokenGerado,
                 pontos: 0,
+                oficinas: [],
+                oficinasPresenca: [],
                 d21_m: false, d21_t: false,
                 d22_m: false,
                 d23_m: false, d23_t: false,
@@ -195,6 +261,8 @@ if (btnAdminBuscar) {
         const leitura = interpretarConteudoQr(adminBuscaPax.value);
         if (!leitura.valido) {
             ultimaBuscaPorQr = false;
+            credencialCheckinAtual = { tipo: 'consulta', oficinaId: null };
+            alunoCheckinAtual = null;
             mostrarStatusQr(leitura.mensagem, false);
             adminResultadoBusca.style.display = 'none';
             return;
@@ -203,8 +271,13 @@ if (btnAdminBuscar) {
         if (!busca) return;
         ultimaBuscaPorQr = leitura.origemQr;
         if (leitura.origemQr) {
-            const horario = leitura.geradoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            mostrarStatusQr('QR válido, gerado às ' + horario + '.', true);
+            const horario = leitura.geradoEm
+                ? `, gerado às ${leitura.geradoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+                : '';
+            const identificacao = leitura.tipoCredencial === 'oficina'
+                ? `QR da ${rotuloOficina(leitura.oficinaId)}`
+                : 'QR do ingresso geral';
+            mostrarStatusQr(`${identificacao} válido${horario}.`, true);
             adminBuscaPax.value = leitura.busca.toUpperCase();
         } else if (adminQrStatus) {
             adminQrStatus.style.display = 'none';
@@ -212,6 +285,8 @@ if (btnAdminBuscar) {
 
         adminResultadoBusca.style.display = 'none';
         idAlunoSelecionado = null;
+        alunoCheckinAtual = null;
+        credencialCheckinAtual = { tipo: leitura.tipoCredencial || 'consulta', oficinaId: leitura.oficinaId || null };
 
         try {
             const inscritosRef = collection(db, "inscritos");
@@ -220,35 +295,22 @@ if (btnAdminBuscar) {
 
             querySnapshot.forEach((docSnap) => {
                 const dados = docSnap.data();
-                if (dados.email === busca || dados.token.toLowerCase() === busca) {
+                if (String(dados.email || '').toLowerCase() === busca || String(dados.token || '').toLowerCase() === busca) {
                     alunoAchado = { id: docSnap.id, ...dados };
                 }
             });
 
             if (alunoAchado) {
                 idAlunoSelecionado = alunoAchado.id;
+                alunoCheckinAtual = alunoAchado;
                 paxNome.textContent = alunoAchado.nome;
-                
-                botoesPresenca.forEach(botao => {
-                    const campoNoBanco = botao.dataset.campo;
-                    atualizarBotaoPresenca(botao, alunoAchado[campoNoBanco], alunoAchado[campoNoBanco + "_checkinEm"]);
-                });
 
-                const oficinasAtuais = alunoAchado.oficinas || [];
-                botoesOficinaAdmin.forEach(botao => {
-                    const idOficina = botao.dataset.oficina;
-                    if (oficinasAtuais.includes(idOficina)) {
-                        botao.classList.add('ativo');
-                        botao.style.backgroundColor = "var(--cor-secundaria)";
-                        botao.style.color = "#fff";
-                        botao.style.border = "1px solid var(--cor-secundaria)";
-                    } else {
-                        botao.classList.remove('ativo');
-                        botao.style.backgroundColor = "#f4f5f7";
-                        botao.style.color = "#666";
-                        botao.style.border = "1px solid #e8e8eb";
-                    }
-                });
+                const oficinasAtuais = Array.isArray(alunoAchado.oficinas) ? alunoAchado.oficinas : [];
+                if (credencialCheckinAtual.tipo === 'oficina' && !oficinasAtuais.includes(credencialCheckinAtual.oficinaId)) {
+                    mostrarStatusQr('Este ingresso de oficina não está ativo para o participante.', false);
+                    credencialCheckinAtual = { tipo: 'invalida', oficinaId: credencialCheckinAtual.oficinaId };
+                }
+                atualizarGradeCheckin(alunoAchado, credencialCheckinAtual);
 
                 adminResultadoBusca.style.display = 'block';
             } else {
@@ -258,6 +320,20 @@ if (btnAdminBuscar) {
             console.error("Erro na busca:", error);
         }
     });
+}
+
+function atualizarEscopoCheckin(credencial) {
+    if (!adminEscopoCheckin) return;
+    adminEscopoCheckin.dataset.tipo = credencial.tipo;
+    if (credencial.tipo === 'geral') {
+        adminEscopoCheckin.textContent = 'Ingresso geral lido: somente os turnos de palestras estão habilitados.';
+    } else if (credencial.tipo === 'oficina') {
+        adminEscopoCheckin.textContent = `${rotuloOficina(credencial.oficinaId)} lida: somente esta oficina está habilitada.`;
+    } else if (credencial.tipo === 'invalida') {
+        adminEscopoCheckin.textContent = 'Este ingresso de oficina não pertence às inscrições ativas deste participante.';
+    } else {
+        adminEscopoCheckin.textContent = 'Consulta manual: leia o QR Code correto para habilitar um check-in.';
+    }
 }
 
 function atualizarBotaoPresenca(botao, status, horario = null) {
@@ -281,11 +357,58 @@ function atualizarBotaoPresenca(botao, status, horario = null) {
     }
 }
 
+function atualizarBotaoOficinaCheckin(botao, dadosAluno, credencial) {
+    const idOficina = botao.dataset.oficina;
+    const oficinasInscritas = Array.isArray(dadosAluno.oficinas) ? dadosAluno.oficinas : [];
+    const inscrito = oficinasInscritas.includes(idOficina);
+    botao.hidden = !inscrito;
+    botao.disabled = !inscrito || credencial.tipo !== 'oficina' || credencial.oficinaId !== idOficina;
+    if (!inscrito) return;
+
+    const presencas = Array.isArray(dadosAluno.oficinasPresenca) ? dadosAluno.oficinasPresenca : [];
+    const confirmado = presencas.includes(idOficina);
+    const horario = dadosAluno.oficinasCheckinEm?.[idOficina];
+    botao.classList.toggle('confirmado', confirmado);
+    if (confirmado) {
+        let horaTexto = '';
+        if (horario) {
+            const data = typeof horario.toDate === 'function' ? horario.toDate() : new Date(horario);
+            if (!Number.isNaN(data.getTime())) horaTexto = ` · ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        botao.innerHTML = `<i class="ph-bold ph-check"></i> ${idOficina} · Presença confirmada${horaTexto}`;
+        botao.style.backgroundColor = 'var(--cor-secundaria)';
+        botao.style.color = '#fff';
+        botao.style.border = '1px solid var(--cor-secundaria)';
+    } else {
+        botao.textContent = botao.dataset.rotuloBase || rotuloOficina(idOficina);
+        botao.style.backgroundColor = '#f4f5f7';
+        botao.style.color = '#666';
+        botao.style.border = '1px solid #e8e8eb';
+    }
+}
+
+function atualizarGradeCheckin(dadosAluno, credencial) {
+    atualizarEscopoCheckin(credencial);
+    botoesPresenca.forEach(botao => {
+        const campoNoBanco = botao.dataset.campo;
+        atualizarBotaoPresenca(botao, dadosAluno[campoNoBanco], dadosAluno[campoNoBanco + '_checkinEm']);
+        botao.disabled = credencial.tipo !== 'geral';
+    });
+    botoesOficinaAdmin.forEach(botao => atualizarBotaoOficinaCheckin(botao, dadosAluno, credencial));
+    if (adminOficinasVazio) {
+        const possuiOficinas = Array.isArray(dadosAluno.oficinas) && dadosAluno.oficinas.length > 0;
+        adminOficinasVazio.style.display = possuiOficinas ? 'none' : 'block';
+    }
+}
+
 // ==========================================
 // 3. DAR PRESENÇA E OFICINAS
 // ==========================================
 const togglePresenca = async (campo, botao) => {
-    if (!idAlunoSelecionado) return;
+    if (!idAlunoSelecionado || credencialCheckinAtual.tipo !== 'geral') {
+        alert('Leia o QR Code do ingresso geral para alterar a presença em palestras.');
+        return;
+    }
     const jaTemPresenca = botao.classList.contains('confirmado');
     const novoStatus = !jaTemPresenca;
     try {
@@ -299,12 +422,20 @@ const togglePresenca = async (campo, botao) => {
             [campo + '_origem']: deleteField()
         };
         await updateDoc(doc(db, "inscritos", idAlunoSelecionado), atualizacao);
+        if (alunoCheckinAtual) {
+            alunoCheckinAtual[campo] = novoStatus;
+            alunoCheckinAtual[campo + '_checkinEm'] = novoStatus ? new Date() : null;
+        }
         atualizarBotaoPresenca(botao, novoStatus, novoStatus ? new Date() : null);
     } catch (error) { console.error("Erro ao atualizar presença:", error); }
 };
 
 botoesPresenca.forEach(botao => {
     botao.addEventListener('click', () => {
+        if (credencialCheckinAtual.tipo !== 'geral') {
+            alert('Este controle só é liberado pelo QR Code do ingresso geral.');
+            return;
+        }
         const acao = botao.classList.contains('confirmado') ? "REMOVER a presença" : "CONFIRMAR a presença";
         if (confirm(`Tem certeza que deseja ${acao} neste turno?`)) {
             togglePresenca(botao.dataset.campo, botao);
@@ -314,28 +445,42 @@ botoesPresenca.forEach(botao => {
 
 botoesOficinaAdmin.forEach(botao => {
     botao.addEventListener('click', async () => {
-        if (!idAlunoSelecionado) return;
+        if (!idAlunoSelecionado || !alunoCheckinAtual) return;
         const idOficina = botao.dataset.oficina;
-        const jaEstaAtivo = botao.classList.contains('ativo');
-        const acao = jaEstaAtivo ? "REMOVER o aluno da" : "INSCREVER o aluno na";
-        
-        if (!confirm(`Tem certeza que deseja ${acao} ${idOficina}?`)) return; 
+        if (credencialCheckinAtual.tipo !== 'oficina' || credencialCheckinAtual.oficinaId !== idOficina) {
+            alert('Leia o QR Code desta oficina para alterar a presença nela.');
+            return;
+        }
+        const oficinasInscritas = Array.isArray(alunoCheckinAtual.oficinas) ? alunoCheckinAtual.oficinas : [];
+        if (!oficinasInscritas.includes(idOficina)) {
+            alert('O participante não está inscrito nesta oficina.');
+            return;
+        }
+        const presencas = Array.isArray(alunoCheckinAtual.oficinasPresenca) ? alunoCheckinAtual.oficinasPresenca : [];
+        const jaTemPresenca = presencas.includes(idOficina);
+        const acao = jaTemPresenca ? 'REMOVER a presença em' : 'CONFIRMAR a presença em';
+        if (!confirm(`Tem certeza que deseja ${acao} ${rotuloOficina(idOficina)}?`)) return;
 
         const alunoRef = doc(db, "inscritos", idAlunoSelecionado);
         try {
-            if (jaEstaAtivo) {
-                await updateDoc(alunoRef, { oficinas: arrayRemove(idOficina) });
-                botao.classList.remove('ativo');
-                botao.style.backgroundColor = "#f4f5f7";
-                botao.style.color = "#666";
-                botao.style.border = "1px solid #e8e8eb";
+            if (jaTemPresenca) {
+                await updateDoc(alunoRef, {
+                    oficinasPresenca: arrayRemove(idOficina),
+                    [`oficinasCheckinEm.${idOficina}`]: deleteField(),
+                    [`oficinasCheckinOrigem.${idOficina}`]: deleteField()
+                });
+                alunoCheckinAtual.oficinasPresenca = presencas.filter(id => id !== idOficina);
+                if (alunoCheckinAtual.oficinasCheckinEm) delete alunoCheckinAtual.oficinasCheckinEm[idOficina];
             } else {
-                await updateDoc(alunoRef, { oficinas: arrayUnion(idOficina) });
-                botao.classList.add('ativo');
-                botao.style.backgroundColor = "var(--cor-secundaria)";
-                botao.style.color = "#fff";
-                botao.style.border = "1px solid var(--cor-secundaria)";
+                await updateDoc(alunoRef, {
+                    oficinasPresenca: arrayUnion(idOficina),
+                    [`oficinasCheckinEm.${idOficina}`]: serverTimestamp(),
+                    [`oficinasCheckinOrigem.${idOficina}`]: 'qr_oficina'
+                });
+                alunoCheckinAtual.oficinasPresenca = [...new Set([...presencas, idOficina])];
+                alunoCheckinAtual.oficinasCheckinEm = { ...(alunoCheckinAtual.oficinasCheckinEm || {}), [idOficina]: new Date() };
             }
+            atualizarBotaoOficinaCheckin(botao, alunoCheckinAtual, credencialCheckinAtual);
         } catch (error) { console.error("Erro:", error); }
     });
 });
@@ -690,6 +835,20 @@ const fichaDadosEvento = document.getElementById('ficha-dados-evento');
 let focoAntesDaFicha = null;
 let idFichaInscritoAtual = null;
 
+onSnapshot(docCronogramaOficinasRefAdmin, snapshot => {
+    const dados = snapshot.data();
+    const programacaoRemota = normalizarProgramacao(dados?.programacao);
+    const programacao = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(programacaoRemota)
+        ? programacaoRemota
+        : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+    catalogoOficinasAdmin = montarCatalogoIngressosOficinas(programacao);
+    atualizarNomesOficinasCheckin();
+    if (alunoCheckinAtual) atualizarGradeCheckin(alunoCheckinAtual, credencialCheckinAtual);
+    if (idFichaInscritoAtual && inscritosPorId.has(idFichaInscritoAtual)) {
+        renderizarOficinasFicha(inscritosPorId.get(idFichaInscritoAtual).oficinas);
+    }
+}, error => console.warn('Não foi possível sincronizar as oficinas no painel.', error));
+
 // O aplicativo recebe zoom responsivo no celular. Fora desse contêiner, a camada
 // fixa volta a usar a janela inteira como referência e cobre toda a tela.
 if (modalFichaInscrito && modalFichaInscrito.parentElement !== document.body) {
@@ -979,6 +1138,33 @@ function atualizarCamposVinculoFicha() {
     });
 }
 
+function renderizarOficinasFicha(oficinasSelecionadas = []) {
+    if (!fichaOficinas) return;
+    const selecionadas = new Set(Array.isArray(oficinasSelecionadas) ? oficinasSelecionadas.map(String) : []);
+    fichaOficinas.replaceChildren();
+
+    Object.keys(catalogoOficinasAdmin).sort().forEach(idOficina => {
+        const oficina = dadosOficina(idOficina);
+        const opcao = document.createElement('label');
+        opcao.className = 'ficha-oficina-opcao';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = idOficina;
+        checkbox.dataset.fichaOficina = '';
+        checkbox.checked = selecionadas.has(idOficina);
+
+        const textos = document.createElement('span');
+        const titulo = document.createElement('strong');
+        titulo.textContent = `${idOficina} · ${oficina.titulo}`;
+        const detalhes = document.createElement('small');
+        detalhes.textContent = `${oficina.data} · ${oficina.ministrante}`;
+        textos.append(titulo, detalhes);
+        opcao.append(checkbox, textos);
+        fichaOficinas.appendChild(opcao);
+    });
+}
+
 function abrirFichaInscrito(idInscrito) {
     const dados = inscritosPorId.get(idInscrito);
     if (!dados || !modalFichaInscrito) return;
@@ -992,6 +1178,7 @@ function abrirFichaInscrito(idInscrito) {
     fichaDadosPessoais.replaceChildren();
     fichaDadosIngresso.replaceChildren();
     fichaDadosEvento.replaceChildren();
+    renderizarOficinasFicha(dados.oficinas);
 
     adicionarCampoFicha(fichaDadosPessoais, 'Nome completo', dados.nome, { editavel: true, campo: 'nome', largo: true, obrigatorio: true, autocomplete: 'name' });
     adicionarCampoFicha(fichaDadosPessoais, 'E-mail', dados.email, { editavel: true, campo: 'email', tipo: 'email', largo: true, obrigatorio: true, autocomplete: 'email' });
@@ -1082,7 +1269,8 @@ function abrirFichaInscrito(idInscrito) {
     fichaResumoPresenca.append(legendaPresenca, valorPresenca);
 
     adicionarCampoFicha(fichaDadosEvento, 'Turnos presentes', presencasConfirmadas.map(turno => NOMES_TURNOS[turno]).join(' · ') || 'Nenhum', { largo: true });
-    adicionarCampoFicha(fichaDadosEvento, 'Oficinas inscritas', Array.isArray(dados.oficinas) && dados.oficinas.length ? dados.oficinas.join(' · ') : 'Nenhuma', { largo: true });
+    const oficinasComPresenca = Array.isArray(dados.oficinasPresenca) ? dados.oficinasPresenca : [];
+    adicionarCampoFicha(fichaDadosEvento, 'Presenças em oficinas', oficinasComPresenca.length ? oficinasComPresenca.map(rotuloOficina).join(' · ') : 'Nenhuma', { largo: true });
     adicionarCampoFicha(fichaDadosEvento, 'Cadastro criado em', formatarDataRegistro(dados.criadoEm));
     adicionarCampoFicha(fichaDadosEvento, 'Última atualização', formatarDataRegistro(dados.atualizadoEm));
 
@@ -1129,11 +1317,15 @@ formFichaInscrito?.addEventListener('submit', async event => {
     const tipoIngresso = valorEditavelFicha('tipoIngresso');
     const semVinculoAcademico = valorEditavelFicha('vinculoAcademico') === 'sem_vinculo';
     const idInscrito = idFichaInscritoAtual;
+    const oficinas = fichaOficinas
+        ? [...fichaOficinas.querySelectorAll('[data-ficha-oficina]:checked')].map(campo => campo.value)
+        : [];
 
     const atualizacao = {
         nome,
         email,
         semVinculoAcademico,
+        oficinas,
         atualizadoEm: serverTimestamp()
     };
 
