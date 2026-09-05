@@ -9,7 +9,7 @@ import {
     disponibilidadeSegundoLote,
     obterLoteAutomatico,
     normalizarUrlFormulario
-} from "./ingressos-config.js?v=171";
+} from "./ingressos-config.js?v=20260905-1";
 
 const lotes = document.querySelectorAll(".lote-card");
 const botoes = document.querySelectorAll(".plano-botao");

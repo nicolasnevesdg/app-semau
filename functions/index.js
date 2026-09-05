@@ -22,11 +22,18 @@ const FORMULARIO_LOTE_SOCIAL = "https://docs.google.com/forms/d/e/1FAIpQLSdkiRqu
 const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
 const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
 const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
-const LIMITE_KIT_SEGUNDO_LOTE = 60;
+const LIMITE_KIT_SEGUNDO_LOTE_PADRAO = 70;
 const DURACAO_CHECKOUT_MS = 7 * 60 * 1000;
 const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
 const DURACAO_RESERVA_MS = DURACAO_CHECKOUT_MS;
+const INTERVALO_RECUSA_RISCO_MS = 15 * 60 * 1000;
 const STATUS_FINAIS_SEM_PAGAMENTO = new Set(["rejected", "cancelled", "refunded", "charged_back"]);
+const STATUS_PEDIDO_ABERTO = new Set(["creating_preference", "pending"]);
+const STATUS_PAGAMENTO_CANCELAVEL = new Set(["pending", "in_process", "authorized"]);
+const DETALHES_RECUSA_RISCO = new Set([
+  "high_risk", "cc_rejected_high_risk", "rejected_by_issuer", "cc_rejected_blacklist",
+  "cc_rejected_duplicated_payment", "duplicated_payment", "cc_rejected_max_attempts", "max_attempts_exceeded",
+]);
 const ESCOLARIDADES_VALIDAS = new Set([
   "fundamental", "medio", "tecnico", "graduacao_incompleta", "graduacao_completa",
   "especializacao", "mestrado", "doutorado", "nao_informar",
@@ -75,6 +82,20 @@ function numeroSeguro(value) {
   return Number.isFinite(numero) && numero > 0 ? Math.floor(numero) : 0;
 }
 
+function limiteSeguro(value, fallback) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numero = Number(value);
+  return Number.isFinite(numero) && numero >= 0 ? Math.floor(numero) : fallback;
+}
+
+function dataEmMilissegundos(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (Number.isFinite(value.seconds)) return (value.seconds * 1000) + Math.floor((value.nanoseconds || 0) / 1e6);
+  const data = new Date(value);
+  return Number.isNaN(data.getTime()) ? 0 : data.getTime();
+}
+
 function normalizarEstoque(dados = {}, agora = Date.now(), lote = "primeiro") {
   const estoqueLote = dados[lote] || {};
   const reservas = {};
@@ -91,7 +112,7 @@ function normalizarEstoque(dados = {}, agora = Date.now(), lote = "primeiro") {
   });
   const limites = lote === "primeiro"
     ? LIMITE_PRIMEIRO_LOTE
-    : { normal: null, kit: LIMITE_KIT_SEGUNDO_LOTE };
+    : { normal: null, kit: limiteSeguro(estoqueLote.kitLimite, LIMITE_KIT_SEGUNDO_LOTE_PADRAO) };
   return {
     normalVendidos: numeroSeguro(estoqueLote.normalVendidos),
     kitVendidos: numeroSeguro(estoqueLote.kitVendidos),
@@ -172,6 +193,7 @@ function validarDados(data) {
     escolaridade: semVinculoAcademico ? escolaridade : "",
     profissao: semVinculoAcademico ? profissao : "",
     comoConheceu: semVinculoAcademico ? comoConheceu : "",
+    compraAdicionalAutorizada: data.permitirCompraAdicional === true,
   };
 }
 
@@ -200,6 +222,7 @@ function dadosPedido(dados, ingresso, expiraEm) {
     reservaEstoque,
     reservaExpiraEm: reservaEstoque ? expiraEm : null,
     checkoutExpiraEm: expiraEm,
+    compraAdicionalAutorizada: dados.compraAdicionalAutorizada === true,
     estoqueContabilizado: false,
     criadoEm: FieldValue.serverTimestamp(),
     atualizadoEm: FieldValue.serverTimestamp(),
@@ -227,6 +250,22 @@ async function localizarCompraExistente(dados, permitirCompraAdicional = false) 
   }
 
   const agora = Date.now();
+  const recusaDeRisco = pedidosSnapshot.docs
+    .map((documento) => ({ id: documento.id, ...documento.data() }))
+    .filter((pedido) => pedido.status === "rejected" && DETALHES_RECUSA_RISCO.has(texto(pedido.paymentStatusDetail, 100).toLowerCase()))
+    .map((pedido) => ({ ...pedido, recusadoEm: dataEmMilissegundos(pedido.atualizadoEm) }))
+    .filter((pedido) => pedido.recusadoEm > 0 && agora - pedido.recusadoEm < INTERVALO_RECUSA_RISCO_MS)
+    .sort((a, b) => b.recusadoEm - a.recusadoEm)[0];
+  if (recusaDeRisco) {
+    const tentarNovamenteEm = recusaDeRisco.recusadoEm + INTERVALO_RECUSA_RISCO_MS;
+    const minutos = Math.max(1, Math.ceil((tentarNovamenteEm - agora) / 60000));
+    throw new HttpsError(
+      "resource-exhausted",
+      `O Mercado Pago recusou a tentativa anterior por segurança. Aguarde ${minutos} minuto${minutos === 1 ? "" : "s"} e tente novamente com Pix, outro cartão ou o dispositivo habitual.`,
+      { motivo: "risco-temporario", tentarNovamenteEm },
+    );
+  }
+
   const pedidoPendente = pedidosSnapshot.docs
     .map((documento) => ({ id: documento.id, ...documento.data() }))
     .filter((pedido) => pedido.status === "pending" || pedido.status === "creating_preference")
@@ -288,7 +327,7 @@ async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
 
     if (dados.lote === "segundo" && dados.tipo === "kit") {
       const ocupados = estoqueSegundo.kitVendidos + quantidadeReservada(estoqueSegundo, "kit");
-      if (ocupados >= LIMITE_KIT_SEGUNDO_LOTE) {
+      if (ocupados >= estoqueSegundo.kitLimite) {
         throw new HttpsError("resource-exhausted", "Os ingressos com kit do 2º lote estão esgotados.");
       }
       estoqueSegundo.reservas[pedidoRef.id] = { tipo: "kit", criadaEm: agora, expiraEm };
@@ -453,6 +492,16 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
 
   const pedidoRef = db.collection("pedidos").doc(pedidoId);
   const inscritoRef = db.collection("inscritos").doc(pedidoId);
+  const pedidoInicialDoc = await pedidoRef.get();
+  if (!pedidoInicialDoc.exists) throw new Error("Pedido não encontrado.");
+  const pedidoInicial = pedidoInicialDoc.data();
+  const inscritosMesmoEmail = pedidoInicial.email
+    ? await db.collection("inscritos").where("email", "==", pedidoInicial.email).limit(20).get()
+    : { docs: [] };
+  const jaExisteOutroIngressoAtivo = inscritosMesmoEmail.docs.some((documento) => {
+    const inscrito = documento.data();
+    return documento.id !== pedidoId && inscrito.statusPagamento === "approved" && inscrito.ingressoAtivo !== false;
+  });
   const tokenNovo = await gerarTokenIngresso();
 
   const resultado = await db.runTransaction(async (transaction) => {
@@ -497,8 +546,23 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
     const limiteEstoque = loteEstoque === "primeiro"
       ? LIMITE_PRIMEIRO_LOTE[tipoEstoque]
       : loteEstoque === "segundo"
-        ? LIMITE_KIT_SEGUNDO_LOTE
+        ? estoqueSegundo.kitLimite
         : null;
+
+    if (
+      pagamentoAprovado &&
+      !inscritoDoc.exists &&
+      jaExisteOutroIngressoAtivo &&
+      pedido.compraAdicionalAutorizada !== true
+    ) {
+      pagamentoAprovado = false;
+      estornoNecessario = true;
+      statusSeguro = "refund_required_duplicate";
+      if (estoquePedido?.reservas[pedidoId]) {
+        delete estoquePedido.reservas[pedidoId];
+        estoqueMudou = true;
+      }
+    }
 
     if (pagamentoAprovado && !inscritoDoc.exists && estoquePedido && !estoqueContabilizado) {
       const temReserva = Boolean(estoquePedido.reservas[pedidoId]);
@@ -617,24 +681,26 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       token: pagamentoAprovado ? token : null,
       nome: pagamentoAprovado ? pedido.nome : null,
       email: pagamentoAprovado ? pedido.email : null,
+      paymentStatusDetail: texto(payment.status_detail, 100) || null,
       estornoNecessario,
     };
   });
 
   if (resultado.estornoNecessario) {
+    const estornoPorDuplicidade = resultado.status === "refund_required_duplicate";
     try {
       await mercadoPago(`/v1/payments/${encodeURIComponent(paymentId)}/refunds`, {
         method: "POST",
-        headers: { "X-Idempotency-Key": `estoque-${pedidoId}` },
+        headers: { "X-Idempotency-Key": `${estornoPorDuplicidade ? "duplicidade" : "estoque"}-${pedidoId}` },
         body: "{}",
       });
       await pedidoRef.update({
-        status: "refunded_stock_limit",
+        status: estornoPorDuplicidade ? "refunded_duplicate" : "refunded_stock_limit",
         credencialEmitida: false,
         estornadoEm: FieldValue.serverTimestamp(),
         atualizadoEm: FieldValue.serverTimestamp(),
       });
-      resultado.status = "refunded_stock_limit";
+      resultado.status = estornoPorDuplicidade ? "refunded_duplicate" : "refunded_stock_limit";
     } catch (error) {
       logger.error("Falha ao estornar pagamento acima do estoque", { pedidoId, paymentId, error: error.message });
       await pedidoRef.update({
@@ -691,6 +757,121 @@ async function obterPagamentoJaConfirmado(pedidoId, paymentId) {
   };
 }
 
+async function marcarPedidoComoExpirado(pedidoId) {
+  const pedidoRef = db.collection("pedidos").doc(pedidoId);
+  await db.runTransaction(async (transaction) => {
+    const [pedidoDoc, estoqueDoc] = await Promise.all([
+      transaction.get(pedidoRef),
+      transaction.get(estoqueIngressosRef),
+    ]);
+    if (!pedidoDoc.exists) return;
+    const pedido = pedidoDoc.data();
+    if (!STATUS_PEDIDO_ABERTO.has(pedido.status)) return;
+    const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
+    if (expiraEm > Date.now()) return;
+
+    const dadosEstoque = estoqueDoc.data() || {};
+    const estoquePrimeiro = normalizarEstoque(dadosEstoque, Date.now(), "primeiro");
+    const estoqueSegundo = normalizarEstoque(dadosEstoque, Date.now(), "segundo");
+    delete estoquePrimeiro.reservas[pedidoId];
+    delete estoqueSegundo.reservas[pedidoId];
+    transaction.set(estoqueIngressosRef, {
+      primeiro: estoquePrimeiro,
+      segundo: estoqueSegundo,
+      atualizadoEm: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    transaction.update(pedidoRef, {
+      status: "expired",
+      paymentStatusDetail: "checkout_expired",
+      expiradoEm: FieldValue.serverTimestamp(),
+      atualizadoEm: FieldValue.serverTimestamp(),
+    });
+  });
+}
+
+async function limparPedidoPendente(documento) {
+  const pedidoId = documento.id;
+  const pedido = documento.data();
+  const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
+  if (!STATUS_PEDIDO_ABERTO.has(pedido.status) || !expiraEm || expiraEm > Date.now()) return;
+
+  const busca = new URLSearchParams({
+    external_reference: pedidoId,
+    sort: "date_created",
+    criteria: "desc",
+    limit: "20",
+  });
+  const resposta = await mercadoPago(`/v1/payments/search?${busca.toString()}`);
+  const pagamentos = Array.isArray(resposta.results) ? resposta.results : [];
+  const aprovado = pagamentos.find((pagamento) => pagamento.status === "approved");
+  if (aprovado?.id) {
+    await processarPagamento(String(aprovado.id), pedidoId);
+    return;
+  }
+
+  const cancelaveis = pagamentos.filter((pagamento) => pagamento.id && STATUS_PAGAMENTO_CANCELAVEL.has(pagamento.status));
+  for (const pagamento of cancelaveis) {
+    await mercadoPago(`/v1/payments/${encodeURIComponent(pagamento.id)}`, {
+      method: "PUT",
+      body: JSON.stringify({ status: "cancelled" }),
+    });
+    await processarPagamento(String(pagamento.id), pedidoId);
+  }
+  if (cancelaveis.length) return;
+
+  const finalizado = pagamentos.find((pagamento) => pagamento.id && STATUS_FINAIS_SEM_PAGAMENTO.has(pagamento.status));
+  if (finalizado?.id) {
+    await processarPagamento(String(finalizado.id), pedidoId);
+    return;
+  }
+  await marcarPedidoComoExpirado(pedidoId);
+}
+
+async function reconciliarContadoresEstoque() {
+  const aprovadosSnapshot = await db.collection("pedidos").where("status", "==", "approved").limit(500).get();
+  const totais = { primeiro: { normal: 0, kit: 0 }, segundo: { kit: 0 } };
+  const pedidosNaoContabilizados = [];
+
+  aprovadosSnapshot.docs.forEach((documento) => {
+    const pedido = documento.data();
+    if (pedido.loteIngresso === "primeiro" && (pedido.tipoIngresso === "normal" || pedido.tipoIngresso === "kit")) {
+      totais.primeiro[pedido.tipoIngresso] += 1;
+      if (pedido.estoqueContabilizado !== true) pedidosNaoContabilizados.push(documento.ref);
+    }
+    if (pedido.loteIngresso === "segundo" && pedido.tipoIngresso === "kit") {
+      totais.segundo.kit += 1;
+      if (pedido.estoqueContabilizado !== true) pedidosNaoContabilizados.push(documento.ref);
+    }
+  });
+
+  await db.runTransaction(async (transaction) => {
+    const estoqueDoc = await transaction.get(estoqueIngressosRef);
+    const dadosEstoque = estoqueDoc.data() || {};
+    const primeiro = normalizarEstoque(dadosEstoque, Date.now(), "primeiro");
+    const segundo = normalizarEstoque(dadosEstoque, Date.now(), "segundo");
+    primeiro.normalVendidos = Math.max(primeiro.normalVendidos, totais.primeiro.normal);
+    primeiro.kitVendidos = Math.max(primeiro.kitVendidos, totais.primeiro.kit);
+    segundo.kitVendidos = Math.max(segundo.kitVendidos, totais.segundo.kit);
+    transaction.set(estoqueIngressosRef, {
+      primeiro,
+      segundo,
+      ultimaAuditoriaEm: FieldValue.serverTimestamp(),
+      atualizadoEm: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+
+  for (let indice = 0; indice < pedidosNaoContabilizados.length; indice += 400) {
+    const lote = pedidosNaoContabilizados.slice(indice, indice + 400);
+    const batch = db.batch();
+    lote.forEach((referencia) => batch.update(referencia, {
+      estoqueContabilizado: true,
+      estoqueReconciliadoEm: FieldValue.serverTimestamp(),
+    }));
+    await batch.commit();
+  }
+  return totais;
+}
+
 exports.criarPreferencia = onCall(
   {
     region: REGION,
@@ -733,6 +914,9 @@ exports.criarPreferencia = onCall(
             failure: `${SITE_URL}/pagamento-falhou.html`,
           },
           auto_return: "approved",
+          payment_methods: {
+            excluded_payment_types: [{ id: "ticket" }],
+          },
           expires: true,
           expiration_date_from: new Date(agora).toISOString(),
           expiration_date_to: new Date(reservaExpiraEm).toISOString(),
@@ -840,6 +1024,32 @@ exports.mercadoPagoWebhook = onRequest(
       logger.error("Falha ao processar webhook", { paymentId, error: error.message });
       response.status(500).send("retry");
     }
+  },
+);
+
+exports.manterPagamentosEEstoque = onSchedule(
+  {
+    region: REGION,
+    schedule: "every 10 minutes",
+    timeZone: "America/Sao_Paulo",
+    maxInstances: 1,
+    secrets: [mercadoPagoAccessToken, emailJsPrivateKey],
+  },
+  async () => {
+    const pedidosAbertos = await db.collection("pedidos").where("status", "in", [...STATUS_PEDIDO_ABERTO]).limit(200).get();
+    let limpos = 0;
+    for (const documento of pedidosAbertos.docs) {
+      try {
+        const expiraEm = Number(documento.data().checkoutExpiraEm || documento.data().reservaExpiraEm || 0);
+        if (!expiraEm || expiraEm > Date.now()) continue;
+        await limparPedidoPendente(documento);
+        limpos += 1;
+      } catch (error) {
+        logger.error("Falha ao limpar pedido pendente", { pedidoId: documento.id, error: error.message });
+      }
+    }
+    const totais = await reconciliarContadoresEstoque();
+    logger.info("Manutenção de pagamentos e estoque concluída.", { pedidosLimpos: limpos, totais });
   },
 );
 

@@ -3,7 +3,7 @@ export const FORMULARIO_LOTE_SOCIAL = "https://docs.google.com/forms/d/e/1FAIpQL
 export const ABERTURA_LOTE_SOCIAL = Date.parse("2026-09-01T12:00:00-03:00");
 export const ENCERRAMENTO_LOTE_SOCIAL = Date.parse("2026-09-01T15:00:00-03:00");
 export const LIMITE_PRIMEIRO_LOTE = Object.freeze({ normal: 10, kit: 10 });
-export const LIMITE_KIT_SEGUNDO_LOTE = 60;
+export const LIMITE_KIT_SEGUNDO_LOTE = 70;
 const DURACAO_RESERVA_ANTIGA_MS = 60 * 60 * 1000;
 const DURACAO_RESERVA_MS = 7 * 60 * 1000;
 
@@ -81,11 +81,16 @@ export function disponibilidadeSegundoLote(estoque = {}, agora = Date.now()) {
     const segundo = estoque?.segundo || {};
     const kitVendidos = numeroSeguro(segundo.kitVendidos);
     const kitReservados = reservasAtivas(estoque, "segundo", "kit", agora);
+    const limiteConfigurado = Number(segundo.kitLimite);
+    const kitLimite = Number.isFinite(limiteConfigurado) && limiteConfigurado >= 0
+        ? Math.floor(limiteConfigurado)
+        : LIMITE_KIT_SEGUNDO_LOTE;
     return {
         normal: true,
-        kit: kitVendidos + kitReservados < LIMITE_KIT_SEGUNDO_LOTE,
+        kit: kitVendidos + kitReservados < kitLimite,
         kitVendidos,
-        kitReservados
+        kitReservados,
+        kitLimite
     };
 }
 

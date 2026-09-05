@@ -8,7 +8,7 @@ import {
     disponibilidadeSegundoLote,
     obterLoteAutomatico,
     obterIngresso
-} from "./ingressos-config.js?v=171";
+} from "./ingressos-config.js?v=20260905-1";
 
 const functions = getFunctions(app, "southamerica-east1");
 const criarPreferencia = httpsCallable(functions, "criarPreferencia");
@@ -217,6 +217,12 @@ form.addEventListener("submit", async event => {
         window.location.assign(resposta.data.checkoutUrl);
     } catch (error) {
         console.error("Falha ao iniciar pagamento", error);
+        if (error?.details?.motivo === "risco-temporario") {
+            mostrarStatus(error.message || "Por segurança, aguarde alguns minutos antes de tentar novamente. Prefira Pix, outro cartão ou o dispositivo habitual.");
+            botao.disabled = false;
+            botao.innerHTML = textoBotaoPadrao;
+            return;
+        }
         if (error?.details?.motivo === "ingresso-ativo") {
             const comprarOutro = window.confirm("Já existe um ingresso pago e ativo para este e-mail. Deseja realmente comprar outro ingresso usando o mesmo endereço?");
             if (comprarOutro) {

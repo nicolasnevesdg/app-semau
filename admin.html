@@ -57,6 +57,17 @@
     .resumo-modalidade span { display: block; color: #767a76; font-size: 10px; font-weight: 800; line-height: 1.3; letter-spacing: .4px; text-transform: uppercase; }
     .resumo-modalidade strong { display: block; margin-top: 5px; color: var(--cor-primaria); font-size: 23px; line-height: 1; }
     .resumo-modalidade-outros { background: #fff8f2; border-color: #f4dfcf; }
+    .controle-estoque { display: grid; gap: 15px; }
+    .controle-estoque-linha { padding: 16px; border: 1px solid #dfe8e3; border-radius: 16px; background: #f4f9f6; }
+    .controle-estoque-linha > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .controle-estoque-linha span { color: #6c736e; font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; }
+    .controle-estoque-linha strong { color: var(--cor-primaria); font-size: 22px; }
+    .controle-estoque-linha p { margin: 8px 0 0; color: #6b716d; font-size: 12px; line-height: 1.45; }
+    .controle-estoque-linha[data-esgotado="true"] { border-color: #f1cabf; background: #fff2ed; }
+    .pagamentos-problemas { display: grid; gap: 9px; }
+    .pagamento-problema { padding: 12px 14px; border: 1px solid #ece4df; border-radius: 13px; background: #fffaf7; }
+    .pagamento-problema strong { display: block; color: #3e4842; font-size: 12px; }
+    .pagamento-problema span { display: block; margin-top: 4px; color: #797b78; font-size: 11px; line-height: 1.4; }
     .filtro-inscritos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
     .filtro-inscritos label { min-width: 0; }
     .filtro-inscritos label > span { display: block; margin: 0 0 7px; color: #696d69; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
@@ -339,6 +350,21 @@
             </div>
         </div>
 
+        <div class="admin-card-minimal controle-estoque">
+            <div>
+                <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Estoque protegido</p>
+                <h2 style="margin: 0; color: var(--cor-primaria); font-size: 20px;">Kit do 2º lote</h2>
+            </div>
+            <div id="estoque-kit-segundo" class="controle-estoque-linha">
+                <div><span>Pagamentos contabilizados</span><strong><b id="estoque-kit-vendidos">—</b> / <b id="estoque-kit-limite">—</b></strong></div>
+                <p id="estoque-kit-status">Conferindo vendas e reservas...</p>
+            </div>
+            <div>
+                <h3 style="margin: 2px 0 10px; color: var(--cor-primaria); font-size: 14px;">Tentativas recentes que precisam de atenção</h3>
+                <div id="admin-pagamentos-problemas" class="pagamentos-problemas"><p style="color:#777;font-size:12px;">Carregando...</p></div>
+            </div>
+        </div>
+
         <div class="admin-card-minimal">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h2 style="color: var(--cor-primaria); font-size: 20px; font-weight: 800; margin: 0;">Base de Dados</h2>
@@ -578,7 +604,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/admin.js?v=20260904-2"></script>
+  <script type="module" src="js/admin.js?v=20260905-1"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

@@ -815,9 +815,15 @@ const adminListaResultado = document.getElementById('admin-lista-resultado');
 const adminListaFiltroVazio = document.getElementById('admin-lista-filtro-vazio');
 const dashTotal = document.getElementById('dash-total');
 const btnExportarExcel = document.getElementById('btn-exportar-excel');
+const estoqueKitSegundo = document.getElementById('estoque-kit-segundo');
+const estoqueKitVendidos = document.getElementById('estoque-kit-vendidos');
+const estoqueKitLimite = document.getElementById('estoque-kit-limite');
+const estoqueKitStatus = document.getElementById('estoque-kit-status');
+const adminPagamentosProblemas = document.getElementById('admin-pagamentos-problemas');
 
 let dadosParaExcel = [];
 const inscritosPorId = new Map();
+const pedidosPorId = new Map();
 const TURNOS_PRESENCA = ['d21_m', 'd21_t', 'd22_m', 'd23_m', 'd23_t', 'd24_m', 'd25_m'];
 const NOMES_TURNOS = {
     d21_m: '21/Set · Manhã', d21_t: '21/Set · Tarde',
@@ -1088,6 +1094,59 @@ function nomeDoStatusPagamento(status) {
     })[status] || textoDisponivel(status);
 }
 
+function nomeDoDetalhePagamento(detalhe) {
+    return ({
+        accredited: 'Pagamento aprovado e creditado',
+        pending_waiting_payment: 'Aguardando pagamento',
+        waiting_payment: 'Aguardando pagamento',
+        checkout_expired: 'Checkout expirado',
+        high_risk: 'Recusado por risco',
+        cc_rejected_high_risk: 'Recusado por risco',
+        rejected_by_issuer: 'Recusado pelo banco emissor',
+        cc_rejected_duplicated_payment: 'Tentativa considerada duplicada',
+        duplicated_payment: 'Tentativa considerada duplicada',
+        cc_rejected_max_attempts: 'Limite de tentativas excedido',
+        max_attempts_exceeded: 'Limite de tentativas excedido',
+        insufficient_amount: 'Limite ou saldo insuficiente',
+        cc_rejected_insufficient_amount: 'Limite ou saldo insuficiente',
+        bad_filled_card_data: 'Dados do cartão incorretos'
+    })[String(detalhe || '').toLowerCase()] || textoDisponivel(detalhe);
+}
+
+function renderizarProblemasDePagamento(pedidos = []) {
+    if (!adminPagamentosProblemas) return;
+    const agora = Date.now();
+    const itens = pedidos
+        .filter(pedido => ['pending', 'rejected', 'expired', 'manual_refund_required'].includes(String(pedido.status || '')))
+        .sort((a, b) => dataEmMilissegundos(b.atualizadoEm || b.criadoEm) - dataEmMilissegundos(a.atualizadoEm || a.criadoEm))
+        .slice(0, 10);
+    if (!itens.length) {
+        adminPagamentosProblemas.innerHTML = '<p style="margin:0;color:#718078;font-size:12px;">Nenhuma tentativa recente precisa de atenção.</p>';
+        return;
+    }
+    adminPagamentosProblemas.innerHTML = itens.map(pedido => {
+        const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
+        const status = pedido.status === 'pending' && expiraEm && expiraEm <= agora ? 'Pendente vencido' : nomeDoStatusPagamento(pedido.status);
+        return `<article class="pagamento-problema"><strong>${escaparHtml(textoDisponivel(pedido.nome, 'Comprador sem nome'))} · ${escaparHtml(status)}</strong><span>${escaparHtml(textoDisponivel(pedido.email, 'E-mail não informado'))} · ${escaparHtml(nomeDoDetalhePagamento(pedido.paymentStatusDetail))}</span></article>`;
+    }).join('');
+}
+
+onSnapshot(doc(db, 'configuracoes', 'estoqueIngressos'), snapshot => {
+    const segundo = snapshot.data()?.segundo || {};
+    const vendidos = Math.max(0, Number(segundo.kitVendidos) || 0);
+    const limite = Math.max(0, Number(segundo.kitLimite) || 70);
+    const reservados = Object.values(segundo.reservas || {}).filter(reserva => Number(reserva?.expiraEm || 0) > Date.now()).length;
+    const disponiveis = Math.max(0, limite - vendidos - reservados);
+    if (estoqueKitVendidos) estoqueKitVendidos.textContent = vendidos;
+    if (estoqueKitLimite) estoqueKitLimite.textContent = limite;
+    if (estoqueKitStatus) estoqueKitStatus.textContent = disponiveis > 0
+        ? `${disponiveis} ingresso${disponiveis === 1 ? '' : 's'} disponível${disponiveis === 1 ? '' : 'is'}${reservados ? ` · ${reservados} em reserva temporária` : ''}.`
+        : 'Esgotado. A compra com kit está bloqueada automaticamente.';
+    if (estoqueKitSegundo) estoqueKitSegundo.dataset.esgotado = String(disponiveis <= 0);
+}, () => {
+    if (estoqueKitStatus) estoqueKitStatus.textContent = 'Não foi possível consultar o estoque agora.';
+});
+
 function nomeDoStatusEmail(status) {
     return ({ enviado: 'Enviado', enviando: 'Enviando', falhou: 'Falhou' })[status] || 'Ainda não enviado';
 }
@@ -1180,6 +1239,9 @@ function renderizarOficinasFicha(oficinasSelecionadas = []) {
 function abrirFichaInscrito(idInscrito) {
     const dados = inscritosPorId.get(idInscrito);
     if (!dados || !modalFichaInscrito) return;
+    const pedidoPago = dados._pedido?.status === 'approved';
+    const loteExibido = pedidoPago ? dados._pedido.loteIngresso : dados.loteIngresso;
+    const tipoExibido = pedidoPago ? dados._pedido.tipoIngresso : dados.tipoIngresso;
 
     idFichaInscritoAtual = idInscrito;
     modalFichaNome.textContent = textoDisponivel(dados.nome, 'Inscrito sem nome');
@@ -1242,8 +1304,8 @@ function abrirFichaInscrito(idInscrito) {
     });
     formFichaInscrito.querySelector('[data-campo="vinculoAcademico"]')?.addEventListener('change', atualizarCamposVinculoFicha);
     atualizarCamposVinculoFicha();
-    adicionarCampoFicha(fichaDadosPessoais, 'Lote', dados.loteIngresso, {
-        editavel: true,
+    adicionarCampoFicha(fichaDadosPessoais, 'Lote', loteExibido, {
+        editavel: !pedidoPago,
         campo: 'loteIngresso',
         opcoes: [
             { valor: '', rotulo: 'Não informado' },
@@ -1252,8 +1314,8 @@ function abrirFichaInscrito(idInscrito) {
             { valor: 'segundo', rotulo: NOMES_LOTES.segundo }
         ]
     });
-    adicionarCampoFicha(fichaDadosPessoais, 'Modalidade', dados.tipoIngresso, {
-        editavel: true,
+    adicionarCampoFicha(fichaDadosPessoais, 'Modalidade', tipoExibido, {
+        editavel: !pedidoPago,
         campo: 'tipoIngresso',
         opcoes: [
             { valor: '', rotulo: 'Não informada' },
@@ -1264,6 +1326,7 @@ function abrirFichaInscrito(idInscrito) {
 
     adicionarCampoFicha(fichaDadosIngresso, 'Token', dados.token, { token: true });
     adicionarCampoFicha(fichaDadosIngresso, 'Pagamento', nomeDoStatusPagamento(dados.statusPagamento));
+    adicionarCampoFicha(fichaDadosIngresso, 'Detalhe do pagamento', nomeDoDetalhePagamento(dados.paymentStatusDetail));
     adicionarCampoFicha(fichaDadosIngresso, 'E-mail do ingresso', nomeDoStatusEmail(dados.emailIngressoStatus));
     adicionarCampoFicha(fichaDadosIngresso, 'E-mail enviado em', formatarDataRegistro(dados.emailIngressoEnviadoEm));
     adicionarCampoFicha(fichaDadosIngresso, 'Ingresso ativo', dados.ingressoAtivo === false ? 'Não' : dados.ingressoAtivo === true ? 'Sim' : 'Não informado');
@@ -1329,6 +1392,8 @@ formFichaInscrito?.addEventListener('submit', async event => {
     const tipoIngresso = valorEditavelFicha('tipoIngresso');
     const semVinculoAcademico = valorEditavelFicha('vinculoAcademico') === 'sem_vinculo';
     const idInscrito = idFichaInscritoAtual;
+    const dadosAtuais = inscritosPorId.get(idInscrito) || {};
+    const pedidoPago = dadosAtuais._pedido?.status === 'approved';
     const oficinas = fichaOficinas
         ? [...fichaOficinas.querySelectorAll('[data-ficha-oficina]:checked')].map(campo => campo.value)
         : [];
@@ -1352,10 +1417,12 @@ formFichaInscrito?.addEventListener('submit', async event => {
     camposNaoAcademicos.forEach(campo => {
         atualizacao[campo] = semVinculoAcademico ? (valorEditavelFicha(campo) || deleteField()) : deleteField();
     });
-    atribuirCampoOpcional(atualizacao, 'loteIngresso', loteIngresso);
-    atribuirCampoOpcional(atualizacao, 'nomeLote', NOMES_LOTES[loteIngresso] || '');
-    atribuirCampoOpcional(atualizacao, 'tipoIngresso', tipoIngresso);
-    atribuirCampoOpcional(atualizacao, 'nomeIngresso', NOMES_MODALIDADES[tipoIngresso] || '');
+    if (!pedidoPago) {
+        atribuirCampoOpcional(atualizacao, 'loteIngresso', loteIngresso);
+        atribuirCampoOpcional(atualizacao, 'nomeLote', NOMES_LOTES[loteIngresso] || '');
+        atribuirCampoOpcional(atualizacao, 'tipoIngresso', tipoIngresso);
+        atribuirCampoOpcional(atualizacao, 'nomeIngresso', NOMES_MODALIDADES[tipoIngresso] || '');
+    }
 
     const textoOriginal = btnSalvarFicha?.innerHTML || 'Salvar alterações';
     if (btnSalvarFicha) {
@@ -1396,10 +1463,17 @@ async function carregarListaInscritos() {
     containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px solid #e8e8eb;"><p style="color: #888; font-size: 14px; font-weight: 600; margin:0;"><i class="ph-bold ph-hourglass-high" style="margin-right: 8px;"></i> Carregando base de dados...</p></div>';
     dadosParaExcel = [];
     inscritosPorId.clear();
+    pedidosPorId.clear();
     atualizarResumoModalidades();
-    
+
     try {
-        const querySnapshot = await getDocs(collection(db, "inscritos"));
+        const [querySnapshot, pedidosSnapshot] = await Promise.all([
+            getDocs(collection(db, "inscritos")),
+            getDocs(collection(db, "pedidos"))
+        ]);
+        const pedidos = pedidosSnapshot.docs.map(documento => ({ id: documento.id, ...documento.data() }));
+        pedidos.forEach(pedido => pedidosPorId.set(pedido.id, pedido));
+        renderizarProblemasDePagamento(pedidos);
         
         if (querySnapshot.empty) {
             containerListaInscritos.innerHTML = '<div style="text-align:center; padding: 40px 20px; background: #fff; border-radius: 20px; border: 1px dashed #e8e8eb;"><i class="ph-bold ph-users-slash" style="font-size: 32px; color: #ccc; margin-bottom: 12px; display: block;"></i><p style="color: #888; font-weight: 600; font-size: 14px; margin:0;">Nenhum inscrito encontrado.</p></div>';
@@ -1414,8 +1488,17 @@ async function carregarListaInscritos() {
 
         querySnapshot.forEach((docSnap) => {
             const dados = docSnap.data();
-            const categoria = categoriaDoInscrito(dados);
-            inscritosPorId.set(docSnap.id, { id: docSnap.id, ...dados });
+            const pedido = pedidosPorId.get(dados.pedidoId || docSnap.id);
+            const dadosAutoritativos = pedido?.status === 'approved'
+                ? { ...dados, loteIngresso: pedido.loteIngresso, nomeLote: pedido.nomeLote, tipoIngresso: pedido.tipoIngresso, nomeIngresso: pedido.nomeIngresso }
+                : dados;
+            const categoria = categoriaDoInscrito(dadosAutoritativos);
+            inscritosPorId.set(docSnap.id, {
+                id: docSnap.id,
+                ...dados,
+                _pedido: pedido || null,
+                paymentStatusDetail: pedido?.paymentStatusDetail || dados.paymentStatusDetail || null
+            });
             totalInscritos++;
             contagensModalidades[categoria]++;
             const nomeSeguro = textoDisponivel(dados.nome, 'Inscrito sem nome');

@@ -20,7 +20,15 @@ const paginaRetorno = document.getElementById("app-container");
 const paginaSucesso = paginaRetorno?.classList.contains("pagamento-sucesso");
 const paginaPendente = paginaRetorno?.classList.contains("pagamento-pendente");
 const paginaFalhou = paginaRetorno?.classList.contains("pagamento-falhou");
-const STATUS_FALHA = new Set(["rejected", "cancelled", "refunded", "charged_back", "refunded_stock_limit"]);
+const STATUS_FALHA = new Set([
+    "rejected", "cancelled", "expired", "refunded", "charged_back",
+    "refund_required_stock_limit", "refunded_stock_limit",
+    "refund_required_duplicate", "refunded_duplicate", "manual_refund_required"
+]);
+const DETALHES_RISCO = new Set([
+    "high_risk", "cc_rejected_high_risk", "rejected_by_issuer", "cc_rejected_blacklist",
+    "cc_rejected_duplicated_payment", "duplicated_payment", "cc_rejected_max_attempts", "max_attempts_exceeded"
+]);
 const TEMPO_LIMITE_CONSULTA_MS = 15000;
 let confirmacaoConcluida = false;
 let pararObservacao = null;
@@ -45,12 +53,18 @@ function mostrarVerificacao() {
     if (retornoMensagem) retornoMensagem.textContent = "Estamos consultando o Mercado Pago para mostrar o estado mais recente da sua compra.";
 }
 
-function mostrarFalhaConfirmada() {
+function mostrarFalhaConfirmada(dados = {}) {
+    const detalhe = String(dados.paymentStatusDetail || "").toLowerCase();
+    const recusadoPorRisco = DETALHES_RISCO.has(detalhe);
     if (retornoIcone) retornoIcone.innerHTML = '<i class="ph-bold ph-x"></i>';
-    if (retornoEtiqueta) retornoEtiqueta.textContent = "Pagamento não concluído";
-    if (retornoTitulo) retornoTitulo.textContent = "Não deu certo desta vez.";
-    if (retornoMensagem) retornoMensagem.textContent = "O pagamento não foi aprovado. Você pode tentar novamente ou escolher outro meio de pagamento.";
-    if (retornoPassos[0]) retornoPassos[0].querySelector("div").innerHTML = "<h2>Confira os dados</h2><p>Revise as informações utilizadas e tente novamente quando estiver pronto.</p>";
+    if (retornoEtiqueta) retornoEtiqueta.textContent = recusadoPorRisco ? "Recusado por segurança" : "Pagamento não concluído";
+    if (retornoTitulo) retornoTitulo.textContent = recusadoPorRisco ? "Aguarde antes de tentar novamente." : "Não deu certo desta vez.";
+    if (retornoMensagem) retornoMensagem.textContent = recusadoPorRisco
+        ? "O Mercado Pago identificou risco nesta tentativa. Não faça várias tentativas seguidas com os mesmos dados."
+        : "O pagamento não foi aprovado. Você pode tentar novamente ou escolher outro meio de pagamento.";
+    if (retornoPassos[0]) retornoPassos[0].querySelector("div").innerHTML = recusadoPorRisco
+        ? "<h2>Espere 15 minutos</h2><p>Depois, abra um checkout novo e prefira Pix, outro cartão ou o dispositivo que você costuma usar.</p>"
+        : "<h2>Confira os dados</h2><p>Revise as informações utilizadas e tente novamente quando estiver pronto.</p>";
     if (retornoPassos[1]) retornoPassos[1].querySelector("div").innerHTML = "<h2>Sua vaga não foi emitida</h2><p>Nenhum ingresso ou token foi criado a partir desta tentativa.</p>";
 }
 
@@ -195,7 +209,7 @@ async function confirmarPagamento() {
                 redirecionarPara("pagamento-falhou.html");
                 return;
             }
-            mostrarFalhaConfirmada();
+            mostrarFalhaConfirmada(resposta.data);
             return;
         }
 
