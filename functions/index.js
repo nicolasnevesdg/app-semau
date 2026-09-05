@@ -96,6 +96,13 @@ function dataEmMilissegundos(value) {
   return Number.isNaN(data.getTime()) ? 0 : data.getTime();
 }
 
+function expiracaoPedido(pedido = {}) {
+  const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
+  if (expiraEm > 0) return expiraEm;
+  const criadoEm = dataEmMilissegundos(pedido.criadoEm || pedido.criadoEmCliente || pedido.atualizadoEm);
+  return criadoEm > 0 ? criadoEm + DURACAO_CHECKOUT_MS : 0;
+}
+
 function normalizarEstoque(dados = {}, agora = Date.now(), lote = "primeiro") {
   const estoqueLote = dados[lote] || {};
   const reservas = {};
@@ -270,8 +277,8 @@ async function localizarCompraExistente(dados, permitirCompraAdicional = false) 
     .map((documento) => ({ id: documento.id, ...documento.data() }))
     .filter((pedido) => pedido.status === "pending" || pedido.status === "creating_preference")
     .filter((pedido) => pedido.loteIngresso === dados.lote && pedido.tipoIngresso === dados.tipo)
-    .filter((pedido) => Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0) > agora && pedido.preferenceId)
-    .sort((a, b) => Number(b.checkoutExpiraEm || b.reservaExpiraEm || 0) - Number(a.checkoutExpiraEm || a.reservaExpiraEm || 0))[0];
+    .filter((pedido) => expiracaoPedido(pedido) > agora && pedido.preferenceId)
+    .sort((a, b) => expiracaoPedido(b) - expiracaoPedido(a))[0];
 
   if (!pedidoPendente) return null;
   try {
@@ -282,7 +289,7 @@ async function localizarCompraExistente(dados, permitirCompraAdicional = false) 
     return {
       pedidoId: pedidoPendente.id,
       checkoutUrl,
-      reservaExpiraEm: Number(pedidoPendente.checkoutExpiraEm || pedidoPendente.reservaExpiraEm),
+      reservaExpiraEm: expiracaoPedido(pedidoPendente),
       reutilizado: true,
     };
   } catch (error) {
@@ -767,7 +774,7 @@ async function marcarPedidoComoExpirado(pedidoId) {
     if (!pedidoDoc.exists) return;
     const pedido = pedidoDoc.data();
     if (!STATUS_PEDIDO_ABERTO.has(pedido.status)) return;
-    const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
+    const expiraEm = expiracaoPedido(pedido);
     if (expiraEm > Date.now()) return;
 
     const dadosEstoque = estoqueDoc.data() || {};
@@ -792,7 +799,7 @@ async function marcarPedidoComoExpirado(pedidoId) {
 async function limparPedidoPendente(documento) {
   const pedidoId = documento.id;
   const pedido = documento.data();
-  const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
+  const expiraEm = expiracaoPedido(pedido);
   if (!STATUS_PEDIDO_ABERTO.has(pedido.status) || !expiraEm || expiraEm > Date.now()) return;
 
   const busca = new URLSearchParams({
@@ -1041,7 +1048,7 @@ exports.manterPagamentosEEstoque = onSchedule(
     let limpos = 0;
     for (const documento of pedidosAbertos.docs) {
       try {
-        const expiraEm = Number(documento.data().checkoutExpiraEm || documento.data().reservaExpiraEm || 0);
+        const expiraEm = expiracaoPedido(documento.data());
         if (!expiraEm || expiraEm > Date.now()) continue;
         await limparPedidoPendente(documento);
         limpos += 1;
