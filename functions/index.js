@@ -1033,6 +1033,7 @@ exports.manterPagamentosEEstoque = onSchedule(
     schedule: "every 10 minutes",
     timeZone: "America/Sao_Paulo",
     maxInstances: 1,
+    timeoutSeconds: 300,
     secrets: [mercadoPagoAccessToken, emailJsPrivateKey],
   },
   async () => {
