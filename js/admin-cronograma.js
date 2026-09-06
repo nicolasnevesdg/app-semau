@@ -10,7 +10,7 @@ import {
     normalizarAtividade,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=158';
+} from './programacao-ao-vivo-config.js?v=20260906-1';
 
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
 const EMAIL_CONTA_ADMINISTRATIVA = 'admin@semauufrrj.com';
@@ -136,6 +136,7 @@ function criarCamposConteudoPublico(item) {
         );
     } else if (item.tipo === 'oficina') {
         grade.append(
+            criarCampoDetalhe(item, 'local', 'Local da oficina', { placeholder: 'Ex.: Sala 01, Instituto de Tecnologia', limite: 300 }),
             criarCampoDetalhe(item, 'oficineiro', 'Oficineiro(a)', { placeholder: 'Nome de quem ministra a oficina', limite: 180 }),
             criarCampoDetalhe(item, 'oficineiroCargo', 'Formação / cargo', { placeholder: 'Identificação curta do oficineiro' }),
             criarCampoDetalhe(item, 'oficineiroFoto', 'Foto do(a) oficineiro(a) (caminho ou URL)', { placeholder: 'Ex.: assets/img/oficineiro.png ou https://…', limite: 500 }),

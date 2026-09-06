@@ -8,7 +8,7 @@ import {
     clonarProgramacao,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=158';
+} from './programacao-ao-vivo-config.js?v=20260906-1';
 
 const gridPalestrantes = document.getElementById('grid-palestrantes');
 const gridOficinas = document.getElementById('grid-oficinas');
@@ -107,9 +107,10 @@ function renderizarOficina(item) {
     const biografia = item.oficineiroBio ? `<div class="palestra-biografia"><strong>Sobre quem ministra</strong><p>${escaparHtml(item.oficineiroBio)}</p></div>` : '';
     const fotoOficineiro = escaparHtml(versionarImagemLocal(item.oficineiroFoto || 'assets/img/professor-teste_1.png'));
     const ministrante = item.oficineiro ? `<div class="palestra-mesa oficina-ministrante"><img src="${fotoOficineiro}" alt="Foto de ${escaparHtml(item.oficineiro)}"><div><strong>${escaparHtml(item.oficineiro)}</strong><small>${escaparHtml(item.oficineiroCargo)}</small></div></div>` : '';
+    const local = item.local || 'Local a confirmar';
     return `<div class="carousel-card schedule-card schedule-card-oficina">
         <div class="palestra-capa oficina-capa"><img src="${imagemAtividade(item, 'assets/img/oficina-levantamento.png')}" alt="Imagem de ${escaparHtml(item.titulo)}"><div class="palestra-capa-topo">${horarioCard(item)}<span class="type-tag oficina">Oficina</span></div></div>
-        <div class="palestra-corpo oficina-corpo"><div class="oficina-conteudo"><h3>${escaparHtml(item.titulo)}</h3>${item.descricao ? `<p>${escaparHtml(item.descricao)}</p>` : ''}${biografia}</div>${ministrante}</div>
+        <div class="palestra-corpo oficina-corpo"><div class="oficina-conteudo"><h3>${escaparHtml(item.titulo)}</h3><p class="oficina-local"><i class="ph-bold ph-map-pin"></i><span>${escaparHtml(local)}</span></p>${item.descricao ? `<p>${escaparHtml(item.descricao)}</p>` : ''}${biografia}</div>${ministrante}</div>
     </div>`;
 }
 

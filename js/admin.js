@@ -8,7 +8,7 @@ import {
     montarCatalogoIngressosOficinas,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=20260903-1';
+} from './programacao-ao-vivo-config.js?v=20260906-1';
 
 const funcoesAdmin = getFunctions(app, 'southamerica-east1');
 const atualizarLimiteEstoqueSeguro = httpsCallable(funcoesAdmin, 'atualizarLimiteEstoque');

@@ -28,7 +28,7 @@ export const REFERENCIAS_INGRESSOS_OFICINAS = Object.freeze({
 const atividade = (id, inicio, fim, tipo, titulo, descricao = '', extras = {}) => Object.freeze({
     id, inicio, fim, tipo, titulo, descricao, texto: '', convidado: '', convidadoCargo: '',
     convidadoBio: '', tema: '', temaDescricao: '', mediador: '', mediadorCargo: '',
-    oficineiro: '', oficineiroCargo: '', oficineiroBio: '', oficineiroFoto: '', imagem: '', mediadorFoto: '', ...extras
+    local: '', oficineiro: '', oficineiroCargo: '', oficineiroBio: '', oficineiroFoto: '', imagem: '', mediadorFoto: '', ...extras
 });
 
 export const PROGRAMACAO_AO_VIVO_PADRAO = Object.freeze({
@@ -129,6 +129,7 @@ export function normalizarAtividade(item) {
         convidado: textoSeguro(item?.convidado, 180), convidadoCargo: textoSeguro(item?.convidadoCargo, 500), convidadoBio: textoSeguro(item?.convidadoBio, 8000, true),
         tema: textoSeguro(item?.tema, 500), temaDescricao: textoSeguro(item?.temaDescricao, 5000, true),
         mediador: textoSeguro(item?.mediador, 180), mediadorCargo: textoSeguro(item?.mediadorCargo, 500),
+        local: textoSeguro(item?.local, 300),
         oficineiro: textoSeguro(item?.oficineiro, 180), oficineiroCargo: textoSeguro(item?.oficineiroCargo, 500), oficineiroBio: textoSeguro(item?.oficineiroBio, 8000, true), oficineiroFoto: textoSeguro(item?.oficineiroFoto, 500),
         imagem: textoSeguro(item?.imagem, 500), mediadorFoto: textoSeguro(item?.mediadorFoto, 500)
     };
@@ -164,6 +165,7 @@ export function montarCatalogoIngressosOficinas(programacao = PROGRAMACAO_AO_VIV
             titulo: item.titulo || 'Oficina',
             ministrante: item.oficineiro || 'Ministrante a confirmar',
             data: dia ? `${dia.dataCurta} · ${item.inicio}–${item.fim}` : 'Horário a confirmar',
+            local: item.local || 'Local a confirmar',
             imagem: item.imagem || OFICINA_PADRAO
         }];
     }));

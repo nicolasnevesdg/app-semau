@@ -8,7 +8,7 @@ import {
     montarCatalogoIngressosOficinas,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=162';
+} from './programacao-ao-vivo-config.js?v=20260906-1';
 
 // Elementos do Login
 const inputEmail = document.getElementById('input-email');
@@ -235,6 +235,7 @@ function renderizarOficinas(tokenUsuario, oficinasDoAluno) {
                     <span class="tag-oficina">${idOficina}</span>
                     <h4 class="ticket-oficina-titulo">${escaparHtml(oficina.titulo)}</h4>
                     <p class="ticket-oficina-ministrante">Com ${escaparHtml(oficina.ministrante)}</p>
+                    <p class="ticket-oficina-local"><i class="ph-bold ph-map-pin"></i><span>${escaparHtml(oficina.local || 'Local a confirmar')}</span></p>
                     <p class="ticket-oficina-data">${escaparHtml(oficina.data)}</p>
                 </div>
                 <div class="ticket-oficina-qr">
