@@ -57,6 +57,14 @@
     .resumo-modalidade span { display: block; color: #767a76; font-size: 10px; font-weight: 800; line-height: 1.3; letter-spacing: .4px; text-transform: uppercase; }
     .resumo-modalidade strong { display: block; margin-top: 5px; color: var(--cor-primaria); font-size: 23px; line-height: 1; }
     .resumo-modalidade-outros { background: #fff8f2; border-color: #f4dfcf; }
+    .estoque-resumo-botao { width: 100%; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .estoque-resumo-botao:hover { transform: translateY(-2px); border-color: rgba(13,55,43,.13); box-shadow: 0 14px 38px rgba(0,0,0,.07); }
+    .estoque-resumo-icone { width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 13px; background: #edf5f1; color: var(--cor-primaria); font-size: 21px; }
+    .estoque-resumo-texto { min-width: 0; flex: 1 1 auto; }
+    .estoque-resumo-texto strong { display: block; color: var(--cor-primaria); font-size: 15px; }
+    .estoque-resumo-texto span { display: block; margin-top: 3px; color: #747975; font-size: 11px; line-height: 1.35; }
+    .estoque-resumo-quantidade { flex: 0 0 auto; color: var(--cor-primaria); font-size: 17px; font-weight: 800; white-space: nowrap; }
+    .estoque-resumo-seta { flex: 0 0 auto; color: #8a8e8a; font-size: 18px; }
     .controle-estoque { display: grid; gap: 15px; }
     .controle-estoque-linha { padding: 16px; border: 1px solid #dfe8e3; border-radius: 16px; background: #f4f9f6; }
     .controle-estoque-linha > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -68,6 +76,24 @@
     .pagamento-problema { padding: 12px 14px; border: 1px solid #ece4df; border-radius: 13px; background: #fffaf7; }
     .pagamento-problema strong { display: block; color: #3e4842; font-size: 12px; }
     .pagamento-problema span { display: block; margin-top: 4px; color: #797b78; font-size: 11px; line-height: 1.4; }
+    html.estoque-modal-aberta, body.estoque-modal-aberta { overflow: hidden !important; overscroll-behavior: none; }
+    body.estoque-modal-aberta { position: fixed; inset-inline: 0; top: var(--estoque-scroll-top, 0); width: 100%; touch-action: none; }
+    .modal-estoque-overlay { position: fixed; inset: 0; z-index: 12500; width: 100vw; height: 100vh; height: 100dvh; display: flex; align-items: center; justify-content: center; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: rgba(18,24,34,.74); backdrop-filter: blur(8px); overflow: hidden; overscroll-behavior: none; touch-action: none; box-sizing: border-box; }
+    .modal-estoque-overlay[hidden] { display: none; }
+    .modal-estoque { width: min(100%, 560px); max-height: min(calc(100vh - 32px), 820px); max-height: min(calc(100dvh - 32px), 820px); display: flex; flex-direction: column; overflow: hidden; border-radius: 26px; background: #f7f8fa; box-shadow: 0 28px 80px rgba(0,0,0,.34); touch-action: auto; }
+    .modal-estoque-topo { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 24px; background: #fff; border-bottom: 1px solid #e9e9ee; }
+    .modal-estoque-topo p { margin: 0; color: var(--cor-secundaria); font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+    .modal-estoque-topo h2 { margin: 4px 0 0; color: var(--cor-primaria); font-size: 21px; }
+    .modal-estoque-corpo { min-height: 0; flex: 1 1 auto; display: grid; gap: 16px; padding: 20px; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-gutter: stable; }
+    .modal-estoque-bloco { padding: 18px; border: 1px solid #e6e9e7; border-radius: 18px; background: #fff; }
+    .modal-estoque-bloco h3 { margin: 0 0 12px; color: var(--cor-primaria); font-size: 14px; }
+    .estoque-edicao-acoes { display: flex; justify-content: flex-end; margin-top: 12px; }
+    .estoque-formulario { display: grid; gap: 13px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #eceeec; }
+    .estoque-formulario[hidden] { display: none; }
+    .estoque-formulario label > span { display: block; margin-bottom: 6px; color: #6d726e; font-size: 10px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+    .estoque-seguranca-aviso { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 11px; background: #fff7df; color: #69520d; font-size: 11px; line-height: 1.45; }
+    .estoque-formulario-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .estoque-status-edicao { min-height: 18px; margin: 0; font-size: 12px; font-weight: 700; line-height: 1.45; }
     .filtro-inscritos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
     .filtro-inscritos label { min-width: 0; }
     .filtro-inscritos label > span { display: block; margin: 0 0 7px; color: #696d69; font-size: 10px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
@@ -156,6 +182,14 @@
         .resumo-inscritos { padding: 24px 18px !important; }
         .resumo-modalidade { padding: 12px 10px; }
         .resumo-modalidade strong { font-size: 21px; }
+        .estoque-resumo-botao { padding: 15px 16px; min-height: 70px; }
+        .estoque-resumo-icone { width: 38px; height: 38px; font-size: 19px; }
+        .estoque-resumo-quantidade { font-size: 15px; }
+        .modal-estoque-overlay { padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+        .modal-estoque { width: 100%; max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 22px; }
+        .modal-estoque-topo { padding: 18px; }
+        .modal-estoque-corpo { padding: 14px; scrollbar-gutter: auto; }
+        .modal-estoque-bloco { padding: 15px; }
         .filtro-inscritos { grid-template-columns: 1fr; }
         .modal-ficha-overlay { padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); align-items: center; }
         .modal-ficha { width: 100%; max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 22px; }
@@ -350,20 +384,12 @@
             </div>
         </div>
 
-        <div class="admin-card-minimal controle-estoque">
-            <div>
-                <p style="margin: 0 0 5px; color: var(--cor-secundaria); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Estoque protegido</p>
-                <h2 style="margin: 0; color: var(--cor-primaria); font-size: 20px;">Kit do 2º lote</h2>
-            </div>
-            <div id="estoque-kit-segundo" class="controle-estoque-linha">
-                <div><span>Pagamentos contabilizados</span><strong><b id="estoque-kit-vendidos">—</b> / <b id="estoque-kit-limite">—</b></strong></div>
-                <p id="estoque-kit-status">Conferindo vendas e reservas...</p>
-            </div>
-            <div>
-                <h3 style="margin: 2px 0 10px; color: var(--cor-primaria); font-size: 14px;">Tentativas recentes que precisam de atenção</h3>
-                <div id="admin-pagamentos-problemas" class="pagamentos-problemas"><p style="color:#777;font-size:12px;">Carregando...</p></div>
-            </div>
-        </div>
+        <button id="btn-abrir-estoque" type="button" class="admin-card-minimal estoque-resumo-botao" aria-haspopup="dialog" aria-controls="modal-estoque">
+            <span class="estoque-resumo-icone"><i class="ph-bold ph-package"></i></span>
+            <span class="estoque-resumo-texto"><strong>Estoque e pagamentos</strong><span>Abra para conferir ou ajustar com segurança</span></span>
+            <span class="estoque-resumo-quantidade"><b id="estoque-resumo-vendidos">—</b> / <b id="estoque-resumo-limite">—</b></span>
+            <i class="ph-bold ph-caret-right estoque-resumo-seta" aria-hidden="true"></i>
+        </button>
 
         <div class="admin-card-minimal">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -548,7 +574,53 @@
             <span class="active-indicator"></span>
         </button>
     </nav>
-    
+
+    <div id="modal-estoque" class="modal-estoque-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-estoque-titulo" hidden>
+        <article class="modal-estoque">
+            <header class="modal-estoque-topo">
+                <div>
+                    <p>Controle protegido</p>
+                    <h2 id="modal-estoque-titulo">Estoque e pagamentos</h2>
+                </div>
+                <button type="button" id="btn-fechar-estoque" class="modal-ficha-fechar" aria-label="Fechar controle de estoque"><i class="ph-bold ph-x"></i></button>
+            </header>
+            <div class="modal-estoque-corpo">
+                <section class="modal-estoque-bloco controle-estoque">
+                    <div>
+                        <h3>Kit do 2º lote</h3>
+                        <div id="estoque-kit-segundo" class="controle-estoque-linha">
+                            <div><span>Pagamentos contabilizados</span><strong><b id="estoque-kit-vendidos">—</b> / <b id="estoque-kit-limite">—</b></strong></div>
+                            <p id="estoque-kit-status">Conferindo vendas e reservas...</p>
+                        </div>
+                        <div class="estoque-edicao-acoes">
+                            <button id="btn-editar-limite-estoque" type="button" class="ficha-btn ficha-btn-secundario"><i class="ph-bold ph-pencil-simple"></i> Alterar limite</button>
+                        </div>
+                        <form id="form-limite-estoque" class="estoque-formulario" hidden>
+                            <label>
+                                <span>Novo limite total</span>
+                                <input id="input-limite-estoque" class="admin-input" type="number" min="0" max="999" step="1" inputmode="numeric" required>
+                            </label>
+                            <label>
+                                <span>Confirme a senha do painel</span>
+                                <input id="senha-limite-estoque" class="admin-input" type="password" autocomplete="current-password" required>
+                            </label>
+                            <p class="estoque-seguranca-aviso"><i class="ph-bold ph-shield-check"></i><span>O limite nunca poderá ficar abaixo da quantidade já vendida e reservada. A alteração será validada novamente no servidor.</span></p>
+                            <p id="status-limite-estoque" class="estoque-status-edicao" role="status" aria-live="polite"></p>
+                            <div class="estoque-formulario-botoes">
+                                <button id="btn-cancelar-limite-estoque" type="button" class="ficha-btn ficha-btn-secundario">Cancelar</button>
+                                <button id="btn-salvar-limite-estoque" type="submit" class="ficha-btn ficha-btn-salvar"><i class="ph-bold ph-floppy-disk"></i> Salvar limite</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+                <section class="modal-estoque-bloco">
+                    <h3>Tentativas recentes que precisam de atenção</h3>
+                    <div id="admin-pagamentos-problemas" class="pagamentos-problemas"><p style="color:#777;font-size:12px;">Carregando...</p></div>
+                </section>
+            </div>
+        </article>
+    </div>
+
     <div id="modal-ficha-inscrito" class="modal-ficha-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-ficha-nome" hidden>
         <article class="modal-ficha">
             <header class="modal-ficha-topo">
@@ -604,7 +676,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/admin.js?v=20260905-1"></script>
+  <script type="module" src="js/admin.js?v=20260905-2"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

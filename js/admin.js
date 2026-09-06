@@ -1,5 +1,6 @@
-import { db } from './firebase-config.js';
+import { app, db } from './firebase-config.js';
 import { collection, doc, addDoc, getDocs, updateDoc, query, where, arrayUnion, arrayRemove, setDoc, onSnapshot, deleteDoc, getDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 import {
     VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
@@ -8,6 +9,9 @@ import {
     normalizarProgramacao,
     temProgramacaoValida
 } from './programacao-ao-vivo-config.js?v=20260903-1';
+
+const funcoesAdmin = getFunctions(app, 'southamerica-east1');
+const atualizarLimiteEstoqueSeguro = httpsCallable(funcoesAdmin, 'atualizarLimiteEstoque');
 
 // ==========================================
 // ELEMENTOS DO HTML
@@ -820,10 +824,25 @@ const estoqueKitVendidos = document.getElementById('estoque-kit-vendidos');
 const estoqueKitLimite = document.getElementById('estoque-kit-limite');
 const estoqueKitStatus = document.getElementById('estoque-kit-status');
 const adminPagamentosProblemas = document.getElementById('admin-pagamentos-problemas');
+const estoqueResumoVendidos = document.getElementById('estoque-resumo-vendidos');
+const estoqueResumoLimite = document.getElementById('estoque-resumo-limite');
+const btnAbrirEstoque = document.getElementById('btn-abrir-estoque');
+const modalEstoque = document.getElementById('modal-estoque');
+const btnFecharEstoque = document.getElementById('btn-fechar-estoque');
+const btnEditarLimiteEstoque = document.getElementById('btn-editar-limite-estoque');
+const formLimiteEstoque = document.getElementById('form-limite-estoque');
+const inputLimiteEstoque = document.getElementById('input-limite-estoque');
+const senhaLimiteEstoque = document.getElementById('senha-limite-estoque');
+const btnCancelarLimiteEstoque = document.getElementById('btn-cancelar-limite-estoque');
+const btnSalvarLimiteEstoque = document.getElementById('btn-salvar-limite-estoque');
+const statusLimiteEstoque = document.getElementById('status-limite-estoque');
 
 let dadosParaExcel = [];
 const inscritosPorId = new Map();
 const pedidosPorId = new Map();
+let estadoEstoqueKit = { vendidos: 0, limite: 70, reservados: 0 };
+let rolagemAntesDoEstoque = 0;
+let focoAntesDoEstoque = null;
 const TURNOS_PRESENCA = ['d21_m', 'd21_t', 'd22_m', 'd23_m', 'd23_t', 'd24_m', 'd25_m'];
 const NOMES_TURNOS = {
     d21_m: '21/Set · Manhã', d21_t: '21/Set · Tarde',
@@ -866,6 +885,130 @@ onSnapshot(docCronogramaOficinasRefAdmin, snapshot => {
 if (modalFichaInscrito && modalFichaInscrito.parentElement !== document.body) {
     document.body.appendChild(modalFichaInscrito);
 }
+
+// O modal precisa ficar fora do contêiner responsivo do aplicativo para que o
+// fundo escuro cubra a janela inteira em qualquer celular.
+if (modalEstoque && modalEstoque.parentElement !== document.body) {
+    document.body.appendChild(modalEstoque);
+}
+
+function limparFormularioLimiteEstoque() {
+    if (formLimiteEstoque) formLimiteEstoque.hidden = true;
+    if (senhaLimiteEstoque) senhaLimiteEstoque.value = '';
+    if (statusLimiteEstoque) {
+        statusLimiteEstoque.textContent = '';
+        statusLimiteEstoque.style.color = '';
+    }
+}
+
+function abrirModalEstoque() {
+    if (!modalEstoque || !modalEstoque.hidden) return;
+    focoAntesDoEstoque = document.activeElement;
+    rolagemAntesDoEstoque = window.scrollY || window.pageYOffset || 0;
+    document.body.style.setProperty('--estoque-scroll-top', `-${rolagemAntesDoEstoque}px`);
+    document.documentElement.classList.add('estoque-modal-aberta');
+    document.body.classList.add('estoque-modal-aberta');
+    modalEstoque.hidden = false;
+    limparFormularioLimiteEstoque();
+    requestAnimationFrame(() => btnFecharEstoque?.focus());
+}
+
+function fecharModalEstoque() {
+    if (!modalEstoque || modalEstoque.hidden) return;
+    modalEstoque.hidden = true;
+    document.documentElement.classList.remove('estoque-modal-aberta');
+    document.body.classList.remove('estoque-modal-aberta');
+    document.body.style.removeProperty('--estoque-scroll-top');
+    limparFormularioLimiteEstoque();
+    window.scrollTo(0, rolagemAntesDoEstoque);
+    focoAntesDoEstoque?.focus?.();
+}
+
+btnAbrirEstoque?.addEventListener('click', abrirModalEstoque);
+btnFecharEstoque?.addEventListener('click', fecharModalEstoque);
+modalEstoque?.addEventListener('click', event => {
+    if (event.target === modalEstoque) fecharModalEstoque();
+});
+
+btnEditarLimiteEstoque?.addEventListener('click', () => {
+    if (!formLimiteEstoque || !inputLimiteEstoque) return;
+    formLimiteEstoque.hidden = false;
+    inputLimiteEstoque.min = String(estadoEstoqueKit.vendidos + estadoEstoqueKit.reservados);
+    inputLimiteEstoque.value = String(estadoEstoqueKit.limite);
+    if (senhaLimiteEstoque) senhaLimiteEstoque.value = '';
+    if (statusLimiteEstoque) statusLimiteEstoque.textContent = '';
+    inputLimiteEstoque.focus();
+});
+
+btnCancelarLimiteEstoque?.addEventListener('click', limparFormularioLimiteEstoque);
+
+formLimiteEstoque?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const novoLimite = Number(inputLimiteEstoque?.value);
+    const senha = senhaLimiteEstoque?.value || '';
+    const ocupados = estadoEstoqueKit.vendidos + estadoEstoqueKit.reservados;
+
+    if (!Number.isInteger(novoLimite) || novoLimite < 0 || novoLimite > 999) {
+        statusLimiteEstoque.textContent = 'Informe um número inteiro entre 0 e 999.';
+        statusLimiteEstoque.style.color = '#b63a32';
+        return;
+    }
+    if (novoLimite < ocupados) {
+        statusLimiteEstoque.textContent = `O limite mínimo agora é ${ocupados}, considerando vendas e reservas.`;
+        statusLimiteEstoque.style.color = '#b63a32';
+        return;
+    }
+    if (!senha) {
+        statusLimiteEstoque.textContent = 'Digite a senha do painel para confirmar.';
+        statusLimiteEstoque.style.color = '#b63a32';
+        senhaLimiteEstoque?.focus();
+        return;
+    }
+    if (novoLimite === estadoEstoqueKit.limite) {
+        statusLimiteEstoque.textContent = 'O limite informado já está em uso.';
+        statusLimiteEstoque.style.color = '#6f7077';
+        return;
+    }
+    if (!confirm(`Confirma a alteração do limite de ${estadoEstoqueKit.limite} para ${novoLimite}?`)) return;
+
+    const textoOriginal = btnSalvarLimiteEstoque?.innerHTML;
+    if (btnSalvarLimiteEstoque) {
+        btnSalvarLimiteEstoque.disabled = true;
+        btnSalvarLimiteEstoque.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Validando...';
+    }
+    statusLimiteEstoque.textContent = 'Validando senha e disponibilidade no servidor...';
+    statusLimiteEstoque.style.color = '#6f7077';
+
+    try {
+        const resposta = await atualizarLimiteEstoqueSeguro({ novoLimite, senha });
+        const limiteSalvo = Number(resposta.data?.limite);
+        statusLimiteEstoque.textContent = `Limite alterado com segurança para ${limiteSalvo}.`;
+        statusLimiteEstoque.style.color = '#218653';
+        if (senhaLimiteEstoque) senhaLimiteEstoque.value = '';
+        if (inputLimiteEstoque) inputLimiteEstoque.value = String(limiteSalvo);
+        setTimeout(() => {
+            if (formLimiteEstoque) formLimiteEstoque.hidden = true;
+        }, 900);
+    } catch (error) {
+        console.error('Erro ao alterar limite do estoque:', error);
+        const codigo = String(error?.code || '');
+        statusLimiteEstoque.textContent = codigo.includes('permission-denied')
+            ? 'Senha incorreta. O limite não foi alterado.'
+            : error?.message || 'Não foi possível alterar o limite agora.';
+        statusLimiteEstoque.style.color = '#b63a32';
+        senhaLimiteEstoque?.focus();
+        if (senhaLimiteEstoque) senhaLimiteEstoque.select();
+    } finally {
+        if (btnSalvarLimiteEstoque) {
+            btnSalvarLimiteEstoque.disabled = false;
+            btnSalvarLimiteEstoque.innerHTML = textoOriginal;
+        }
+    }
+});
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && modalEstoque && !modalEstoque.hidden) fecharModalEstoque();
+});
 
 if (btnRecuperarEmails) {
     btnRecuperarEmails.addEventListener('click', async () => {
@@ -1090,7 +1233,8 @@ function nomeDoTipo(dados) {
 function nomeDoStatusPagamento(status) {
     return ({
         approved: 'Aprovado', pending: 'Pendente', in_process: 'Em análise', rejected: 'Recusado',
-        cancelled: 'Cancelado', refunded: 'Reembolsado', charged_back: 'Contestado', manual_review: 'Revisão manual'
+        cancelled: 'Cancelado', expired: 'Expirado', refunded: 'Reembolsado', charged_back: 'Contestado',
+        manual_review: 'Revisão manual', manual_refund_required: 'Estorno manual necessário'
     })[status] || textoDisponivel(status);
 }
 
@@ -1137,14 +1281,20 @@ onSnapshot(doc(db, 'configuracoes', 'estoqueIngressos'), snapshot => {
     const limite = Math.max(0, Number(segundo.kitLimite) || 70);
     const reservados = Object.values(segundo.reservas || {}).filter(reserva => Number(reserva?.expiraEm || 0) > Date.now()).length;
     const disponiveis = Math.max(0, limite - vendidos - reservados);
+    estadoEstoqueKit = { vendidos, limite, reservados };
     if (estoqueKitVendidos) estoqueKitVendidos.textContent = vendidos;
     if (estoqueKitLimite) estoqueKitLimite.textContent = limite;
+    if (estoqueResumoVendidos) estoqueResumoVendidos.textContent = vendidos;
+    if (estoqueResumoLimite) estoqueResumoLimite.textContent = limite;
+    if (inputLimiteEstoque) inputLimiteEstoque.min = String(vendidos + reservados);
     if (estoqueKitStatus) estoqueKitStatus.textContent = disponiveis > 0
-        ? `${disponiveis} ingresso${disponiveis === 1 ? '' : 's'} disponível${disponiveis === 1 ? '' : 'is'}${reservados ? ` · ${reservados} em reserva temporária` : ''}.`
+        ? `${disponiveis} ingresso${disponiveis === 1 ? '' : 's'} ${disponiveis === 1 ? 'disponível' : 'disponíveis'}${reservados ? ` · ${reservados} em reserva temporária` : ''}.`
         : 'Esgotado. A compra com kit está bloqueada automaticamente.';
     if (estoqueKitSegundo) estoqueKitSegundo.dataset.esgotado = String(disponiveis <= 0);
 }, () => {
     if (estoqueKitStatus) estoqueKitStatus.textContent = 'Não foi possível consultar o estoque agora.';
+    if (estoqueResumoVendidos) estoqueResumoVendidos.textContent = '—';
+    if (estoqueResumoLimite) estoqueResumoLimite.textContent = '—';
 });
 
 function nomeDoStatusEmail(status) {

@@ -96,6 +96,12 @@ function dataEmMilissegundos(value) {
   return Number.isNaN(data.getTime()) ? 0 : data.getTime();
 }
 
+function valoresIguaisSeguros(value, expected) {
+  const recebido = Buffer.from(String(value || ""), "utf8");
+  const configurado = Buffer.from(String(expected || ""), "utf8");
+  return recebido.length === configurado.length && timingSafeEqual(recebido, configurado);
+}
+
 function expiracaoPedido(pedido = {}) {
   const expiraEm = Number(pedido.checkoutExpiraEm || pedido.reservaExpiraEm || 0);
   if (expiraEm > 0) return expiraEm;
@@ -1031,6 +1037,72 @@ exports.mercadoPagoWebhook = onRequest(
       logger.error("Falha ao processar webhook", { paymentId, error: error.message });
       response.status(500).send("retry");
     }
+  },
+);
+
+exports.atualizarLimiteEstoque = onCall(
+  {
+    region: REGION,
+    maxInstances: 2,
+    cors: SITE_ORIGINS,
+  },
+  async (request) => {
+    const novoLimite = Number(request.data?.novoLimite);
+    const senha = String(request.data?.senha || "");
+    if (!Number.isInteger(novoLimite) || novoLimite < 0 || novoLimite > 999) {
+      throw new HttpsError("invalid-argument", "Informe um limite inteiro entre 0 e 999.");
+    }
+    if (!senha) {
+      throw new HttpsError("invalid-argument", "A senha do painel é obrigatória.");
+    }
+
+    const segurancaRef = db.collection("configuracoes").doc("seguranca");
+    const auditoriaRef = db.collection("auditoriaAdmin").doc();
+    return db.runTransaction(async (transaction) => {
+      const [segurancaDoc, estoqueDoc] = await Promise.all([
+        transaction.get(segurancaRef),
+        transaction.get(estoqueIngressosRef),
+      ]);
+      const senhaConfigurada = segurancaDoc.data()?.senhaAdmin;
+      if (!senhaConfigurada || !valoresIguaisSeguros(senha, senhaConfigurada)) {
+        throw new HttpsError("permission-denied", "Senha incorreta. O limite não foi alterado.");
+      }
+      if (!estoqueDoc.exists) {
+        throw new HttpsError("failed-precondition", "O controle de estoque ainda não foi configurado.");
+      }
+
+      const estoqueSegundo = normalizarEstoque(estoqueDoc.data() || {}, Date.now(), "segundo");
+      const vendidos = estoqueSegundo.kitVendidos;
+      const reservados = quantidadeReservada(estoqueSegundo, "kit");
+      const minimoSeguro = vendidos + reservados;
+      if (novoLimite < minimoSeguro) {
+        throw new HttpsError(
+          "failed-precondition",
+          `O limite mínimo agora é ${minimoSeguro}, considerando pagamentos e reservas ativas.`,
+        );
+      }
+
+      const limiteAnterior = estoqueSegundo.kitLimite;
+      transaction.update(estoqueIngressosRef, {
+        "segundo.kitLimite": novoLimite,
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+      transaction.set(auditoriaRef, {
+        acao: "alterar_limite_kit_segundo_lote",
+        limiteAnterior,
+        novoLimite,
+        vendidos,
+        reservados,
+        criadoEm: FieldValue.serverTimestamp(),
+      });
+      logger.info("Limite do kit do 2º lote alterado pelo painel.", {
+        limiteAnterior,
+        novoLimite,
+        vendidos,
+        reservados,
+      });
+      return { limite: novoLimite, vendidos, reservados, minimoSeguro };
+    });
   },
 );
 
