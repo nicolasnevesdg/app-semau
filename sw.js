@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v193-admin-estoque-modal';
+const CACHE_NAME = 'semau-v194-ajuste-manual-ingresso';
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [

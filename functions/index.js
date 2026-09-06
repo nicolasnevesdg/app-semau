@@ -64,6 +64,23 @@ const LOTES_PAGOS = Object.freeze({
 });
 const LOTE_ATIVO_PADRAO = "social";
 
+function categoriaEfetivaPedido(pedido = {}) {
+  const loteOriginal = pedido.loteIngresso;
+  const tipoOriginal = pedido.tipoIngresso;
+  const ajusteValido = pedido.ajusteManualCategoriaAtivo === true &&
+    (pedido.loteIngressoEfetivo === "primeiro" || pedido.loteIngressoEfetivo === "segundo") &&
+    (pedido.tipoIngressoEfetivo === "normal" || pedido.tipoIngressoEfetivo === "kit");
+  const lote = ajusteValido ? pedido.loteIngressoEfetivo : loteOriginal;
+  const tipo = ajusteValido ? pedido.tipoIngressoEfetivo : tipoOriginal;
+  return {
+    lote,
+    tipo,
+    nomeLote: ajusteValido ? (pedido.nomeLoteEfetivo || LOTES_PAGOS[lote]?.nome) : pedido.nomeLote,
+    nomeIngresso: ajusteValido ? (pedido.nomeIngressoEfetivo || TIPOS_INGRESSO[tipo]?.nome) : pedido.nomeIngresso,
+    ajusteManual: ajusteValido,
+  };
+}
+
 function texto(value, maxLength) {
   return String(value || "").trim().replace(/\s+/g, " ").slice(0, maxLength);
 }
@@ -544,11 +561,12 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
       ? "manual_review"
       : statusRecebido;
     const token = inscritoDoc.exists ? inscritoDoc.data().token : tokenNovo;
-    const tipoEstoque = pedido.tipoIngresso === "kit" ? "kit" : "normal";
+    const categoriaEfetiva = categoriaEfetivaPedido(pedido);
+    const tipoEstoque = categoriaEfetiva.tipo === "kit" ? "kit" : "normal";
     const chaveVendidos = tipoEstoque === "kit" ? "kitVendidos" : "normalVendidos";
-    const loteEstoque = pedido.loteIngresso === "primeiro"
+    const loteEstoque = categoriaEfetiva.lote === "primeiro"
       ? "primeiro"
-      : pedido.loteIngresso === "segundo" && tipoEstoque === "kit"
+      : categoriaEfetiva.lote === "segundo" && tipoEstoque === "kit"
         ? "segundo"
         : null;
     const estoquePedido = loteEstoque === "primeiro"
@@ -643,10 +661,10 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
         escolaridade: pedido.escolaridade || null,
         profissao: pedido.profissao || null,
         comoConheceu: pedido.comoConheceu || null,
-        loteIngresso: pedido.loteIngresso || null,
-        nomeLote: pedido.nomeLote || null,
-        tipoIngresso: pedido.tipoIngresso,
-        nomeIngresso: pedido.nomeIngresso,
+        loteIngresso: categoriaEfetiva.lote || null,
+        nomeLote: categoriaEfetiva.nomeLote || null,
+        tipoIngresso: categoriaEfetiva.tipo,
+        nomeIngresso: categoriaEfetiva.nomeIngresso,
         pedidoId,
         paymentId: String(payment.id),
         token,
@@ -847,11 +865,12 @@ async function reconciliarContadoresEstoque() {
 
   aprovadosSnapshot.docs.forEach((documento) => {
     const pedido = documento.data();
-    if (pedido.loteIngresso === "primeiro" && (pedido.tipoIngresso === "normal" || pedido.tipoIngresso === "kit")) {
-      totais.primeiro[pedido.tipoIngresso] += 1;
+    const categoria = categoriaEfetivaPedido(pedido);
+    if (categoria.lote === "primeiro" && (categoria.tipo === "normal" || categoria.tipo === "kit")) {
+      totais.primeiro[categoria.tipo] += 1;
       if (pedido.estoqueContabilizado !== true) pedidosNaoContabilizados.push(documento.ref);
     }
-    if (pedido.loteIngresso === "segundo" && pedido.tipoIngresso === "kit") {
+    if (categoria.lote === "segundo" && categoria.tipo === "kit") {
       totais.segundo.kit += 1;
       if (pedido.estoqueContabilizado !== true) pedidosNaoContabilizados.push(documento.ref);
     }
@@ -862,9 +881,9 @@ async function reconciliarContadoresEstoque() {
     const dadosEstoque = estoqueDoc.data() || {};
     const primeiro = normalizarEstoque(dadosEstoque, Date.now(), "primeiro");
     const segundo = normalizarEstoque(dadosEstoque, Date.now(), "segundo");
-    primeiro.normalVendidos = Math.max(primeiro.normalVendidos, totais.primeiro.normal);
-    primeiro.kitVendidos = Math.max(primeiro.kitVendidos, totais.primeiro.kit);
-    segundo.kitVendidos = Math.max(segundo.kitVendidos, totais.segundo.kit);
+    primeiro.normalVendidos = totais.primeiro.normal;
+    primeiro.kitVendidos = totais.primeiro.kit;
+    segundo.kitVendidos = totais.segundo.kit;
     transaction.set(estoqueIngressosRef, {
       primeiro,
       segundo,

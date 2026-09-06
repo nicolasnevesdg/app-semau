@@ -1087,6 +1087,24 @@ const NOMES_MODALIDADES = {
     kit: 'Ingresso com kit'
 };
 
+function pedidoComCategoriaEfetiva(pedido = {}) {
+    const ajusteValido = pedido.ajusteManualCategoriaAtivo === true &&
+        ['primeiro', 'segundo'].includes(pedido.loteIngressoEfetivo) &&
+        ['normal', 'kit'].includes(pedido.tipoIngressoEfetivo);
+    if (!ajusteValido) return pedido;
+    return {
+        ...pedido,
+        _loteIngressoOriginal: pedido.loteIngresso,
+        _nomeLoteOriginal: pedido.nomeLote,
+        _tipoIngressoOriginal: pedido.tipoIngresso,
+        _nomeIngressoOriginal: pedido.nomeIngresso,
+        loteIngresso: pedido.loteIngressoEfetivo,
+        nomeLote: pedido.nomeLoteEfetivo || NOMES_LOTES[pedido.loteIngressoEfetivo],
+        tipoIngresso: pedido.tipoIngressoEfetivo,
+        nomeIngresso: pedido.nomeIngressoEfetivo || NOMES_MODALIDADES[pedido.tipoIngressoEfetivo]
+    };
+}
+
 const CATEGORIAS_INSCRITOS = [
     'social-kit', 'social-normal',
     'primeiro-kit', 'primeiro-normal',
@@ -1481,6 +1499,11 @@ function abrirFichaInscrito(idInscrito) {
     adicionarCampoFicha(fichaDadosIngresso, 'E-mail enviado em', formatarDataRegistro(dados.emailIngressoEnviadoEm));
     adicionarCampoFicha(fichaDadosIngresso, 'Ingresso ativo', dados.ingressoAtivo === false ? 'Não' : dados.ingressoAtivo === true ? 'Sim' : 'Não informado');
     adicionarCampoFicha(fichaDadosIngresso, 'Origem', dados.pedidoId ? 'Compra pelo site' : 'Cadastro manual');
+    if (dados._pedido?.ajusteManualCategoriaAtivo === true) {
+        const compraOriginal = `${NOMES_LOTES[dados._pedido._loteIngressoOriginal] || textoDisponivel(dados._pedido._nomeLoteOriginal)} · ${NOMES_MODALIDADES[dados._pedido._tipoIngressoOriginal] || textoDisponivel(dados._pedido._nomeIngressoOriginal)}`;
+        adicionarCampoFicha(fichaDadosIngresso, 'Compra original no Mercado Pago', compraOriginal, { largo: true });
+        adicionarCampoFicha(fichaDadosIngresso, 'Ajuste autorizado', textoDisponivel(dados._pedido.ajusteManualMotivo, 'Modalidade alterada pela organização'), { largo: true });
+    }
     adicionarCampoFicha(fichaDadosIngresso, 'ID do pedido', dados.pedidoId, { largo: true });
     adicionarCampoFicha(fichaDadosIngresso, 'ID do pagamento', dados.paymentId, { largo: true });
 
@@ -1621,7 +1644,7 @@ async function carregarListaInscritos() {
             getDocs(collection(db, "inscritos")),
             getDocs(collection(db, "pedidos"))
         ]);
-        const pedidos = pedidosSnapshot.docs.map(documento => ({ id: documento.id, ...documento.data() }));
+        const pedidos = pedidosSnapshot.docs.map(documento => pedidoComCategoriaEfetiva({ id: documento.id, ...documento.data() }));
         pedidos.forEach(pedido => pedidosPorId.set(pedido.id, pedido));
         renderizarProblemasDePagamento(pedidos);
         
