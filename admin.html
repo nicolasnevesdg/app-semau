@@ -153,6 +153,10 @@
     .ficha-campo input, .ficha-campo select { width: 100%; min-height: 44px; padding: 11px 12px; border: 1px solid #dfe1e6; border-radius: 11px; background: #fff; color: #34343a; font: inherit; font-size: 14px; outline: none; transition: 0.2s; }
     .ficha-campo input:focus, .ficha-campo select:focus { border-color: var(--cor-secundaria); box-shadow: 0 0 0 3px rgba(247, 112, 38, 0.13); }
     .ficha-ajuda { margin: -7px 0 16px; color: #6f7077; font-size: 12px; line-height: 1.5; }
+    .ficha-ajuste-categoria { margin-top: 16px; padding: 14px; border: 1px solid #f0c99f; border-radius: 14px; background: #fff8ef; }
+    .ficha-ajuste-categoria[hidden] { display: none; }
+    .ficha-ajuste-categoria > p { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 12px; color: #87501e; font-size: 11px; font-weight: 700; line-height: 1.45; }
+    .ficha-ajuste-categoria-campos { display: grid; grid-template-columns: 1fr 1.35fr; gap: 12px; }
     .ficha-protegido { display: flex; align-items: flex-start; gap: 8px; margin: -5px 0 16px; padding: 10px 12px; border-radius: 11px; background: #f5f7fb; color: #687184; font-size: 11px; line-height: 1.45; }
     .ficha-presenca { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #f8f9fb; }
     .ficha-presenca span { color: #666; font-size: 13px; font-weight: 700; }
@@ -198,6 +202,7 @@
         .ficha-rolagem { padding: 14px; scrollbar-gutter: auto; }
         .ficha-bloco { padding: 16px; }
         .ficha-grade { grid-template-columns: 1fr; }
+        .ficha-ajuste-categoria-campos { grid-template-columns: 1fr; }
         .ficha-oficinas-grade { grid-template-columns: 1fr; }
         .ficha-campo.ficha-campo-largo { grid-column: auto; }
         .ficha-acoes { padding: 12px 14px max(12px, env(safe-area-inset-bottom)); }
@@ -636,6 +641,19 @@
                         <h3><i class="ph-bold ph-pencil-simple"></i> Dados editáveis do inscrito</h3>
                         <p class="ficha-ajuda">Preencha ou corrija aqui os dados recebidos manualmente, inclusive os cadastros do lote social.</p>
                         <div id="ficha-dados-pessoais" class="ficha-grade"></div>
+                        <div id="ficha-ajuste-categoria" class="ficha-ajuste-categoria" hidden>
+                            <p><i class="ph-bold ph-shield-warning"></i><span>Esta mudança altera a modalidade efetiva e a contagem de estoque, mas preserva a compra original do Mercado Pago.</span></p>
+                            <div class="ficha-ajuste-categoria-campos">
+                                <label class="ficha-campo">
+                                    <span>Senha do painel</span>
+                                    <input id="ficha-senha-categoria" type="password" autocomplete="current-password">
+                                </label>
+                                <label class="ficha-campo">
+                                    <span>Motivo do ajuste</span>
+                                    <input id="ficha-motivo-categoria" type="text" maxlength="240" placeholder="Ex.: pagamento complementar do kit">
+                                </label>
+                            </div>
+                        </div>
                     </section>
                     <section class="ficha-bloco">
                         <h3><i class="ph-bold ph-chalkboard-teacher"></i> Inscrições em oficinas</h3>
@@ -676,7 +694,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/admin.js?v=20260906-1"></script>
+  <script type="module" src="js/admin.js?v=20260906-2"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

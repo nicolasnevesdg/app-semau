@@ -12,6 +12,7 @@ import {
 
 const funcoesAdmin = getFunctions(app, 'southamerica-east1');
 const atualizarLimiteEstoqueSeguro = httpsCallable(funcoesAdmin, 'atualizarLimiteEstoque');
+const atualizarCategoriaIngressoSeguro = httpsCallable(funcoesAdmin, 'atualizarCategoriaIngresso');
 
 // ==========================================
 // ELEMENTOS DO HTML
@@ -860,6 +861,9 @@ const btnSalvarFicha = document.getElementById('btn-salvar-ficha');
 const formFichaInscrito = document.getElementById('form-ficha-inscrito');
 const fichaStatus = document.getElementById('ficha-status');
 const fichaDadosPessoais = document.getElementById('ficha-dados-pessoais');
+const fichaAjusteCategoria = document.getElementById('ficha-ajuste-categoria');
+const fichaSenhaCategoria = document.getElementById('ficha-senha-categoria');
+const fichaMotivoCategoria = document.getElementById('ficha-motivo-categoria');
 const fichaDadosIngresso = document.getElementById('ficha-dados-ingresso');
 const fichaResumoPresenca = document.getElementById('ficha-resumo-presenca');
 const fichaDadosEvento = document.getElementById('ficha-dados-evento');
@@ -1371,6 +1375,20 @@ function atualizarCamposVinculoFicha() {
     });
 }
 
+function atualizarSegurancaCategoriaFicha() {
+    if (!formFichaInscrito || !fichaAjusteCategoria) return;
+    const pedidoPago = formFichaInscrito.dataset.pedidoPago === 'true';
+    const loteAtual = valorEditavelFicha('loteIngresso');
+    const tipoAtual = valorEditavelFicha('tipoIngresso');
+    const alterou = pedidoPago && (
+        loteAtual !== formFichaInscrito.dataset.loteInicial ||
+        tipoAtual !== formFichaInscrito.dataset.tipoInicial
+    );
+    fichaAjusteCategoria.hidden = !alterou;
+    if (fichaSenhaCategoria) fichaSenhaCategoria.required = alterou;
+    if (!alterou && fichaSenhaCategoria) fichaSenhaCategoria.value = '';
+}
+
 function renderizarOficinasFicha(oficinasSelecionadas = []) {
     if (!fichaOficinas) return;
     const selecionadas = new Set(Array.isArray(oficinasSelecionadas) ? oficinasSelecionadas.map(String) : []);
@@ -1420,6 +1438,11 @@ function abrirFichaInscrito(idInscrito) {
     fichaDadosPessoais.replaceChildren();
     fichaDadosIngresso.replaceChildren();
     fichaDadosEvento.replaceChildren();
+    formFichaInscrito.dataset.pedidoPago = String(pedidoPago);
+    formFichaInscrito.dataset.loteInicial = loteExibido || '';
+    formFichaInscrito.dataset.tipoInicial = tipoExibido || '';
+    if (fichaSenhaCategoria) fichaSenhaCategoria.value = '';
+    if (fichaMotivoCategoria) fichaMotivoCategoria.value = dados._pedido?.ajusteManualMotivo || '';
     renderizarOficinasFicha(dados.oficinas);
 
     adicionarCampoFicha(fichaDadosPessoais, 'Nome completo', dados.nome, { editavel: true, campo: 'nome', largo: true, obrigatorio: true, autocomplete: 'name' });
@@ -1473,24 +1496,29 @@ function abrirFichaInscrito(idInscrito) {
     formFichaInscrito.querySelector('[data-campo="vinculoAcademico"]')?.addEventListener('change', atualizarCamposVinculoFicha);
     atualizarCamposVinculoFicha();
     adicionarCampoFicha(fichaDadosPessoais, 'Lote', loteExibido, {
-        editavel: !pedidoPago,
+        editavel: true,
         campo: 'loteIngresso',
         opcoes: [
             { valor: '', rotulo: 'Não informado' },
-            { valor: 'social', rotulo: NOMES_LOTES.social },
+            ...(!pedidoPago ? [{ valor: 'social', rotulo: NOMES_LOTES.social }] : []),
             { valor: 'primeiro', rotulo: NOMES_LOTES.primeiro },
             { valor: 'segundo', rotulo: NOMES_LOTES.segundo }
-        ]
+        ],
+        obrigatorio: pedidoPago
     });
     adicionarCampoFicha(fichaDadosPessoais, 'Modalidade', tipoExibido, {
-        editavel: !pedidoPago,
+        editavel: true,
         campo: 'tipoIngresso',
         opcoes: [
             { valor: '', rotulo: 'Não informada' },
             { valor: 'normal', rotulo: NOMES_MODALIDADES.normal },
             { valor: 'kit', rotulo: NOMES_MODALIDADES.kit }
-        ]
+        ],
+        obrigatorio: pedidoPago
     });
+    formFichaInscrito.querySelector('[data-campo="loteIngresso"]')?.addEventListener('change', atualizarSegurancaCategoriaFicha);
+    formFichaInscrito.querySelector('[data-campo="tipoIngresso"]')?.addEventListener('change', atualizarSegurancaCategoriaFicha);
+    atualizarSegurancaCategoriaFicha();
 
     adicionarCampoFicha(fichaDadosIngresso, 'Token', dados.token, { token: true });
     adicionarCampoFicha(fichaDadosIngresso, 'Pagamento', nomeDoStatusPagamento(dados.statusPagamento));
@@ -1567,6 +1595,24 @@ formFichaInscrito?.addEventListener('submit', async event => {
     const idInscrito = idFichaInscritoAtual;
     const dadosAtuais = inscritosPorId.get(idInscrito) || {};
     const pedidoPago = dadosAtuais._pedido?.status === 'approved';
+    const categoriaPagamentoAlterada = pedidoPago && (
+        loteIngresso !== (dadosAtuais._pedido?.loteIngresso || '') ||
+        tipoIngresso !== (dadosAtuais._pedido?.tipoIngresso || '')
+    );
+    const senhaCategoria = fichaSenhaCategoria?.value || '';
+    const motivoCategoria = fichaMotivoCategoria?.value.trim() || '';
+    if (categoriaPagamentoAlterada && !senhaCategoria) {
+        atualizarSegurancaCategoriaFicha();
+        if (fichaStatus) {
+            fichaStatus.textContent = 'Confirme a senha do painel para alterar o lote ou a modalidade.';
+            fichaStatus.style.color = '#b66b22';
+        }
+        fichaSenhaCategoria?.focus();
+        return;
+    }
+    if (categoriaPagamentoAlterada && !confirm('Confirma a alteração do lote/modalidade? O estoque será atualizado e a compra original do Mercado Pago será preservada no histórico.')) {
+        return;
+    }
     const oficinas = fichaOficinas
         ? [...fichaOficinas.querySelectorAll('[data-ficha-oficina]:checked')].map(campo => campo.value)
         : [];
@@ -1608,6 +1654,15 @@ formFichaInscrito?.addEventListener('submit', async event => {
     }
 
     try {
+        if (categoriaPagamentoAlterada) {
+            await atualizarCategoriaIngressoSeguro({
+                inscritoId: idInscrito,
+                loteIngresso,
+                tipoIngresso,
+                senha: senhaCategoria,
+                motivo: motivoCategoria
+            });
+        }
         await updateDoc(doc(db, 'inscritos', idInscrito), atualizacao);
         await carregarListaInscritos();
         abrirFichaInscrito(idInscrito);
@@ -1618,7 +1673,7 @@ formFichaInscrito?.addEventListener('submit', async event => {
     } catch (error) {
         console.error('Erro ao atualizar a ficha:', error);
         if (fichaStatus) {
-            fichaStatus.textContent = 'Não foi possível salvar. Tente novamente.';
+            fichaStatus.textContent = error?.message || 'Não foi possível salvar. Tente novamente.';
             fichaStatus.style.color = '#b63a32';
         }
     } finally {

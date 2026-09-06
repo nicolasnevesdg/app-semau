@@ -1125,6 +1125,150 @@ exports.atualizarLimiteEstoque = onCall(
   },
 );
 
+exports.atualizarCategoriaIngresso = onCall(
+  {
+    region: REGION,
+    maxInstances: 2,
+    cors: SITE_ORIGINS,
+  },
+  async (request) => {
+    const inscritoId = texto(request.data?.inscritoId, 120);
+    const loteIngresso = texto(request.data?.loteIngresso, 20).toLowerCase();
+    const tipoIngresso = texto(request.data?.tipoIngresso, 20).toLowerCase();
+    const senha = String(request.data?.senha || "");
+    const motivoInformado = texto(request.data?.motivo, 240);
+    if (!inscritoId || !LOTES_PAGOS[loteIngresso] || !TIPOS_INGRESSO[tipoIngresso]) {
+      throw new HttpsError("invalid-argument", "Selecione um lote e uma modalidade válidos.");
+    }
+    if (!senha) {
+      throw new HttpsError("invalid-argument", "A senha do painel é obrigatória.");
+    }
+
+    const segurancaRef = db.collection("configuracoes").doc("seguranca");
+    const pedidoRef = db.collection("pedidos").doc(inscritoId);
+    const inscritoRef = db.collection("inscritos").doc(inscritoId);
+    const auditoriaRef = db.collection("auditoriaAdmin").doc();
+
+    return db.runTransaction(async (transaction) => {
+      const [segurancaDoc, pedidoDoc, inscritoDoc, estoqueDoc] = await Promise.all([
+        transaction.get(segurancaRef),
+        transaction.get(pedidoRef),
+        transaction.get(inscritoRef),
+        transaction.get(estoqueIngressosRef),
+      ]);
+      const senhaConfigurada = segurancaDoc.data()?.senhaAdmin;
+      if (!senhaConfigurada || !valoresIguaisSeguros(senha, senhaConfigurada)) {
+        throw new HttpsError("permission-denied", "Senha incorreta. O ingresso não foi alterado.");
+      }
+      if (!pedidoDoc.exists || pedidoDoc.data()?.status !== "approved" || !inscritoDoc.exists) {
+        throw new HttpsError("failed-precondition", "Esta alteração protegida exige um pagamento aprovado e uma ficha ativa.");
+      }
+      if (!estoqueDoc.exists) {
+        throw new HttpsError("failed-precondition", "O controle de estoque ainda não foi configurado.");
+      }
+
+      const pedido = pedidoDoc.data();
+      const categoriaAnterior = categoriaEfetivaPedido(pedido);
+      const estoquePrimeiro = normalizarEstoque(estoqueDoc.data() || {}, Date.now(), "primeiro");
+      const estoqueSegundo = normalizarEstoque(estoqueDoc.data() || {}, Date.now(), "segundo");
+      const referenciaEstoque = (lote, tipo) => {
+        if (lote === "primeiro" && (tipo === "normal" || tipo === "kit")) {
+          return { estoque: estoquePrimeiro, lote: "primeiro", chave: tipo === "kit" ? "kitVendidos" : "normalVendidos", limite: LIMITE_PRIMEIRO_LOTE[tipo] };
+        }
+        if (lote === "segundo" && tipo === "kit") {
+          return { estoque: estoqueSegundo, lote: "segundo", chave: "kitVendidos", limite: estoqueSegundo.kitLimite };
+        }
+        return null;
+      };
+      const anterior = referenciaEstoque(categoriaAnterior.lote, categoriaAnterior.tipo);
+      const nova = referenciaEstoque(loteIngresso, tipoIngresso);
+      const categoriaMudou = categoriaAnterior.lote !== loteIngresso || categoriaAnterior.tipo !== tipoIngresso;
+
+      if (categoriaMudou && anterior && pedido.estoqueContabilizado === true) {
+        anterior.estoque[anterior.chave] = Math.max(0, anterior.estoque[anterior.chave] - 1);
+      }
+      if (categoriaMudou && nova) {
+        const reservados = quantidadeReservada(nova.estoque, tipoIngresso);
+        if (nova.estoque[nova.chave] + reservados >= nova.limite) {
+          throw new HttpsError("resource-exhausted", "Essa modalidade está esgotada. A ficha não foi alterada.");
+        }
+        nova.estoque[nova.chave] += 1;
+      }
+
+      const ajusteAtivo = pedido.loteIngresso !== loteIngresso || pedido.tipoIngresso !== tipoIngresso;
+      const nomeLote = LOTES_PAGOS[loteIngresso].nome;
+      const nomeIngresso = TIPOS_INGRESSO[tipoIngresso].nome;
+      const motivo = motivoInformado || "Categoria do ingresso alterada manualmente pela organização.";
+      const camposAjustePedido = ajusteAtivo ? {
+        ajusteManualCategoriaAtivo: true,
+        loteIngressoEfetivo: loteIngresso,
+        nomeLoteEfetivo: nomeLote,
+        tipoIngressoEfetivo: tipoIngresso,
+        nomeIngressoEfetivo: nomeIngresso,
+        ajusteManualMotivo: motivo,
+        ajusteManualOrigem: "painel_admin",
+        ajusteManualEm: FieldValue.serverTimestamp(),
+      } : {
+        ajusteManualCategoriaAtivo: false,
+        loteIngressoEfetivo: FieldValue.delete(),
+        nomeLoteEfetivo: FieldValue.delete(),
+        tipoIngressoEfetivo: FieldValue.delete(),
+        nomeIngressoEfetivo: FieldValue.delete(),
+        ajusteManualMotivo: FieldValue.delete(),
+        ajusteManualOrigem: FieldValue.delete(),
+        ajusteManualEm: FieldValue.delete(),
+      };
+
+      transaction.update(pedidoRef, {
+        ...camposAjustePedido,
+        estoqueContabilizado: Boolean(nova),
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+      transaction.update(inscritoRef, {
+        loteIngresso,
+        nomeLote,
+        tipoIngresso,
+        nomeIngresso,
+        ajusteManualCategoriaAtivo: ajusteAtivo,
+        ajusteManualMotivo: ajusteAtivo ? motivo : FieldValue.delete(),
+        ajusteManualOrigem: ajusteAtivo ? "painel_admin" : FieldValue.delete(),
+        ajusteManualEm: ajusteAtivo ? FieldValue.serverTimestamp() : FieldValue.delete(),
+        atualizadoEm: FieldValue.serverTimestamp(),
+      });
+      if (categoriaMudou) {
+        transaction.set(estoqueIngressosRef, {
+          primeiro: estoquePrimeiro,
+          segundo: estoqueSegundo,
+          atualizadoEm: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+      transaction.set(auditoriaRef, {
+        acao: "alterar_categoria_ingresso",
+        inscritoId,
+        categoriaOriginal: `${pedido.loteIngresso || "nao_informado"}/${pedido.tipoIngresso || "nao_informado"}`,
+        categoriaAnterior: `${categoriaAnterior.lote || "nao_informado"}/${categoriaAnterior.tipo || "nao_informado"}`,
+        categoriaNova: `${loteIngresso}/${tipoIngresso}`,
+        ajusteAtivo,
+        motivo: ajusteAtivo ? motivo : "Retorno à categoria original da compra.",
+        criadoEm: FieldValue.serverTimestamp(),
+      });
+      return {
+        loteIngresso,
+        nomeLote,
+        tipoIngresso,
+        nomeIngresso,
+        ajusteAtivo,
+        estoque: {
+          primeiroNormal: estoquePrimeiro.normalVendidos,
+          primeiroKit: estoquePrimeiro.kitVendidos,
+          segundoKit: estoqueSegundo.kitVendidos,
+          limiteSegundoKit: estoqueSegundo.kitLimite,
+        },
+      };
+    });
+  },
+);
+
 exports.manterPagamentosEEstoque = onSchedule(
   {
     region: REGION,
