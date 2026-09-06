@@ -503,6 +503,25 @@ botoesOficinaAdmin.forEach(botao => {
 // 4. O SORTEADOR
 // ==========================================
 const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
+const CACHE_TELAO_OFFLINE = 'semau-v197-telao-offline-direto';
+const ARQUIVOS_TELAO_OFFLINE = [
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js',
+    './admin.html', './telao-evento.html', './sorteio-telao.html',
+    './css/global.css', './css/telao-evento.css', './css/sorteio-telao.css',
+    './js/admin.js', './js/firebase-config.js', './js/telao-evento.js', './js/sorteio-telao.js', './js/qrcode.min.js',
+    './assets/fonts/Onest-Regular.ttf', './assets/fonts/Onest-SemiBold.ttf', './assets/fonts/Onest-ExtraBold.ttf',
+    './assets/svg/logo-cn-02.svg', './assets/svg/lojinha-xvi.svg', './assets/svg/sticker-palmeira.svg',
+    './assets/svg/sticker-selo.svg', './assets/svg/sticker-cadeira.svg', './assets/svg/sticker-estrela.svg',
+    './assets/lojinha-xvi/Camisa_01.png', './assets/lojinha-xvi/baralho/baralho-capa.jpg', './assets/lojinha-xvi/ima/ima-capa.jpg',
+    './assets/patrocinadores/logifab.png', './assets/patrocinadores/voitto.png', './assets/patrocinadores/peanuts-bakery.png',
+    './assets/patrocinadores/choco-latte.png', './assets/patrocinadores/venus-artesa.png', './assets/patrocinadores/studio3-papelaria.png',
+    './assets/patrocinadores/jardim-de-papel.png', './assets/patrocinadores/manufatura-atelie.png', './assets/patrocinadores/precinho-ruralino.png',
+    './assets/patrocinadores/fireprint.png', './assets/patrocinadores/aura.png', './assets/patrocinadores/euphoria-atelie.png',
+    './assets/patrocinadores/canson.png', './assets/patrocinadores/arqstream.png', './assets/patrocinadores/doce-carol.png',
+    './assets/patrocinadores/so-fachada.png', './assets/patrocinadores/jm.png', './assets/patrocinadores/cura-marca-branco.png'
+];
 const canalSorteio = 'BroadcastChannel' in window ? new BroadcastChannel('semau-sorteio') : null;
 let janelaTelao = null;
 let telaoConectado = false;
@@ -586,21 +605,40 @@ function atualizarStatusTelaoOffline(base = carregarBaseSorteioOffline(), estado
 
 async function prepararArquivosTelaoOffline() {
     if (!('serviceWorker' in navigator)) throw new Error('Este navegador não oferece o modo offline necessário.');
+    if (!('caches' in window)) throw new Error('Este navegador não permite salvar os slides para uso offline.');
     const registro = await navigator.serviceWorker.ready;
     await registro.update().catch(() => {});
-    const trabalhador = registro.waiting || registro.active || navigator.serviceWorker.controller;
-    if (!trabalhador) throw new Error('O aplicativo offline ainda não está ativo. Atualize a página e tente novamente.');
+    const cache = await caches.open(CACHE_TELAO_OFFLINE);
+    const fila = [...ARQUIVOS_TELAO_OFFLINE];
+    let concluidos = 0;
+    let falha = null;
 
-    await new Promise((resolve, reject) => {
-        const canal = new MessageChannel();
-        const limite = setTimeout(() => reject(new Error('A preparação dos slides demorou demais. Tente novamente com uma conexão estável.')), 60000);
-        canal.port1.onmessage = evento => {
-            clearTimeout(limite);
-            if (evento.data?.ok) resolve(evento.data);
-            else reject(new Error(evento.data?.mensagem || 'Não foi possível salvar os slides.'));
-        };
-        trabalhador.postMessage({ tipo: 'preparar-telao-offline' }, [canal.port2]);
-    });
+    const baixarProximo = async () => {
+        while (fila.length && !falha) {
+            const caminho = fila.shift();
+            try {
+                const requisicao = new Request(new URL(caminho, window.location.href), { cache: 'reload' });
+                const resposta = await fetch(requisicao);
+                if (!resposta.ok) throw new Error(`Falha ao baixar ${caminho}.`);
+                await cache.put(requisicao, resposta.clone());
+                concluidos += 1;
+                if (statusTelaoOffline) statusTelaoOffline.textContent = `Salvando arquivos do telão · ${concluidos}/${ARQUIVOS_TELAO_OFFLINE.length}...`;
+            } catch (error) {
+                falha = error;
+            }
+        }
+    };
+    await Promise.all(Array.from({ length: 4 }, baixarProximo));
+    if (falha) throw falha;
+
+    const conferencias = await Promise.all(ARQUIVOS_TELAO_OFFLINE.map(caminho =>
+        cache.match(new Request(new URL(caminho, window.location.href)))
+    ));
+    if (conferencias.some(resposta => !resposta)) {
+        throw new Error('Alguns arquivos não ficaram salvos. Tente preparar novamente.');
+    }
+    navigator.storage?.persist?.().catch(() => {});
+    return { quantidade: concluidos };
 }
 
 if (btnPrepararTelaoOffline) {
