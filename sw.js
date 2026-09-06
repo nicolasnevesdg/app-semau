@@ -1,4 +1,51 @@
-const CACHE_NAME = 'semau-v195-edicao-segura-ingresso';
+const CACHE_NAME = 'semau-v196-telao-offline';
+
+const TELAO_OFFLINE_ASSETS = [
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
+    'https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js',
+    './admin.html',
+    './telao-evento.html',
+    './sorteio-telao.html',
+    './css/global.css',
+    './css/telao-evento.css',
+    './css/sorteio-telao.css',
+    './js/admin.js',
+    './js/firebase-config.js',
+    './js/telao-evento.js',
+    './js/sorteio-telao.js',
+    './js/qrcode.min.js',
+    './assets/fonts/Onest-Regular.ttf',
+    './assets/fonts/Onest-SemiBold.ttf',
+    './assets/fonts/Onest-ExtraBold.ttf',
+    './assets/svg/logo-cn-02.svg',
+    './assets/svg/lojinha-xvi.svg',
+    './assets/svg/sticker-palmeira.svg',
+    './assets/svg/sticker-selo.svg',
+    './assets/svg/sticker-cadeira.svg',
+    './assets/svg/sticker-estrela.svg',
+    './assets/lojinha-xvi/Camisa_01.png',
+    './assets/lojinha-xvi/baralho/baralho-capa.jpg',
+    './assets/lojinha-xvi/ima/ima-capa.jpg',
+    './assets/patrocinadores/logifab.png',
+    './assets/patrocinadores/voitto.png',
+    './assets/patrocinadores/peanuts-bakery.png',
+    './assets/patrocinadores/studio3-papelaria.png',
+    './assets/patrocinadores/choco-latte.png',
+    './assets/patrocinadores/venus-artesa.png',
+    './assets/patrocinadores/cura-marca-branco.png',
+    './assets/patrocinadores/jardim-de-papel.png',
+    './assets/patrocinadores/manufatura-atelie.png',
+    './assets/patrocinadores/precinho-ruralino.png',
+    './assets/patrocinadores/fireprint.png',
+    './assets/patrocinadores/aura.png',
+    './assets/patrocinadores/euphoria-atelie.png',
+    './assets/patrocinadores/canson.png',
+    './assets/patrocinadores/arqstream.png',
+    './assets/patrocinadores/doce-carol.png',
+    './assets/patrocinadores/so-fachada.png',
+    './assets/patrocinadores/jm.png'
+];
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
 const assetsToCache = [
@@ -6,6 +53,7 @@ const assetsToCache = [
     './index.html',
     './admin.html',
     './sorteio-telao.html',
+    './telao-evento.html',
     './ingressos.html',
     './admin-cronograma.html',
     './compra.html',
@@ -19,6 +67,7 @@ const assetsToCache = [
     './css/components.css',
     './css/views.css',
     './css/sorteio-telao.css',
+    './css/telao-evento.css',
     './css/compra.css',
     './css/admin-cronograma.css',
     './css/pagamento.css',
@@ -32,6 +81,10 @@ const assetsToCache = [
     './js/store-config.js',
     './js/store-gallery.js',
     './js/sorteio-telao.js',
+    './js/telao-evento.js',
+    './js/qrcode.min.js',
+    './js/admin.js',
+    './js/firebase-config.js',
     './js/ingressos.js',
     './js/ingressos-config.js',
     './js/programacao-ao-vivo-config.js',
@@ -139,7 +192,9 @@ const assetsToCache = [
 
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(assetsToCache))
+        caches.open(CACHE_NAME)
+            .then(cache => cache.addAll(assetsToCache))
+            .then(() => self.skipWaiting())
     );
 });
 
@@ -155,12 +210,41 @@ self.addEventListener('activate', event => {
     );
 });
 
+self.addEventListener('message', event => {
+    if (event.data?.tipo !== 'preparar-telao-offline') return;
+    event.waitUntil((async () => {
+        try {
+            const cache = await caches.open(CACHE_NAME);
+            await Promise.all(TELAO_OFFLINE_ASSETS.map(async caminho => {
+                const resposta = await fetch(caminho, { cache: 'reload' });
+                if (!resposta.ok) throw new Error(`Não foi possível salvar ${caminho}.`);
+                await cache.put(caminho, resposta);
+            }));
+            event.ports[0]?.postMessage({ ok: true, quantidade: TELAO_OFFLINE_ASSETS.length });
+        } catch (error) {
+            event.ports[0]?.postMessage({ ok: false, mensagem: error.message });
+        }
+    })());
+});
+
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        fetch(event.request).catch(async () =>
-            (await caches.match(event.request)) || caches.match(event.request, { ignoreSearch: true })
-        )
-    );
+    if (event.request.method !== 'GET') return;
+    event.respondWith((async () => {
+        try {
+            const resposta = await fetch(event.request);
+            const url = new URL(event.request.url);
+            const recursoDoAplicativo = url.origin === self.location.origin || url.hostname === 'www.gstatic.com';
+            if (recursoDoAplicativo && (resposta.ok || resposta.type === 'opaque')) {
+                const copia = resposta.clone();
+                event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, copia)).catch(() => {}));
+            }
+            return resposta;
+        } catch (_) {
+            return (await caches.match(event.request)) ||
+                (await caches.match(event.request, { ignoreSearch: true })) ||
+                Response.error();
+        }
+    })());
 });
 
 

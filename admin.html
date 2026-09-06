@@ -42,6 +42,11 @@
         border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease;
     }
     .admin-btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(224, 109, 83, 0.2); }
+    .btn-telao-offline { width: 100%; margin-top: 10px; background: #edf5f1; color: var(--cor-primaria); border: 1px solid #cfdfd7; }
+    .btn-telao-offline[data-pronto="true"] { background: #e8f7ed; color: #1e7044; border-color: #b9dec8; }
+    .telao-offline-status { min-height: 18px; margin: 10px 0 0; color: #747975; font-size: 11px; font-weight: 700; line-height: 1.45; text-align: center; }
+    .telao-offline-status[data-estado="pronto"] { color: #218653; }
+    .telao-offline-status[data-estado="erro"] { color: #b63a32; }
 
     .admin-card-minimal {
         background: #fff; padding: 32px; border-radius: 24px;
@@ -275,6 +280,10 @@
             <button id="btn-abrir-telao-evento" class="admin-btn-secondary" style="width: 100%; background: var(--cor-primaria);">
                 <i class="ph-bold ph-monitor-play"></i> Abrir telão do evento
             </button>
+            <button id="btn-preparar-telao-offline" class="admin-btn-secondary btn-telao-offline" type="button">
+                <i class="ph-bold ph-cloud-arrow-down"></i> Preparar telão para uso offline
+            </button>
+            <p id="status-telao-offline" class="telao-offline-status" role="status" aria-live="polite">Ainda não preparado neste dispositivo.</p>
         </div>
 
         <div class="admin-card-minimal">
@@ -694,7 +703,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/admin.js?v=20260906-2"></script>
+  <script type="module" src="js/admin.js?v=20260906-3"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

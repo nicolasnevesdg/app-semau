@@ -56,6 +56,8 @@ const btnAdminSortear = document.getElementById('btn-admin-sortear');
 const sorteioResultado = document.getElementById('sorteio-resultado');
 const btnAbrirTelao = document.getElementById('btn-abrir-telao');
 const btnAbrirTelaoEvento = document.getElementById('btn-abrir-telao-evento');
+const btnPrepararTelaoOffline = document.getElementById('btn-preparar-telao-offline');
+const statusTelaoOffline = document.getElementById('status-telao-offline');
 const statusTelao = document.getElementById('status-telao');
 
 let idAlunoSelecionado = null;
@@ -434,6 +436,7 @@ const togglePresenca = async (campo, botao) => {
         if (alunoCheckinAtual) {
             alunoCheckinAtual[campo] = novoStatus;
             alunoCheckinAtual[campo + '_checkinEm'] = novoStatus ? new Date() : null;
+            atualizarParticipanteNaBaseSorteioOffline(alunoCheckinAtual);
         }
         atualizarBotaoPresenca(botao, novoStatus, novoStatus ? new Date() : null);
     } catch (error) { console.error("Erro ao atualizar presença:", error); }
@@ -499,9 +502,136 @@ botoesOficinaAdmin.forEach(botao => {
 // ==========================================
 // 4. O SORTEADOR
 // ==========================================
+const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
 const canalSorteio = 'BroadcastChannel' in window ? new BroadcastChannel('semau-sorteio') : null;
 let janelaTelao = null;
 let telaoConectado = false;
+
+function montarBaseSorteioOffline(documentos) {
+    const participantes = documentos.map(documento => {
+        const dados = typeof documento.data === 'function' ? documento.data() : documento;
+        const id = documento?.id || dados?.id || '';
+        const nome = String(dados?.nome || '').trim();
+        const turnos = TURNOS_PRESENCA.filter(turno => dados?.[turno] === true);
+        return { id, nome, turnos };
+    }).filter(participante => participante.nome && participante.turnos.length);
+    return { versao: 1, atualizadoEm: Date.now(), participantes };
+}
+
+function salvarBaseSorteioOffline(base) {
+    localStorage.setItem(CHAVE_BASE_SORTEIO_OFFLINE, JSON.stringify(base));
+    atualizarStatusTelaoOffline(base);
+}
+
+function carregarBaseSorteioOffline() {
+    try {
+        const base = JSON.parse(localStorage.getItem(CHAVE_BASE_SORTEIO_OFFLINE) || 'null');
+        return base?.versao === 1 && Array.isArray(base.participantes) ? base : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function atualizarParticipanteNaBaseSorteioOffline(dadosAluno) {
+    const base = carregarBaseSorteioOffline();
+    if (!base || !dadosAluno) return;
+    const id = dadosAluno.id || idAlunoSelecionado || '';
+    const nome = String(dadosAluno.nome || '').trim();
+    const turnos = TURNOS_PRESENCA.filter(turno => dadosAluno[turno] === true);
+    const indiceParticipante = base.participantes.findIndex(participante => participante.id === id);
+    if (!nome || !turnos.length) {
+        if (indiceParticipante >= 0) base.participantes.splice(indiceParticipante, 1);
+    } else if (indiceParticipante >= 0) {
+        base.participantes[indiceParticipante] = { id, nome, turnos };
+    } else {
+        base.participantes.push({ id, nome, turnos });
+    }
+    base.atualizadoEm = Date.now();
+    salvarBaseSorteioOffline(base);
+}
+
+function nomesElegiveisNaBase(base, turno) {
+    if (!base) return [];
+    return base.participantes
+        .filter(participante => turno === 'qualquer' ? participante.turnos.length : participante.turnos.includes(turno))
+        .map(participante => participante.nome);
+}
+
+function consultarInscritosComLimite(tempoMaximo = 6000) {
+    if (!navigator.onLine) return Promise.reject(new Error('Sem conexão.'));
+    return Promise.race([
+        getDocs(collection(db, 'inscritos')),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('A consulta on-line demorou demais.')), tempoMaximo))
+    ]);
+}
+
+function atualizarStatusTelaoOffline(base = carregarBaseSorteioOffline(), estado = '') {
+    if (!statusTelaoOffline || !btnPrepararTelaoOffline) return;
+    if (!base) {
+        statusTelaoOffline.textContent = 'Ainda não preparado neste dispositivo.';
+        statusTelaoOffline.dataset.estado = estado;
+        btnPrepararTelaoOffline.dataset.pronto = 'false';
+        return;
+    }
+    const data = new Date(base.atualizadoEm);
+    const horario = data.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const elegibilidade = base.participantes.length === 1 ? 'participante elegível' : 'participantes elegíveis';
+    statusTelaoOffline.textContent = `Pronto para uso offline · ${base.participantes.length} ${elegibilidade} · atualizado em ${horario}.`;
+    statusTelaoOffline.dataset.estado = 'pronto';
+    btnPrepararTelaoOffline.dataset.pronto = 'true';
+    if (!btnPrepararTelaoOffline.disabled) {
+        btnPrepararTelaoOffline.innerHTML = '<i class="ph-bold ph-arrows-clockwise"></i> Atualizar preparo offline';
+    }
+}
+
+async function prepararArquivosTelaoOffline() {
+    if (!('serviceWorker' in navigator)) throw new Error('Este navegador não oferece o modo offline necessário.');
+    const registro = await navigator.serviceWorker.ready;
+    await registro.update().catch(() => {});
+    const trabalhador = registro.waiting || registro.active || navigator.serviceWorker.controller;
+    if (!trabalhador) throw new Error('O aplicativo offline ainda não está ativo. Atualize a página e tente novamente.');
+
+    await new Promise((resolve, reject) => {
+        const canal = new MessageChannel();
+        const limite = setTimeout(() => reject(new Error('A preparação dos slides demorou demais. Tente novamente com uma conexão estável.')), 60000);
+        canal.port1.onmessage = evento => {
+            clearTimeout(limite);
+            if (evento.data?.ok) resolve(evento.data);
+            else reject(new Error(evento.data?.mensagem || 'Não foi possível salvar os slides.'));
+        };
+        trabalhador.postMessage({ tipo: 'preparar-telao-offline' }, [canal.port2]);
+    });
+}
+
+if (btnPrepararTelaoOffline) {
+    atualizarStatusTelaoOffline();
+    btnPrepararTelaoOffline.addEventListener('click', async () => {
+        const textoOriginal = btnPrepararTelaoOffline.innerHTML;
+        btnPrepararTelaoOffline.disabled = true;
+        btnPrepararTelaoOffline.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Preparando telão...';
+        if (statusTelaoOffline) {
+            statusTelaoOffline.dataset.estado = '';
+            statusTelaoOffline.textContent = 'Salvando slides e atualizando os participantes elegíveis...';
+        }
+        try {
+            const [querySnapshot] = await Promise.all([
+                getDocs(collection(db, 'inscritos')),
+                prepararArquivosTelaoOffline()
+            ]);
+            salvarBaseSorteioOffline(montarBaseSorteioOffline(querySnapshot.docs));
+            btnPrepararTelaoOffline.innerHTML = '<i class="ph-bold ph-check-circle"></i> Telão preparado';
+        } catch (error) {
+            console.error('Erro ao preparar telão offline:', error);
+            if (statusTelaoOffline) {
+                statusTelaoOffline.dataset.estado = 'erro';
+                statusTelaoOffline.textContent = error?.message || 'Não foi possível preparar o telão. Confira a internet e tente novamente.';
+            }
+            btnPrepararTelaoOffline.innerHTML = textoOriginal;
+        } finally {
+            btnPrepararTelaoOffline.disabled = false;
+        }
+    });
+}
 
 function publicarNoTelao(mensagem) {
     canalSorteio?.postMessage(mensagem);
@@ -557,23 +687,20 @@ if (btnAdminSortear) {
         btnAdminSortear.disabled = true;
         
         const turnoEscolhido = selectSorteioTurno ? selectSorteioTurno.value : 'qualquer';
+        let usandoBaseOffline = false;
 
         try {
-            const querySnapshot = await getDocs(collection(db, "inscritos"));
-            let listaSorteaveis = [];
-            
-            querySnapshot.forEach((docSnap) => {
-                const dados = docSnap.data();
-                let temPresenca = false;
-
-                if (turnoEscolhido === 'qualquer') {
-                    temPresenca = TURNOS_PRESENCA.some(turno => dados[turno] === true);
-                } else {
-                    temPresenca = dados[turnoEscolhido] === true;
-                }
-                
-                if (temPresenca) listaSorteaveis.push(dados.nome);
-            });
+            let baseSorteio;
+            try {
+                const querySnapshot = await consultarInscritosComLimite();
+                baseSorteio = montarBaseSorteioOffline(querySnapshot.docs);
+                salvarBaseSorteioOffline(baseSorteio);
+            } catch (erroRede) {
+                baseSorteio = carregarBaseSorteioOffline();
+                usandoBaseOffline = Boolean(baseSorteio);
+                if (!baseSorteio) throw erroRede;
+            }
+            const listaSorteaveis = nomesElegiveisNaBase(baseSorteio, turnoEscolhido);
             
             if (listaSorteaveis.length === 0) {
                 sorteioResultado.innerHTML = `<div style="background: #fffaf9; color: #e06d53; padding: 16px; border-radius: 12px; border: 1px solid #ffebeb; font-weight: 600; font-size: 14px;"><i class="ph-bold ph-warning-circle"></i> Ninguém com presença confirmada neste turno!</div>`;
@@ -585,13 +712,14 @@ if (btnAdminSortear) {
             publicarNoTelao({ tipo: 'sortear', nomes: listaSorteaveis, ganhador, turno: turnoTexto });
             sorteioResultado.innerHTML = `
                 <div style="background: #f2fbf5; padding: 24px; border-radius: 16px; border: 1px solid #c3ebd2; margin-top: 10px;">
+                    ${usandoBaseOffline ? '<p style="margin:0 0 10px;color:#8a6816;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;"><i class="ph-bold ph-cloud-slash"></i> Sorteio realizado com a base offline salva</p>' : ''}
                     <p style="font-size: 12px; color: #27ae60; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;"><i class="ph-bold ph-confetti"></i> Ganhador(a)</p>
                     <strong style="font-size: 24px; color: var(--cor-primaria); font-weight: 800; word-break: break-word; line-height: 1.2;">${ganhador}</strong>
                 </div>
             `;
             
         } catch (error) {
-            sorteioResultado.textContent = "Erro ao sortear.";
+            sorteioResultado.textContent = "Sem conexão e sem uma base offline preparada. Conecte-se ou use o botão de preparação do telão.";
         } finally {
             btnAdminSortear.disabled = false;
         }
