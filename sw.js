@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v202-cronograma-sincronizado';
+const CACHE_NAME = 'semau-v203-foto-daniel';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -132,6 +132,7 @@ const assetsToCache = [
     './assets/palestrantes/beatriz-fraga.png',
     './assets/palestrantes/urbanas.png',
     './assets/palestrantes/julia.png',
+    './assets/palestrantes/daniel.png',
     './assets/oficinas/diadorim.png',
     './assets/professores/sem-foto.png',
     './assets/professores/denise.png',
