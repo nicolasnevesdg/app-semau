@@ -1,7 +1,7 @@
 import { db } from './firebase-config.js';
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 // 1. Importa o banco de perguntas separado
-import { bancoDePerguntas } from './questions.js';
+import { bancoDePerguntas } from './questions.js?v=20260915-1';
 
 let perguntasEmbaralhadas = [];
 let perguntaAtualIndex = 0;
@@ -10,6 +10,10 @@ let errosNaPartida = 0;
 
 const LIMITE_ERROS = 3; // Quantos erros bloqueiam o usuário
 const TEMPO_BLOQUEIO_MINUTOS = 5; // Tempo de penalidade
+const PERGUNTAS_POR_DIFICULDADE = 5;
+const PERGUNTAS_POR_RODADA = PERGUNTAS_POR_DIFICULDADE * 3;
+const LIMITE_HISTORICO_PERGUNTAS = 30;
+const CHAVE_HISTORICO_PERGUNTAS = 'quiz_perguntas_recentes';
 
 // Elementos da tela
 const perguntaTexto = document.getElementById('pergunta-texto');
@@ -57,6 +61,63 @@ function verificarBloqueio() {
 // ==========================================
 // INICIAR E ALEATORIZAR O JOGO
 // ==========================================
+function embaralhar(lista) {
+    const copia = [...lista];
+    for (let indice = copia.length - 1; indice > 0; indice--) {
+        const destino = Math.floor(Math.random() * (indice + 1));
+        [copia[indice], copia[destino]] = [copia[destino], copia[indice]];
+    }
+    return copia;
+}
+
+function lerHistoricoPerguntas() {
+    try {
+        const historico = JSON.parse(localStorage.getItem(CHAVE_HISTORICO_PERGUNTAS) || '[]');
+        return Array.isArray(historico)
+            ? historico.filter(item => typeof item === 'string').slice(-LIMITE_HISTORICO_PERGUNTAS)
+            : [];
+    } catch {
+        return [];
+    }
+}
+
+function embaralharOpcoes(pergunta) {
+    const opcoes = embaralhar(pergunta.opcoes.map((texto, indice) => ({
+        texto,
+        correta: indice === pergunta.respostaCorreta
+    })));
+    return {
+        ...pergunta,
+        opcoes: opcoes.map(opcao => opcao.texto),
+        respostaCorreta: opcoes.findIndex(opcao => opcao.correta)
+    };
+}
+
+function selecionarPerguntasDaRodada() {
+    const historico = lerHistoricoPerguntas();
+    const recentes = new Set(historico);
+    const escolhidas = [];
+
+    ['facil', 'media', 'dificil'].forEach(dificuldade => {
+        const nivel = bancoDePerguntas.filter(item => item.dificuldade === dificuldade);
+        const aindaNaoVistas = nivel.filter(item => !recentes.has(item.texto));
+        const candidatas = aindaNaoVistas.length >= PERGUNTAS_POR_DIFICULDADE
+            ? aindaNaoVistas
+            : nivel;
+        escolhidas.push(...embaralhar(candidatas).slice(0, PERGUNTAS_POR_DIFICULDADE));
+    });
+
+    const selecionadas = embaralhar(escolhidas).slice(0, PERGUNTAS_POR_RODADA);
+    const textosSelecionados = selecionadas.map(item => item.texto);
+    const historicoAtualizado = [
+        ...historico.filter(texto => !textosSelecionados.includes(texto)),
+        ...textosSelecionados
+    ].slice(-LIMITE_HISTORICO_PERGUNTAS);
+
+    localStorage.setItem(CHAVE_HISTORICO_PERGUNTAS, JSON.stringify(historicoAtualizado));
+    return selecionadas.map(embaralharOpcoes);
+}
+
 function iniciarJogo() {
     // Se estiver bloqueado, nem deixa jogar
     if (verificarBloqueio()) return;
@@ -66,8 +127,7 @@ function iniciarJogo() {
     errosNaPartida = 0;
     pontosDisplay.textContent = "0";
 
-    // Mágica para clonar e embaralhar a ordem das perguntas aleatoriamente
-    perguntasEmbaralhadas = [...bancoDePerguntas].sort(() => Math.random() - 0.5);
+    perguntasEmbaralhadas = selecionarPerguntasDaRodada();
 
     carregarPergunta();
 }
@@ -76,7 +136,7 @@ function carregarPergunta() {
     if (verificarBloqueio()) return;
 
     const perguntaAtual = perguntasEmbaralhadas[perguntaAtualIndex];
-    perguntaTexto.innerHTML = `<small style="color:var(--cor-primaria)">[Dificuldade: ${perguntaAtual.dificuldade.toUpperCase()}]</small><br>${perguntaAtual.texto}`;
+    perguntaTexto.innerHTML = `<small style="color:var(--cor-primaria)">[Dificuldade: ${perguntaAtual.dificuldade.toUpperCase()} · ${perguntaAtualIndex + 1}/${perguntasEmbaralhadas.length}]</small><br>${perguntaAtual.texto}`;
     opcoesContainer.innerHTML = ''; 
 
     perguntaAtual.opcoes.forEach((opcao, index) => {
