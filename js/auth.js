@@ -183,6 +183,7 @@ const containerOficinas = document.getElementById('container-oficinas');
 const listaOficinas = document.getElementById('lista-oficinas');
 const docCronogramaOficinasRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
 let catalogoOficinas = montarCatalogoIngressosOficinas(PROGRAMACAO_AO_VIVO_PADRAO);
+const VERSAO_IMAGENS_OFICINAS = '20260915-1';
 let sessaoOficinasAtual = null;
 
 function escaparHtml(valor) {
@@ -194,9 +195,11 @@ function escaparHtml(valor) {
 function normalizarImagemOficina(valor) {
     try {
         const url = new URL(String(valor || 'assets/img/oficina-levantamento.png').trim(), window.location.href);
-        return url.protocol === 'http:' || url.protocol === 'https:'
-            ? url.href
-            : new URL('assets/img/oficina-levantamento.png', window.location.href).href;
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return new URL('assets/img/oficina-levantamento.png', window.location.href).href;
+        }
+        if (url.origin === window.location.origin) url.searchParams.set('imgv', VERSAO_IMAGENS_OFICINAS);
+        return url.href;
     } catch {
         return new URL('assets/img/oficina-levantamento.png', window.location.href).href;
     }

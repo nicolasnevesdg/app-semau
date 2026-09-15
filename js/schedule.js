@@ -16,7 +16,7 @@ const containerFase1 = document.getElementById('container-fase1');
 const containerFase2 = document.getElementById('container-fase2');
 const docConvidadosRef = doc(db, 'configuracoes', 'anuncios');
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
-const VERSAO_IMAGENS_CRONOGRAMA = '20260902-1';
+const VERSAO_IMAGENS_CRONOGRAMA = '20260915-1';
 
 function versionarImagemLocal(caminho) {
     const valor = String(caminho || '').trim();
