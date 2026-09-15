@@ -37,6 +37,16 @@ const linksPatrocinadores = {
     "so-fachada.png": "https://www.instagram.com/sofachadapodcast/",
     // JM Sacolé Gourmet
     "jm.png": "https://www.instagram.com/jmsacolegourmet21/",
+    // Gastrobar Vó Sacasa
+    "gastrobarr-vo-sacasa-clara.png": "https://www.instagram.com/gastrobarvosacasa/",
+    // Nut Acessórios
+    "nut-acessorios.png": "https://www.instagram.com/nutacessorios_/",
+    // Sabor e Calor
+    "saborecalor.png": "https://www.instagram.com/caldo_ssabor/",
+    // Doce Sensação
+    "doce-sensacao.png": "https://www.instagram.com/docesensacaos2/",
+    // Pitoresco Eventos
+    "pitoresco.png": "https://www.instagram.com/pitorescoeventos/",
 };
 
 document.querySelectorAll("[data-patrocinador]").forEach(link => {

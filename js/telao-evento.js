@@ -5,7 +5,9 @@ const patrocinadores = [
     ['manufatura-atelie.png', 'Manufatura Ateliê'], ['precinho-ruralino.png', 'Ruralino'], ['fireprint.png', 'Fireprint Gráfica'],
     ['aura.png', 'Arquitetura Aura'], ['euphoria-atelie.png', 'Euphoria Ateliê'], ['canson.png', 'Canson'],
     ['arqstream.png', 'Arqstream'], ['doce-carol.png', 'Doce Carol'], ['so-fachada.png', 'Só Fachada Podcast'],
-    ['jm.png', 'JM Sacolé Gourmet']
+    ['jm.png', 'JM Sacolé Gourmet'], ['gastrobarr-vo-sacasa-clara.png', 'Gastrobar Vó Sacasa'],
+    ['nut-acessorios.png', 'Nut Acessórios'], ['saborecalor.png', 'Sabor e Calor'],
+    ['doce-sensacao.png', 'Doce Sensação'], ['pitoresco.png', 'Pitoresco Eventos']
 ];
 
 const roteiro = [

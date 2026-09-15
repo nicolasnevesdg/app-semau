@@ -503,7 +503,7 @@ botoesOficinaAdmin.forEach(botao => {
 // 4. O SORTEADOR
 // ==========================================
 const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
-const CACHE_TELAO_OFFLINE = 'semau-v197-telao-offline-direto';
+const CACHE_TELAO_OFFLINE = 'semau-v201-novos-patrocinadores';
 const ARQUIVOS_TELAO_OFFLINE = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
@@ -520,7 +520,9 @@ const ARQUIVOS_TELAO_OFFLINE = [
     './assets/patrocinadores/jardim-de-papel.png', './assets/patrocinadores/manufatura-atelie.png', './assets/patrocinadores/precinho-ruralino.png',
     './assets/patrocinadores/fireprint.png', './assets/patrocinadores/aura.png', './assets/patrocinadores/euphoria-atelie.png',
     './assets/patrocinadores/canson.png', './assets/patrocinadores/arqstream.png', './assets/patrocinadores/doce-carol.png',
-    './assets/patrocinadores/so-fachada.png', './assets/patrocinadores/jm.png', './assets/patrocinadores/cura-marca-branco.png'
+    './assets/patrocinadores/so-fachada.png', './assets/patrocinadores/jm.png', './assets/patrocinadores/cura-marca-branco.png',
+    './assets/patrocinadores/gastrobarr-vo-sacasa-clara.png', './assets/patrocinadores/nut-acessorios.png',
+    './assets/patrocinadores/saborecalor.png', './assets/patrocinadores/doce-sensacao.png', './assets/patrocinadores/pitoresco.png'
 ];
 const canalSorteio = 'BroadcastChannel' in window ? new BroadcastChannel('semau-sorteio') : null;
 let janelaTelao = null;

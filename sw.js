@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v200-quiz-ampliado';
+const CACHE_NAME = 'semau-v201-novos-patrocinadores';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -44,7 +44,12 @@ const TELAO_OFFLINE_ASSETS = [
     './assets/patrocinadores/arqstream.png',
     './assets/patrocinadores/doce-carol.png',
     './assets/patrocinadores/so-fachada.png',
-    './assets/patrocinadores/jm.png'
+    './assets/patrocinadores/jm.png',
+    './assets/patrocinadores/gastrobarr-vo-sacasa-clara.png',
+    './assets/patrocinadores/nut-acessorios.png',
+    './assets/patrocinadores/saborecalor.png',
+    './assets/patrocinadores/doce-sensacao.png',
+    './assets/patrocinadores/pitoresco.png'
 ];
 
 // Aqui listamos todos os arquivos que queremos salvar no celular da pessoa
@@ -187,7 +192,12 @@ const assetsToCache = [
     './assets/patrocinadores/arqstream.png',
     './assets/patrocinadores/doce-carol.png',
     './assets/patrocinadores/so-fachada.png',
-    './assets/patrocinadores/jm.png'
+    './assets/patrocinadores/jm.png',
+    './assets/patrocinadores/gastrobarr-vo-sacasa-clara.png',
+    './assets/patrocinadores/nut-acessorios.png',
+    './assets/patrocinadores/saborecalor.png',
+    './assets/patrocinadores/doce-sensacao.png',
+    './assets/patrocinadores/pitoresco.png'
 ];
 
 self.addEventListener('install', event => {
