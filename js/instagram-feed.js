@@ -140,7 +140,7 @@ function renderizarFeed(dados) {
     container.closest('.instagram-section')?.classList.add('instagram-section-feed-oficial');
 }
 
-if (container) {
+if (container && !container.classList.contains('insta-feed-container-substituto')) {
     onSnapshot(
         doc(db, 'configuracoes', 'instagramFeed'),
         snapshot => {
