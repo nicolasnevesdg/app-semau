@@ -25,6 +25,26 @@ export const REFERENCIAS_INGRESSOS_OFICINAS = Object.freeze({
     OF05: '24-1330-mobiliario',
     OF06: '24-1330-mural'
 });
+export const REFERENCIAS_ANUNCIOS = Object.freeze({
+    'palestrante-01': '21-1030-ethel',
+    'palestrante-02': '21-1410-ester',
+    'palestrante-03': '21-1550-case',
+    'palestrante-04': '22-0910-thaysa',
+    'palestrante-05': '22-1040-rafael',
+    'palestrante-06': '23-0910-palestra',
+    'palestrante-07': '23-1040-roberto',
+    'palestrante-08': '23-1410-urbanas',
+    'palestrante-09': '24-0910-palestra',
+    'palestrante-10': '24-1040-negromuro',
+    'palestrante-11': '25-0910-veronica',
+    'oficina-01': '22-1330-levantamento',
+    'oficina-02': '22-1330-ceramica',
+    'oficina-03': '23-1540-aquarela',
+    'oficina-04': '23-1540-cuidado',
+    'oficina-05': '24-1330-mobiliario',
+    'oficina-06': '24-1330-mural'
+});
+const PESSOA_SEM_FOTO = 'assets/professores/sem-foto.png';
 const atividade = (id, inicio, fim, tipo, titulo, descricao = '', extras = {}) => Object.freeze({
     id, inicio, fim, tipo, titulo, descricao, texto: '', convidado: '', convidadoCargo: '',
     convidadoBio: '', tema: '', temaDescricao: '', mediador: '', mediadorCargo: '',
@@ -167,6 +187,27 @@ export function montarCatalogoIngressosOficinas(programacao = PROGRAMACAO_AO_VIV
             data: dia ? `${dia.dataCurta} · ${item.inicio}–${item.fim}` : 'Horário a confirmar',
             local: item.local || 'Local a confirmar',
             imagem: item.imagem || OFICINA_PADRAO
+        }];
+    }));
+}
+
+export function montarCatalogoAnuncios(programacao = PROGRAMACAO_AO_VIVO_PADRAO) {
+    const programacaoAtual = normalizarProgramacao(programacao);
+    const programacaoPadrao = normalizarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+
+    return Object.fromEntries(Object.entries(REFERENCIAS_ANUNCIOS).map(([codigo, idAtividade]) => {
+        const referencia = localizarAtividade(programacaoAtual, idAtividade) || localizarAtividade(programacaoPadrao, idAtividade);
+        const item = referencia?.item || {};
+        const oficina = codigo.startsWith('oficina-');
+
+        return [codigo, oficina ? {
+            nome: item.titulo || 'Oficina',
+            descricao: `Com ${item.oficineiro || 'ministrante a confirmar'}`,
+            imagem: item.oficineiroFoto || PESSOA_SEM_FOTO
+        } : {
+            nome: item.convidado || item.titulo || 'Convidado(a)',
+            descricao: item.convidadoCargo || item.tema || 'Informações em breve',
+            imagem: item.imagem || PALESTRANTE_PADRAO
         }];
     }));
 }

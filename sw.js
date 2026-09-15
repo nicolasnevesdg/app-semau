@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v201-novos-patrocinadores';
+const CACHE_NAME = 'semau-v202-cronograma-sincronizado';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -131,6 +131,9 @@ const assetsToCache = [
     './assets/palestrantes/veronica-natividade.png',
     './assets/palestrantes/beatriz-fraga.png',
     './assets/palestrantes/urbanas.png',
+    './assets/palestrantes/julia.png',
+    './assets/oficinas/diadorim.png',
+    './assets/professores/sem-foto.png',
     './assets/professores/denise.png',
     './assets/professores/ana.png',
     './assets/professores/bruna.png',

@@ -10,12 +10,20 @@ import {
     obterLoteAutomatico,
     normalizarUrlFormulario
 } from "./ingressos-config.js?v=20260905-1";
+import {
+    VERSAO_CONTEUDO_CRONOGRAMA,
+    PROGRAMACAO_AO_VIVO_PADRAO,
+    clonarProgramacao,
+    montarCatalogoAnuncios,
+    normalizarProgramacao,
+    temProgramacaoValida
+} from "./programacao-ao-vivo-config.js?v=20260915-2";
 
 const lotes = document.querySelectorAll(".lote-card");
 const botoes = document.querySelectorAll(".plano-botao");
 const precos = document.querySelectorAll("[data-preco-tipo]");
 const faixaPalestrantes = document.getElementById("palestrantes-faixa");
-const VERSAO_IMAGENS_PALESTRANTES = "20260902-1";
+const VERSAO_IMAGENS_PALESTRANTES = "20260915-2";
 
 function versionarImagemLocal(caminho) {
     const valor = String(caminho || "").trim();
@@ -23,24 +31,13 @@ function versionarImagemLocal(caminho) {
     return `${valor}${valor.includes("?") ? "&" : "?"}imgv=${VERSAO_IMAGENS_PALESTRANTES}`;
 }
 
-const PALESTRANTES = {
-    "palestrante-01": { nome: "Ethel Pinheiro", descricao: "Arquiteta, urbanista e professora da UFRJ", imagem: "assets/palestrantes/ethel-pinheiro.png" },
-    "palestrante-02": { nome: "Ester Carro", descricao: "Arquiteta, urbanista social, professora e ativista", imagem: "assets/palestrantes/esther-carro.png" },
-    "palestrante-03": { nome: "Casé Arquitetura", descricao: "Hamilton Casé e Marcela Casé", imagem: "assets/palestrantes/case-arquitetura.png" },
-    "palestrante-04": { nome: "Thaysa Malaquias", descricao: "Arquiteta, urbanista e pesquisadora do LabLugares", imagem: "assets/palestrantes/thaysa-malaquias.png" },
-    "palestrante-05": { nome: "Rafael Zamorano", descricao: "Historiador e diretor substituto do Sítio Roberto Burle Marx", imagem: "assets/palestrantes/rafael-zamorano.png" },
-    "palestrante-06": { nome: "Beatriz Fraga", descricao: "Palestrante da quarta-feira, às 09h10", imagem: "assets/palestrantes/beatriz-fraga.png" },
-    "palestrante-07": { nome: "Roberto Cruz Saavedra", descricao: "Arquiteto e urbanista", imagem: "assets/palestrantes/roberto-cruz.png" },
-    "palestrante-08": { nome: "Urb.Anas", descricao: "Coletivo de arquitetas e urbanistas", imagem: "assets/palestrantes/urbanas.png" },
-    "palestrante-09": { nome: "Daniel Disitzer · Mestres da Obra", descricao: "Palestra de quinta-feira, às 09h10", imagem: "assets/img/palestrante-teste.png" },
-    "palestrante-10": { nome: "Pedro Rajão · Negromuro", descricao: "Integrante do coletivo Negromuro", imagem: "assets/palestrantes/pedro-rajao.png" },
-    "palestrante-11": { nome: "Verônica Natividade", descricao: "Arquiteta, pesquisadora e professora da PUC-Rio", imagem: "assets/palestrantes/veronica-natividade.png" }
-};
-
 let loteAtivo = null;
 let loteConfigurado = "social";
 let estoqueIngressos = {};
 let formularioLoteSocial = FORMULARIO_LOTE_SOCIAL;
+let catalogoAnuncios = montarCatalogoAnuncios(PROGRAMACAO_AO_VIVO_PADRAO);
+let palestrantesAtivos = [];
+const docCronogramaRef = doc(db, "configuracoes", "cronogramaAoVivo");
 
 function escaparHtml(valor) {
     return String(valor || "").replace(/[&<>'"]/g, caractere => ({
@@ -66,7 +63,7 @@ function renderizarPalestrantes(ativos) {
     if (!faixaPalestrantes) return;
     const divulgados = ativos
         .filter(id => id.startsWith("palestrante-"))
-        .map(id => PALESTRANTES[id])
+        .map(id => catalogoAnuncios[id])
         .filter(Boolean);
 
     if (!divulgados.length) {
@@ -175,8 +172,25 @@ onSnapshot(doc(db, "configuracoes", "estoqueIngressos"), snapshot => {
 
 onSnapshot(doc(db, "configuracoes", "anuncios"), snapshot => {
     const configuracao = snapshot.data() || {};
-    renderizarPalestrantes(Array.isArray(configuracao.ativos) ? configuracao.ativos : []);
-}, () => renderizarPalestrantes([]));
+    palestrantesAtivos = Array.isArray(configuracao.ativos) ? configuracao.ativos : [];
+    renderizarPalestrantes(palestrantesAtivos);
+}, () => {
+    palestrantesAtivos = [];
+    renderizarPalestrantes(palestrantesAtivos);
+});
+
+onSnapshot(docCronogramaRef, snapshot => {
+    const dados = snapshot.data();
+    const remota = normalizarProgramacao(dados?.programacao);
+    const programacao = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(remota)
+        ? remota
+        : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+    catalogoAnuncios = montarCatalogoAnuncios(programacao);
+    renderizarPalestrantes(palestrantesAtivos);
+}, () => {
+    catalogoAnuncios = montarCatalogoAnuncios(PROGRAMACAO_AO_VIVO_PADRAO);
+    renderizarPalestrantes(palestrantesAtivos);
+});
 
 atualizarLotes();
 setInterval(atualizarLotes, 30000);

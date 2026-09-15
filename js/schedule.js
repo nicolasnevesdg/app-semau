@@ -6,9 +6,10 @@ import {
     VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
     clonarProgramacao,
+    montarCatalogoAnuncios,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=20260906-1';
+} from './programacao-ao-vivo-config.js?v=20260915-2';
 
 const gridPalestrantes = document.getElementById('grid-palestrantes');
 const gridOficinas = document.getElementById('grid-oficinas');
@@ -16,7 +17,7 @@ const containerFase1 = document.getElementById('container-fase1');
 const containerFase2 = document.getElementById('container-fase2');
 const docConvidadosRef = doc(db, 'configuracoes', 'anuncios');
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
-const VERSAO_IMAGENS_CRONOGRAMA = '20260915-1';
+const VERSAO_IMAGENS_CRONOGRAMA = '20260915-2';
 
 function versionarImagemLocal(caminho) {
     const valor = String(caminho || '').trim();
@@ -24,25 +25,8 @@ function versionarImagemLocal(caminho) {
     return `${valor}${valor.includes('?') ? '&' : '?'}imgv=${VERSAO_IMAGENS_CRONOGRAMA}`;
 }
 
-const catalogoConvidados = {
-    'palestrante-01': { nome: 'Ethel Pinheiro', descricao: 'Arquiteta, urbanista e professora da UFRJ', imagem: 'assets/palestrantes/ethel-pinheiro.png' },
-    'palestrante-02': { nome: 'Ester Carro', descricao: 'Arquiteta, pesquisadora e professora universitária', imagem: 'assets/palestrantes/esther-carro.png' },
-    'palestrante-03': { nome: 'Casé Arquitetura', descricao: 'Hamilton Casé e Marcela Casé', imagem: 'assets/palestrantes/case-arquitetura.png' },
-    'palestrante-04': { nome: 'Thaysa Malaquias', descricao: 'Arquiteta, urbanista e pesquisadora do LabLugares — PROARQ/UFRJ', imagem: 'assets/palestrantes/thaysa-malaquias.png' },
-    'palestrante-05': { nome: 'Rafael Zamorano', descricao: 'Historiador e diretor substituto do Sítio Roberto Burle Marx', imagem: 'assets/palestrantes/rafael-zamorano.png' },
-    'palestrante-06': { nome: 'Beatriz Fraga', descricao: 'Palestrante da quarta-feira, às 09h10', imagem: 'assets/palestrantes/beatriz-fraga.png' },
-    'palestrante-07': { nome: 'Roberto Cruz Saavedra', descricao: 'Arquiteto e urbanista do Cruz Saavedra Arquitetura', imagem: 'assets/palestrantes/roberto-cruz.png' },
-    'palestrante-08': { nome: 'Urb.Anas', descricao: 'Coletivo de pesquisa sobre urbanismo, feminismo, gênero e interseccionalidade', imagem: 'assets/palestrantes/urbanas.png' },
-    'palestrante-09': { nome: 'Daniel Disitzer · Mestres da Obra', descricao: 'Palestra de quinta-feira, às 09h10', imagem: 'assets/img/palestrante-teste.png' },
-    'palestrante-10': { nome: 'Pedro Rajão · Negromuro', descricao: 'Integrante do coletivo Negromuro', imagem: 'assets/palestrantes/pedro-rajao.png' },
-    'palestrante-11': { nome: 'Verônica Natividade', descricao: 'Arquiteta, pesquisadora e professora da PUC-Rio', imagem: 'assets/palestrantes/veronica-natividade.png' },
-    'oficina-01': { nome: 'Oficina de Levantamento', descricao: 'Com Raphael Valcarce', arquivoSvg: 'jean-geal' },
-    'oficina-02': { nome: 'Oficina de Cerâmica', descricao: 'Com Martha Niklaus', arquivoSvg: 'jean-geal' },
-    'oficina-03': { nome: 'Oficina de Aquarela', descricao: 'Com Alberto Kaplan', arquivoSvg: 'jean-geal' },
-    'oficina-04': { nome: 'Jogo do Cuidado', descricao: 'Com o coletivo Urb.Anas', arquivoSvg: 'jean-geal' },
-    'oficina-05': { nome: 'Oficina de Mobiliário', descricao: 'Ministrante em breve', arquivoSvg: 'jean-geal' },
-    'oficina-06': { nome: 'Oficina de Pintura de Mural', descricao: 'Ministrante em breve', arquivoSvg: 'jean-geal' }
-};
+let catalogoConvidados = montarCatalogoAnuncios(PROGRAMACAO_AO_VIVO_PADRAO);
+let anunciosAtivos = [];
 
 function renderizarAnuncios(ativos) {
     if (gridPalestrantes) gridPalestrantes.innerHTML = '';
@@ -62,21 +46,22 @@ function renderizarAnuncios(ativos) {
         const targetGrid = id.startsWith('oficina-') ? gridOficinas : gridPalestrantes;
         targetGrid?.insertAdjacentHTML('beforeend', `
             <div class="card-convidado">
-                <div class="card-convidado-foto"><img src="${versionarImagemLocal(convidado.imagem || `assets/svg/${convidado.arquivoSvg}.svg`)}" alt="Foto de ${convidado.nome}"></div>
-                <div class="card-convidado-texto"><h2>${convidado.nome}</h2><p>${convidado.descricao}</p></div>
+                <div class="card-convidado-foto"><img src="${escaparHtml(versionarImagemLocal(convidado.imagem))}" alt="Foto de ${escaparHtml(convidado.nome)}"></div>
+                <div class="card-convidado-texto"><h2>${escaparHtml(convidado.nome)}</h2><p>${escaparHtml(convidado.descricao)}</p></div>
             </div>`);
     });
 }
 
 onSnapshot(docConvidadosRef, snapshot => {
     const dados = snapshot.data() || {};
+    anunciosAtivos = Array.isArray(dados.ativos) ? dados.ativos : [];
     if (dados.modo === 'fase2') {
         if (containerFase1) containerFase1.style.display = 'none';
         if (containerFase2) containerFase2.style.display = 'block';
     } else {
         if (containerFase1) containerFase1.style.display = 'block';
         if (containerFase2) containerFase2.style.display = 'none';
-        renderizarAnuncios(Array.isArray(dados.ativos) ? dados.ativos : []);
+        renderizarAnuncios(anunciosAtivos);
     }
 });
 
@@ -142,7 +127,9 @@ onSnapshot(docCronogramaRef, snapshot => {
     programacaoAtual = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(remota)
         ? remota
         : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+    catalogoConvidados = montarCatalogoAnuncios(programacaoAtual);
     renderizarCronograma(programacaoAtual);
+    renderizarAnuncios(anunciosAtivos);
 }, error => console.warn('Não foi possível sincronizar o cronograma completo.', error));
 
 const botoesDias = document.querySelectorAll('.btn-dia-tab');
