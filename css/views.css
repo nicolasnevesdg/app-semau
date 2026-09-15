@@ -2164,6 +2164,25 @@ body.acesso-cronograma-completo #container-fase2 {
 .schedule-card-evento .evento-conteudo p { color: rgba(255,255,255,.63); font-size: 11px; line-height: 1.5; white-space: pre-line; }
 
 /* Status ao vivo da programação na home — papel rasgado */
+.evento-status-simulacao {
+    width: fit-content;
+    margin: -17px auto 12px;
+    padding: 7px 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(240, 120, 44, .38);
+    border-radius: 999px;
+    background: #fff4e9;
+    color: #a84e1b;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .45px;
+    text-transform: uppercase;
+}
+
+.evento-status-simulacao[hidden] { display: none; }
+
 .evento-status-chamada {
     margin-bottom: 15px !important;
 }

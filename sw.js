@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v203-foto-daniel';
+const CACHE_NAME = 'semau-v204-simulador-status';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -61,6 +61,7 @@ const assetsToCache = [
     './telao-evento.html',
     './ingressos.html',
     './admin-cronograma.html',
+    './admin-status-evento.html',
     './compra.html',
     './pagamento-falhou.html',
     './pagamento-pendente.html',
@@ -75,6 +76,7 @@ const assetsToCache = [
     './css/telao-evento.css',
     './css/compra.css',
     './css/admin-cronograma.css',
+    './css/admin-status-evento.css',
     './css/pagamento.css',
     './js/main.js',
     './js/instagram-feed.js',
@@ -94,6 +96,7 @@ const assetsToCache = [
     './js/ingressos-config.js',
     './js/programacao-ao-vivo-config.js',
     './js/admin-cronograma.js',
+    './js/admin-status-evento.js',
     './js/compra.js',
     './js/pagamento-retorno.js',
     './js/auth.js',

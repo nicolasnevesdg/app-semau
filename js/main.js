@@ -6,7 +6,7 @@ import {
     clonarProgramacao,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=158';
+} from './programacao-ao-vivo-config.js?v=20260915-4';
 // ==========================================
 // STATUS AUTOMÁTICO DA XVI SEMAU
 // ==========================================
@@ -18,6 +18,28 @@ const FIM_EVENTO = new Date(2026, 8, 25, 23, 59, 59);
 // PRÉVIA TEMPORÁRIA: após o encerramento definitivo do evento.
 // Troque por null para voltar a usar a data e o horário reais do aparelho.
 const DATA_DE_TESTE = null;
+const CHAVE_SIMULACAO_STATUS = 'semauStatusEventoSimuladoV1';
+const CANAL_SIMULACAO_STATUS = 'semau-status-evento';
+
+let simulacaoStatusEvento = null;
+
+function lerSimulacaoStatusEvento() {
+    try {
+        const dados = JSON.parse(localStorage.getItem(CHAVE_SIMULACAO_STATUS) || 'null');
+        const dataHora = new Date(dados?.dataHora || '');
+        const expiraEm = Number(dados?.expiraEm || 0);
+        if (dados?.ativa !== true || !Number.isFinite(dataHora.getTime()) || expiraEm <= Date.now()) return null;
+        return { dataHora, expiraEm };
+    } catch {
+        return null;
+    }
+}
+
+function agoraDoStatus() {
+    simulacaoStatusEvento = lerSimulacaoStatusEvento();
+    if (simulacaoStatusEvento) return new Date(simulacaoStatusEvento.dataHora);
+    return DATA_DE_TESTE ? new Date(DATA_DE_TESTE) : new Date();
+}
 
 let PROGRAMACAO_AO_VIVO = clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
 
@@ -34,6 +56,7 @@ const statusTitulo = document.getElementById('evento-status-titulo');
 const statusTexto = document.getElementById('evento-status-texto');
 const statusHorario = document.getElementById('evento-status-horario');
 const statusHorarioTexto = statusHorario?.querySelector('span');
+const statusSimulacao = document.getElementById('evento-status-simulacao');
 const btnProgramacao = document.getElementById('btn-fase-cronograma');
 
 function doisDigitos(valor) {
@@ -200,7 +223,13 @@ function mostrarDepoisDoEvento() {
 }
 
 function atualizarStatusDoEvento() {
-    const agora = DATA_DE_TESTE ? new Date(DATA_DE_TESTE) : new Date();
+    const agora = agoraDoStatus();
+    if (statusSimulacao) {
+        statusSimulacao.hidden = !simulacaoStatusEvento;
+        if (simulacaoStatusEvento) {
+            statusSimulacao.querySelector('span').textContent = `Prévia · ${agora.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+    }
 
     if (agora < INICIO_EVENTO) {
         mostrarContagem(agora);
@@ -315,3 +344,12 @@ onSnapshot(doc(db, 'configuracoes', 'cronogramaAoVivo'), snapshot => {
 
 atualizarStatusDoEvento();
 setInterval(atualizarStatusDoEvento, 1000);
+
+window.addEventListener('storage', evento => {
+    if (evento.key === CHAVE_SIMULACAO_STATUS) atualizarStatusDoEvento();
+});
+
+if ('BroadcastChannel' in window) {
+    const canalSimulacao = new BroadcastChannel(CANAL_SIMULACAO_STATUS);
+    canalSimulacao.addEventListener('message', atualizarStatusDoEvento);
+}
