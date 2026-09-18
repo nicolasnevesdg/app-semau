@@ -24,6 +24,8 @@ const botoes = document.querySelectorAll(".plano-botao");
 const precos = document.querySelectorAll("[data-preco-tipo]");
 const faixaPalestrantes = document.getElementById("palestrantes-faixa");
 const planosIntro = document.getElementById("planos-intro");
+const planosGrade = document.querySelector(".planos-grade");
+const planoKit = document.querySelector(".plano-kit");
 const VERSAO_IMAGENS_PALESTRANTES = "20260915-2";
 
 function versionarImagemLocal(caminho) {
@@ -96,6 +98,7 @@ function atualizarLotes() {
     const lote = LOTES_INGRESSOS[loteAtivo || "social"];
     const vendasAbertas = Boolean(loteAtivo);
     const inscricoesEncerradas = String(loteConfigurado).toLowerCase() === "encerrado";
+    const promocionalAtivo = loteAtivo === "promocional";
     const fluxoSocial = lote.fluxo === "formulario";
     const disponibilidadePrimeiro = disponibilidadePrimeiroLote(estoqueIngressos, agora);
     const disponibilidadeSegundo = disponibilidadeSegundoLote(estoqueIngressos, agora);
@@ -126,6 +129,8 @@ function atualizarLotes() {
                 ? "Última oportunidade: ingresso normal por R$ 20."
                 : "Garanta seu lugar e venha habitar a XVI SEMAU.";
     }
+    if (planoKit) planoKit.hidden = promocionalAtivo;
+    if (planosGrade) planosGrade.classList.toggle("planos-grade-promocional", promocionalAtivo);
 
     botoes.forEach(botao => {
         const tipo = botao.dataset.tipo === "kit" ? "kit" : "normal";

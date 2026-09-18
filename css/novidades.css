@@ -843,6 +843,10 @@
     text-transform: uppercase;
 }
 
+.lote-card[data-lote="promocional"] {
+    grid-column: 2;
+}
+
 .lote-ativo {
     border-bottom-color: var(--cor-primaria);
     background: transparent;
@@ -856,6 +860,14 @@
 .planos-grade {
     display: grid;
     gap: 30px;
+}
+
+.planos-grade-promocional .plano-card:not(.plano-kit) {
+    width: 100%;
+}
+
+.plano-kit[hidden] {
+    display: none !important;
 }
 
 .plano-card {

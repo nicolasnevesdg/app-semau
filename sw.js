@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v207-lote-promocional';
+const CACHE_NAME = 'semau-v208-layout-promocional';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
