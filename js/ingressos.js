@@ -9,7 +9,7 @@ import {
     disponibilidadeSegundoLote,
     obterLoteAutomatico,
     normalizarUrlFormulario
-} from "./ingressos-config.js?v=20260905-1";
+} from "./ingressos-config.js?v=20260918-1";
 import {
     VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
@@ -23,6 +23,7 @@ const lotes = document.querySelectorAll(".lote-card");
 const botoes = document.querySelectorAll(".plano-botao");
 const precos = document.querySelectorAll("[data-preco-tipo]");
 const faixaPalestrantes = document.getElementById("palestrantes-faixa");
+const planosIntro = document.getElementById("planos-intro");
 const VERSAO_IMAGENS_PALESTRANTES = "20260915-2";
 
 function versionarImagemLocal(caminho) {
@@ -94,6 +95,7 @@ function atualizarLotes() {
     loteAtivo = obterLoteAutomatico(loteConfigurado, estoqueIngressos, agora);
     const lote = LOTES_INGRESSOS[loteAtivo || "social"];
     const vendasAbertas = Boolean(loteAtivo);
+    const inscricoesEncerradas = String(loteConfigurado).toLowerCase() === "encerrado";
     const fluxoSocial = lote.fluxo === "formulario";
     const disponibilidadePrimeiro = disponibilidadePrimeiroLote(estoqueIngressos, agora);
     const disponibilidadeSegundo = disponibilidadeSegundoLote(estoqueIngressos, agora);
@@ -107,16 +109,36 @@ function atualizarLotes() {
         card.classList.toggle("lote-inativo", !ativo);
         const status = card.querySelector("b");
         if (!status) return;
-        if (!vendasAbertas && chave === "social") status.textContent = "Abre às 12h";
+        if (inscricoesEncerradas) status.textContent = "Encerrado";
+        else if (!vendasAbertas && chave === "social") status.textContent = "Abre às 12h";
         else status.textContent = ativo ? "Ativo" : encerrado ? "Encerrado" : "Em breve";
     });
 
     precos.forEach(preco => {
-        preco.textContent = formatarValor(lote[preco.dataset.precoTipo]);
+        const valor = lote[preco.dataset.precoTipo];
+        preco.textContent = Number.isFinite(valor) ? formatarValor(valor) : "—";
     });
+
+    if (planosIntro) {
+        planosIntro.textContent = inscricoesEncerradas
+            ? "As inscrições para a XVI SEMAU estão encerradas."
+            : loteAtivo === "promocional"
+                ? "Última oportunidade: ingresso normal por R$ 20."
+                : "Garanta seu lugar e venha habitar a XVI SEMAU.";
+    }
 
     botoes.forEach(botao => {
         const tipo = botao.dataset.tipo === "kit" ? "kit" : "normal";
+        if (inscricoesEncerradas) {
+            botao.disabled = true;
+            botao.textContent = "Inscrições encerradas";
+            return;
+        }
+        if (loteAtivo === "promocional" && tipo === "kit") {
+            botao.disabled = true;
+            botao.textContent = "Não disponível no Promocional";
+            return;
+        }
         if (fluxoSocial && tipo === "kit") {
             botao.disabled = true;
             botao.textContent = "Esgotado";
@@ -149,6 +171,7 @@ botoes.forEach(botao => {
         const tipo = botao.dataset.tipo === "kit" ? "kit" : "normal";
         if (!loteAtivo) return;
         const lote = LOTES_INGRESSOS[loteAtivo];
+        if (lote.somenteNormal && tipo !== "normal") return;
         if (lote.fluxo === "formulario") {
             if (formularioLoteSocial) window.location.assign(formularioLoteSocial);
             return;
@@ -159,7 +182,7 @@ botoes.forEach(botao => {
 
 onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {
     const configuracao = snapshot.data() || {};
-    const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
+    const loteLegado = ({ "-1": "encerrado", 1: "primeiro", 2: "segundo", 3: "promocional" })[String(configuracao.loteAtivo)];
     loteConfigurado = configuracao.loteIngressosAtivo || loteLegado || "social";
     formularioLoteSocial = normalizarUrlFormulario(configuracao.formularioLoteSocial) || FORMULARIO_LOTE_SOCIAL;
     atualizarLotes();

@@ -394,6 +394,7 @@
                 <div class="resumo-modalidade"><span>1º lote sem kit</span><strong data-total-categoria="primeiro-normal">0</strong></div>
                 <div class="resumo-modalidade"><span>2º lote com kit</span><strong data-total-categoria="segundo-kit">0</strong></div>
                 <div class="resumo-modalidade"><span>2º lote sem kit</span><strong data-total-categoria="segundo-normal">0</strong></div>
+                <div class="resumo-modalidade"><span>Promocional</span><strong data-total-categoria="promocional-normal">0</strong></div>
                 <div class="resumo-modalidade resumo-modalidade-outros" style="grid-column: 1 / -1;"><span>Outros / não informados</span><strong data-total-categoria="outros">0</strong></div>
             </div>
         </div>
@@ -424,6 +425,7 @@
                         <option value="primeiro-normal">1º lote sem kit</option>
                         <option value="segundo-kit">2º lote com kit</option>
                         <option value="segundo-normal">2º lote sem kit</option>
+                        <option value="promocional-normal">Promocional</option>
                         <option value="outros">Outros / não informados</option>
                     </select>
                 </label>
@@ -468,8 +470,11 @@
                 <option value="social">Lote Social</option>
                 <option value="primeiro">1º lote</option>
                 <option value="segundo">2º lote</option>
+                <option value="promocional">Promocional · R$ 20 sem kit</option>
+                <option value="encerrado">Inscrições encerradas</option>
             </select>
             <button id="btn-salvar-lote" class="admin-btn-primary" style="width: 100%;">Ativar lote selecionado</button>
+            <p style="font-size: 11px; color: #888; margin: 12px 0 0; line-height: 1.45;">“Inscrições encerradas” bloqueia imediatamente todos os ingressos, inclusive links diretos de compra.</p>
         </div>
 
         <div class="admin-card-minimal">
@@ -706,7 +711,7 @@
 <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script type="module" src="js/admin.js?v=20260915-1"></script>
+  <script type="module" src="js/admin.js?v=20260918-1"></script>
 <script src="js/install-admin-app.js?v=20260901-1"></script>
 </body>
 </html>

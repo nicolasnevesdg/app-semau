@@ -786,8 +786,8 @@ onSnapshot(docGeralRef, (docSnap) => {
     const configuracao = docSnap.data();
     if (selectFase && configuracao.faseAtual) selectFase.value = configuracao.faseAtual;
     if (selectLoteAtivo) {
-        const loteLegado = ({ 1: 'primeiro', 2: 'segundo' })[Number(configuracao.loteAtivo)];
-        selectLoteAtivo.value = ['social', 'primeiro', 'segundo'].includes(configuracao.loteIngressosAtivo)
+        const loteLegado = ({ '-1': 'encerrado', 1: 'primeiro', 2: 'segundo', 3: 'promocional' })[String(configuracao.loteAtivo)];
+        selectLoteAtivo.value = ['social', 'primeiro', 'segundo', 'promocional', 'encerrado'].includes(configuracao.loteIngressosAtivo)
             ? configuracao.loteIngressosAtivo
             : loteLegado || 'social';
     }
@@ -797,13 +797,22 @@ onSnapshot(docGeralRef, (docSnap) => {
 if (btnSalvarLote) {
     btnSalvarLote.addEventListener('click', async () => {
         const loteIngressosAtivo = selectLoteAtivo.value;
-        const nomesLotes = { social: 'Lote Social', primeiro: '1º lote', segundo: '2º lote' };
+        const nomesLotes = {
+            social: 'Lote Social',
+            primeiro: '1º lote',
+            segundo: '2º lote',
+            promocional: 'Lote Promocional',
+            encerrado: 'Inscrições encerradas'
+        };
         if (!nomesLotes[loteIngressosAtivo]) return;
         try {
             btnSalvarLote.disabled = true;
-            const loteAtivo = ({ social: 0, primeiro: 1, segundo: 2 })[loteIngressosAtivo];
+            if (loteIngressosAtivo === 'encerrado' && !confirm('Tem certeza que deseja encerrar as inscrições? Todos os ingressos serão bloqueados imediatamente.')) return;
+            const loteAtivo = ({ social: 0, primeiro: 1, segundo: 2, promocional: 3, encerrado: -1 })[loteIngressosAtivo];
             await setDoc(docGeralRef, { loteIngressosAtivo, loteAtivo }, { merge: true });
-            alert(nomesLotes[loteIngressosAtivo] + ' ativado na página de ingressos.');
+            alert(loteIngressosAtivo === 'encerrado'
+                ? 'Inscrições encerradas. Todos os ingressos foram bloqueados.'
+                : nomesLotes[loteIngressosAtivo] + ' ativado na página de ingressos.');
         } catch (error) {
             console.error('Erro ao ativar lote:', error);
             alert('Não foi possível atualizar o lote.');
@@ -1251,7 +1260,8 @@ if (btnRecuperarEmails) {
 const NOMES_LOTES = {
     social: 'Lote Social',
     primeiro: '1º Lote',
-    segundo: '2º Lote'
+    segundo: '2º Lote',
+    promocional: 'Promocional'
 };
 
 const NOMES_MODALIDADES = {
@@ -1261,8 +1271,9 @@ const NOMES_MODALIDADES = {
 
 function pedidoComCategoriaEfetiva(pedido = {}) {
     const ajusteValido = pedido.ajusteManualCategoriaAtivo === true &&
-        ['primeiro', 'segundo'].includes(pedido.loteIngressoEfetivo) &&
-        ['normal', 'kit'].includes(pedido.tipoIngressoEfetivo);
+        ['primeiro', 'segundo', 'promocional'].includes(pedido.loteIngressoEfetivo) &&
+        ['normal', 'kit'].includes(pedido.tipoIngressoEfetivo) &&
+        !(pedido.loteIngressoEfetivo === 'promocional' && pedido.tipoIngressoEfetivo !== 'normal');
     if (!ajusteValido) return pedido;
     return {
         ...pedido,
@@ -1281,6 +1292,7 @@ const CATEGORIAS_INSCRITOS = [
     'social-kit', 'social-normal',
     'primeiro-kit', 'primeiro-normal',
     'segundo-kit', 'segundo-normal',
+    'promocional-normal',
     'outros'
 ];
 
@@ -1291,6 +1303,7 @@ const NOMES_CATEGORIAS_INSCRITOS = {
     'primeiro-normal': '1º lote · sem kit',
     'segundo-kit': '2º lote · com kit',
     'segundo-normal': '2º lote · sem kit',
+    'promocional-normal': 'Promocional · sem kit',
     outros: 'Outros / não informado'
 };
 
@@ -1307,6 +1320,7 @@ function loteNormalizadoDoInscrito(dados = {}) {
     if (lote === '0' || lote.includes('social')) return 'social';
     if (lote === '1' || lote.includes('primeiro') || lote.startsWith('1º') || lote.startsWith('1°')) return 'primeiro';
     if (lote === '2' || lote.includes('segundo') || lote.startsWith('2º') || lote.startsWith('2°')) return 'segundo';
+    if (lote === '3' || lote.includes('promocional')) return 'promocional';
     return '';
 }
 
@@ -1547,6 +1561,9 @@ function atualizarSegurancaCategoriaFicha() {
     if (!formFichaInscrito || !fichaAjusteCategoria) return;
     const pedidoPago = formFichaInscrito.dataset.pedidoPago === 'true';
     const loteAtual = valorEditavelFicha('loteIngresso');
+    const seletorTipo = formFichaInscrito.querySelector('[data-campo="tipoIngresso"]');
+    if (loteAtual === 'promocional' && seletorTipo) seletorTipo.value = 'normal';
+    if (seletorTipo) seletorTipo.disabled = loteAtual === 'promocional';
     const tipoAtual = valorEditavelFicha('tipoIngresso');
     const alterou = pedidoPago && (
         loteAtual !== formFichaInscrito.dataset.loteInicial ||
@@ -1670,7 +1687,8 @@ function abrirFichaInscrito(idInscrito) {
             { valor: '', rotulo: 'Não informado' },
             ...(!pedidoPago ? [{ valor: 'social', rotulo: NOMES_LOTES.social }] : []),
             { valor: 'primeiro', rotulo: NOMES_LOTES.primeiro },
-            { valor: 'segundo', rotulo: NOMES_LOTES.segundo }
+            { valor: 'segundo', rotulo: NOMES_LOTES.segundo },
+            { valor: 'promocional', rotulo: NOMES_LOTES.promocional }
         ],
         obrigatorio: pedidoPago
     });

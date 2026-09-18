@@ -61,6 +61,7 @@ const TIPOS_INGRESSO = Object.freeze({
 const LOTES_PAGOS = Object.freeze({
   primeiro: Object.freeze({ nome: "1º Lote", normal: 25, kit: 40 }),
   segundo: Object.freeze({ nome: "2º Lote", normal: 30, kit: 45 }),
+  promocional: Object.freeze({ nome: "Promocional", normal: 20, kit: null, somenteNormal: true }),
 });
 const LOTE_ATIVO_PADRAO = "social";
 
@@ -68,8 +69,9 @@ function categoriaEfetivaPedido(pedido = {}) {
   const loteOriginal = pedido.loteIngresso;
   const tipoOriginal = pedido.tipoIngresso;
   const ajusteValido = pedido.ajusteManualCategoriaAtivo === true &&
-    (pedido.loteIngressoEfetivo === "primeiro" || pedido.loteIngressoEfetivo === "segundo") &&
-    (pedido.tipoIngressoEfetivo === "normal" || pedido.tipoIngressoEfetivo === "kit");
+    (pedido.loteIngressoEfetivo === "primeiro" || pedido.loteIngressoEfetivo === "segundo" || pedido.loteIngressoEfetivo === "promocional") &&
+    (pedido.tipoIngressoEfetivo === "normal" || pedido.tipoIngressoEfetivo === "kit") &&
+    !(pedido.loteIngressoEfetivo === "promocional" && pedido.tipoIngressoEfetivo !== "normal");
   const lote = ajusteValido ? pedido.loteIngressoEfetivo : loteOriginal;
   const tipo = ajusteValido ? pedido.tipoIngressoEfetivo : tipoOriginal;
   return {
@@ -91,7 +93,7 @@ function emailValido(value) {
 
 function normalizarLoteAtivo(value) {
   const lote = texto(value, 20).toLowerCase();
-  return lote === "social" || LOTES_PAGOS[lote] ? lote : LOTE_ATIVO_PADRAO;
+  return lote === "social" || lote === "encerrado" || LOTES_PAGOS[lote] ? lote : LOTE_ATIVO_PADRAO;
 }
 
 function numeroSeguro(value) {
@@ -162,10 +164,12 @@ function primeiroLoteEsgotado(estoque) {
 }
 
 function calcularLoteAtivo(configuracao = {}, estoque = {}, agora = Date.now()) {
+  const loteLegado = ({ "-1": "encerrado", 1: "primeiro", 2: "segundo", 3: "promocional" })[String(configuracao.loteAtivo)];
+  const loteConfigurado = normalizarLoteAtivo(configuracao.loteIngressosAtivo || loteLegado);
+  if (loteConfigurado === "encerrado") return null;
+  if (loteConfigurado === "promocional") return "promocional";
   if (agora < ABERTURA_LOTE_SOCIAL) return null;
   if (agora < ENCERRAMENTO_LOTE_SOCIAL) return "social";
-  const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
-  const loteConfigurado = normalizarLoteAtivo(configuracao.loteIngressosAtivo || loteLegado);
   if (primeiroLoteEsgotado(estoque) || loteConfigurado === "segundo") return "segundo";
   return "primeiro";
 }
@@ -173,7 +177,7 @@ function calcularLoteAtivo(configuracao = {}, estoque = {}, agora = Date.now()) 
 function obterIngresso(lote, tipo) {
   const loteConfigurado = LOTES_PAGOS[lote];
   const tipoConfigurado = TIPOS_INGRESSO[tipo];
-  if (!loteConfigurado || !tipoConfigurado) return null;
+  if (!loteConfigurado || !tipoConfigurado || !Number.isFinite(loteConfigurado[tipo])) return null;
   return {
     nome: `${tipoConfigurado.nome} — ${loteConfigurado.nome} — XVI SEMAU`,
     descricao: tipoConfigurado.descricao,
@@ -199,6 +203,9 @@ function validarDados(data) {
 
   if (!lote) throw new HttpsError("invalid-argument", "Lote de ingresso inválido.");
   if (!tipo) throw new HttpsError("invalid-argument", "Tipo de ingresso inválido.");
+  if (!Number.isFinite(LOTES_PAGOS[lote][tipo])) {
+    throw new HttpsError("invalid-argument", "O lote Promocional está disponível somente para o ingresso normal, sem kit.");
+  }
   const partesNome = nome.split(/\s+/).filter((parte) => parte.length >= 2);
   if (partesNome.length < 2) throw new HttpsError("invalid-argument", "Informe o nome completo, com nome e sobrenome.");
   if (!emailValido(email)) throw new HttpsError("invalid-argument", "Informe um e-mail válido.");
@@ -321,6 +328,28 @@ async function localizarCompraExistente(dados, permitirCompraAdicional = false) 
   }
 }
 
+async function validarLoteAtivoParaCheckout(dados) {
+  const [configuracaoDoc, estoqueDoc] = await Promise.all([
+    configuracaoGeralRef.get(),
+    estoqueIngressosRef.get(),
+  ]);
+  const configuracao = configuracaoDoc.data() || {};
+  const estoquePrimeiro = normalizarEstoque(estoqueDoc.data() || {}, Date.now(), "primeiro");
+  const loteAtivo = calcularLoteAtivo(configuracao, estoquePrimeiro);
+  if (loteAtivo === null) {
+    const encerradas = configuracao.loteIngressosAtivo === "encerrado" || Number(configuracao.loteAtivo) === -1;
+    throw new HttpsError("failed-precondition", encerradas
+      ? "As inscrições para a XVI SEMAU estão encerradas."
+      : "As inscrições ainda não estão abertas.");
+  }
+  if (loteAtivo === "social") {
+    throw new HttpsError("failed-precondition", "O Lote Social é realizado pelo formulário de comprovação.");
+  }
+  if (dados.lote !== loteAtivo) {
+    throw new HttpsError("failed-precondition", "Este lote não está disponível no momento.");
+  }
+}
+
 async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
   const agora = Date.now();
   const expiraEm = agora + DURACAO_RESERVA_MS;
@@ -333,10 +362,14 @@ async function criarPedidoComReserva(pedidoRef, dados, ingresso) {
     const dadosEstoque = estoqueDoc.data() || {};
     const estoquePrimeiro = normalizarEstoque(dadosEstoque, agora, "primeiro");
     const estoqueSegundo = normalizarEstoque(dadosEstoque, agora, "segundo");
-    const loteAtivo = calcularLoteAtivo(configuracaoDoc.data() || {}, estoquePrimeiro, agora);
+    const configuracao = configuracaoDoc.data() || {};
+    const loteAtivo = calcularLoteAtivo(configuracao, estoquePrimeiro, agora);
 
     if (loteAtivo === null) {
-      throw new HttpsError("failed-precondition", "As inscrições abrem em 01/09, ao meio-dia.");
+      const encerradas = configuracao.loteIngressosAtivo === "encerrado" || Number(configuracao.loteAtivo) === -1;
+      throw new HttpsError("failed-precondition", encerradas
+        ? "As inscrições para a XVI SEMAU estão encerradas."
+        : "As inscrições abrem em 01/09, ao meio-dia.");
     }
     if (loteAtivo === "social") {
       throw new HttpsError("failed-precondition", "O Lote Social é realizado pelo formulário de comprovação.");
@@ -535,10 +568,11 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
   const tokenNovo = await gerarTokenIngresso();
 
   const resultado = await db.runTransaction(async (transaction) => {
-    const [pedidoDoc, inscritoDoc, estoqueDoc] = await Promise.all([
+    const [pedidoDoc, inscritoDoc, estoqueDoc, configuracaoDoc] = await Promise.all([
       transaction.get(pedidoRef),
       transaction.get(inscritoRef),
       transaction.get(estoqueIngressosRef),
+      transaction.get(configuracaoGeralRef),
     ]);
     if (!pedidoDoc.exists) throw new Error("Pedido não encontrado.");
 
@@ -695,7 +729,11 @@ async function processarPagamento(paymentId, pedidoEsperado = "") {
         segundo: estoqueSegundo,
         atualizadoEm: FieldValue.serverTimestamp(),
       }, { merge: true });
-      if (primeiroLoteEsgotado(estoquePrimeiro)) {
+      const estadoConfigurado = normalizarLoteAtivo(
+        configuracaoDoc.data()?.loteIngressosAtivo ||
+        ({ "-1": "encerrado", 1: "primeiro", 2: "segundo", 3: "promocional" })[String(configuracaoDoc.data()?.loteAtivo)],
+      );
+      if (primeiroLoteEsgotado(estoquePrimeiro) && estadoConfigurado !== "promocional" && estadoConfigurado !== "encerrado") {
         transaction.set(configuracaoGeralRef, {
           loteIngressosAtivo: "segundo",
           loteAtivo: 2,
@@ -914,6 +952,7 @@ exports.criarPreferencia = onCall(
   async (request) => {
     const dados = validarDados(request.data || {});
     const ingresso = obterIngresso(dados.lote, dados.tipo);
+    await validarLoteAtivoParaCheckout(dados);
     const compraExistente = await localizarCompraExistente(
       dados,
       request.data?.permitirCompraAdicional === true,
@@ -1137,7 +1176,7 @@ exports.atualizarCategoriaIngresso = onCall(
     const tipoIngresso = texto(request.data?.tipoIngresso, 20).toLowerCase();
     const senha = String(request.data?.senha || "");
     const motivoInformado = texto(request.data?.motivo, 240);
-    if (!inscritoId || !LOTES_PAGOS[loteIngresso] || !TIPOS_INGRESSO[tipoIngresso]) {
+    if (!inscritoId || !LOTES_PAGOS[loteIngresso] || !TIPOS_INGRESSO[tipoIngresso] || !Number.isFinite(LOTES_PAGOS[loteIngresso][tipoIngresso])) {
       throw new HttpsError("invalid-argument", "Selecione um lote e uma modalidade válidos.");
     }
     if (!senha) {

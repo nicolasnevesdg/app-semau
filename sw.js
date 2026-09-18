@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v206-nova-arte-instagram';
+const CACHE_NAME = 'semau-v207-lote-promocional';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',

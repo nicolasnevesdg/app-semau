@@ -8,14 +8,15 @@ import {
     disponibilidadeSegundoLote,
     obterLoteAutomatico,
     obterIngresso
-} from "./ingressos-config.js?v=20260905-1";
+} from "./ingressos-config.js?v=20260918-1";
 
 const functions = getFunctions(app, "southamerica-east1");
 const criarPreferencia = httpsCallable(functions, "criarPreferencia");
 const parametros = new URLSearchParams(window.location.search);
-const lotesPagos = ["primeiro", "segundo"];
+const lotesPagos = ["primeiro", "segundo", "promocional"];
 const loteSelecionado = lotesPagos.includes(parametros.get("lote")) ? parametros.get("lote") : "primeiro";
 const tipoInicial = TIPOS_INGRESSOS[parametros.get("tipo")] ? parametros.get("tipo") : "normal";
+const tipoSelecionadoInicial = loteSelecionado === "promocional" ? "normal" : tipoInicial;
 const radios = document.querySelectorAll('input[name="tipoIngresso"]');
 const resumoTitulo = document.getElementById("resumo-titulo");
 const resumoNome = document.getElementById("resumo-nome");
@@ -74,6 +75,7 @@ function formatarValor(valor, semCentavos = false) {
 
 function atualizarResumo(tipo) {
     const ingresso = obterIngresso(loteSelecionado, tipo);
+    if (!ingresso) return;
     resumoTitulo.textContent = ingresso.nomeLote;
     resumoNome.textContent = ingresso.nome;
     resumoValor.textContent = formatarValor(ingresso.valor);
@@ -102,7 +104,8 @@ function verificarLoteAtivo() {
     const disponibilidadePrimeiro = disponibilidadePrimeiroLote(estoqueIngressos);
     const disponibilidadeSegundo = disponibilidadeSegundoLote(estoqueIngressos);
     radios.forEach(radio => {
-        radio.disabled = (loteSelecionado === "primeiro" && !disponibilidadePrimeiro[radio.value]) ||
+        radio.disabled = (loteSelecionado === "promocional" && radio.value !== "normal") ||
+            (loteSelecionado === "primeiro" && !disponibilidadePrimeiro[radio.value]) ||
             (loteSelecionado === "segundo" && !disponibilidadeSegundo[radio.value]);
     });
     if (loteAtivo !== loteSelecionado || !lotesPagos.includes(loteAtivo)) {
@@ -111,6 +114,10 @@ function verificarLoteAtivo() {
     }
 
     const tipo = document.querySelector('input[name="tipoIngresso"]:checked')?.value || tipoInicial;
+    if (loteSelecionado === "promocional" && tipo !== "normal") {
+        document.querySelector('input[name="tipoIngresso"][value="normal"]').checked = true;
+        atualizarResumo("normal");
+    }
     if (loteSelecionado === "primeiro" && !disponibilidadePrimeiro[tipo]) {
         bloquearLote(`Os ingressos ${tipo === "kit" ? "com kit" : "sem kit"} do 1º lote estão esgotados. Escolha a outra modalidade, se ainda estiver disponível.`);
         return;
@@ -140,11 +147,12 @@ function atualizarContagem() {
 }
 
 precosOpcoes.forEach(preco => {
-    preco.textContent = formatarValor(LOTES_INGRESSOS[loteSelecionado][preco.dataset.opcaoPreco], true);
+    const valor = LOTES_INGRESSOS[loteSelecionado][preco.dataset.opcaoPreco];
+    preco.textContent = Number.isFinite(valor) ? formatarValor(valor, true) : "Indisponível";
 });
 
 radios.forEach(radio => {
-    radio.checked = radio.value === tipoInicial;
+    radio.checked = radio.value === tipoSelecionadoInicial;
     radio.addEventListener("change", () => {
         if (radio.checked) {
             atualizarResumo(radio.value);
@@ -251,14 +259,14 @@ form.addEventListener("submit", async event => {
     }
 });
 
-atualizarResumo(tipoInicial);
+atualizarResumo(tipoSelecionadoInicial);
 atualizarContagem();
 intervaloContagem = window.setInterval(atualizarContagem, 1000);
 verificarLoteAtivo();
 
 onSnapshot(doc(db, "configuracoes", "geral"), snapshot => {
     const configuracao = snapshot.data() || {};
-    const loteLegado = ({ 1: "primeiro", 2: "segundo" })[Number(configuracao.loteAtivo)];
+    const loteLegado = ({ "-1": "encerrado", 1: "primeiro", 2: "segundo", 3: "promocional" })[String(configuracao.loteAtivo)];
     loteConfigurado = configuracao.loteIngressosAtivo || loteLegado || "social";
     verificarLoteAtivo();
 }, () => bloquearLote());

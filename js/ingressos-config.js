@@ -10,8 +10,14 @@ const DURACAO_RESERVA_MS = 7 * 60 * 1000;
 export const LOTES_INGRESSOS = Object.freeze({
     social: Object.freeze({ nome: "Lote Social", normal: 15, kit: 30, fluxo: "formulario" }),
     primeiro: Object.freeze({ nome: "1º Lote", normal: 25, kit: 40, fluxo: "mercado_pago" }),
-    segundo: Object.freeze({ nome: "2º Lote", normal: 30, kit: 45, fluxo: "mercado_pago" })
+    segundo: Object.freeze({ nome: "2º Lote", normal: 30, kit: 45, fluxo: "mercado_pago" }),
+    promocional: Object.freeze({ nome: "Promocional", normal: 20, kit: null, fluxo: "mercado_pago", somenteNormal: true })
 });
+
+export const ESTADOS_LOTES_INGRESSOS = Object.freeze([
+    ...Object.keys(LOTES_INGRESSOS),
+    "encerrado"
+]);
 
 export const TIPOS_INGRESSOS = Object.freeze({
     normal: Object.freeze({ nome: "Ingresso normal", descricao: "Programação geral e certificado" }),
@@ -26,6 +32,7 @@ export function normalizarLoteAtivo(valor) {
 export function obterIngresso(lote, tipo) {
     const loteSeguro = normalizarLoteAtivo(lote);
     const tipoSeguro = TIPOS_INGRESSOS[tipo] ? tipo : "normal";
+    if (LOTES_INGRESSOS[loteSeguro].somenteNormal && tipoSeguro !== "normal") return null;
     return {
         lote: loteSeguro,
         tipo: tipoSeguro,
@@ -95,9 +102,12 @@ export function disponibilidadeSegundoLote(estoque = {}, agora = Date.now()) {
 }
 
 export function obterLoteAutomatico(loteConfigurado, estoque = {}, agora = Date.now()) {
+    const configurado = String(loteConfigurado || "").trim().toLowerCase();
+    if (configurado === "encerrado") return null;
+    if (configurado === "promocional") return "promocional";
     if (agora < ABERTURA_LOTE_SOCIAL) return null;
     if (agora < ENCERRAMENTO_LOTE_SOCIAL) return "social";
     const disponibilidade = disponibilidadePrimeiroLote(estoque, agora);
-    if (disponibilidade.esgotado || normalizarLoteAtivo(loteConfigurado) === "segundo") return "segundo";
+    if (disponibilidade.esgotado || normalizarLoteAtivo(configurado) === "segundo") return "segundo";
     return "primeiro";
 }
