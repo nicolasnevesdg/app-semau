@@ -106,7 +106,7 @@ button { font-family: inherit; }
 }
 .slide-jogos.ativo .jogos-personagem { animation: entrada-personagem-jogos .58s cubic-bezier(.18,.9,.24,1.12) both; }
 .slide-jogos.ativo .jogos-personagem img { animation: balanco-personagem-jogos 5.2s .62s ease-in-out infinite; }
-.slide-sorteios { width: min(1450px, 92vw); justify-content: flex-start; gap: 0; }
+.slide-sorteios { width: min(1400px, 92vw); justify-content: flex-start; gap: 0; }
 .slide-sorteios .slide-coluna-texto { position: relative; z-index: 2; width: min(41vw, 580px); max-width: 580px; flex: 0 1 580px; align-items: flex-start; gap: 18px; text-align: left; }
 .slide-sorteios h2 { max-width: 580px; font-size: clamp(42px, 4.3vw, 72px); }
 .slide-sorteios .slide-texto { max-width: 520px; font-size: clamp(16px, 1.3vw, 23px); }
@@ -114,20 +114,18 @@ button { font-family: inherit; }
 .slide-sorteios .regras-sorteio span { padding: 11px 14px; font-size: clamp(12px, .9vw, 15px); }
 .sorteio-visual {
     position: absolute;
-    top: 50%;
-    right: max(-250px, -13vw);
-    width: min(55vw, 1000px);
+    top: 53%;
+    right: -14vw;
+    width: min(47vw, 900px);
     pointer-events: none;
     transform-origin: 52% 68%;
     will-change: transform, opacity;
 }
 .sorteio-imagem {
-    position: relative;
-    left: -25%;
     display: block;
-    width: 165%;
-    max-width: none;
-    max-height: min(92vh, 960px);
+    width: 100%;
+    max-width: 100%;
+    max-height: min(83vh, 820px);
     object-fit: contain;
     transform-origin: 48% 80%;
     will-change: transform;
@@ -154,7 +152,7 @@ button { font-family: inherit; }
     .slide-sorteios .slide-coluna-texto { width: min(78vw, 600px); align-items: center; text-align: center; }
     .slide-sorteios .regras-sorteio { justify-content: center; }
     .sorteio-visual { position: relative; inset: auto; width: min(76vw, 680px); }
-    .sorteio-imagem { left: -12%; width: 124%; max-height: 38vh; }
+    .sorteio-imagem { width: 100%; max-width: 100%; max-height: 38vh; }
     .slide-sorteios.ativo .sorteio-visual { animation-name: entrada-sorteio-direita-compacto; }
 }
 
