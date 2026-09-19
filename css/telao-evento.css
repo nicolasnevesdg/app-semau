@@ -32,6 +32,8 @@ button { font-family: inherit; }
 .slide[hidden] { display: flex; visibility: hidden; }
 .slide.ativo { opacity: 1; transform: none; visibility: visible; }
 .slide-boas-vindas, .slide-patrocinadores { flex-direction: column; }
+.slide-boas-vindas { gap: clamp(14px, 2.2vh, 24px); }
+.slide-boas-vindas .slide-logo { margin-bottom: clamp(4px, .8vh, 10px); }
 .slide-boas-vindas h1 { max-width: 900px; font-size: clamp(44px, 4.6vw, 76px); }
 .slide-logo { width: clamp(220px, 27vw, 430px); max-height: 140px; }
 .slide-etiqueta { margin: 0; color: #f0782c; font-size: clamp(12px, 1.15vw, 18px); font-weight: 800; letter-spacing: .19em; text-transform: uppercase; }

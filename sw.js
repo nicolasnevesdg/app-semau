@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v209-patrocinadores-telao';
+const CACHE_NAME = 'semau-v210-espacamento-boas-vindas';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
