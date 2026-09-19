@@ -106,8 +106,31 @@ button { font-family: inherit; }
 }
 .slide-jogos.ativo .jogos-personagem { animation: entrada-personagem-jogos .58s cubic-bezier(.18,.9,.24,1.12) both; }
 .slide-jogos.ativo .jogos-personagem img { animation: balanco-personagem-jogos 5.2s .62s ease-in-out infinite; }
-.slide-sorteios .slide-coluna-texto { max-width: 950px; align-items: center; text-align: center; }
-.slide-sorteios .regras-sorteio { justify-content: center; }
+.slide-sorteios { width: min(1400px, 92vw); gap: clamp(18px, 2vw, 38px); }
+.slide-sorteios .slide-coluna-texto { width: min(41vw, 580px); max-width: 580px; flex: 0 1 580px; align-items: flex-start; gap: 18px; text-align: left; }
+.slide-sorteios h2 { max-width: 580px; font-size: clamp(42px, 4.3vw, 72px); }
+.slide-sorteios .slide-texto { max-width: 520px; font-size: clamp(16px, 1.3vw, 23px); }
+.slide-sorteios .regras-sorteio { justify-content: flex-start; }
+.slide-sorteios .regras-sorteio span { padding: 11px 14px; font-size: clamp(12px, .9vw, 15px); }
+.sorteio-visual {
+    width: min(48vw, 800px);
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    transform-origin: 52% 68%;
+    will-change: transform, opacity;
+}
+.sorteio-imagem {
+    display: block;
+    width: 100%;
+    max-height: min(74vh, 760px);
+    object-fit: contain;
+    transform-origin: 48% 80%;
+    will-change: transform;
+}
+.slide-sorteios.ativo .sorteio-visual { animation: entrada-sorteio-direita .68s cubic-bezier(.16,.9,.22,1.1) both; }
+.slide-sorteios.ativo .sorteio-imagem { animation: balanco-sorteio 5.6s .72s ease-in-out infinite; }
 .regras-sorteio { display: flex; flex-wrap: wrap; gap: 12px; }
 .regras-sorteio span { padding: 13px 17px; border-radius: 14px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); color: #fff; font-size: clamp(13px, 1.1vw, 18px); font-weight: 700; }
 
@@ -125,6 +148,10 @@ button { font-family: inherit; }
     .slide-jogos { gap: clamp(14px, 2vw, 28px); }
     .jogos-personagem { width: 34vw; min-width: 30vw; }
     .jogos-personagem img { height: min(65vh, 720px); max-width: 42vw; }
+    .slide-sorteios .slide-coluna-texto { width: min(78vw, 600px); align-items: center; text-align: center; }
+    .slide-sorteios .regras-sorteio { justify-content: center; }
+    .sorteio-visual { width: min(76vw, 680px); }
+    .sorteio-imagem { max-height: 38vh; }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
@@ -176,6 +203,15 @@ button { font-family: inherit; }
 @keyframes balanco-cesta-lojinha {
     0%, 100% { transform: translateY(0) rotate(-.75deg); }
     50% { transform: translateY(-5px) rotate(.75deg); }
+}
+@keyframes entrada-sorteio-direita {
+    from { opacity: 0; transform: translateX(54vw) rotate(5deg) scale(.93); }
+    72% { opacity: 1; }
+    to { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+}
+@keyframes balanco-sorteio {
+    0%, 100% { transform: translateY(0) rotate(-.65deg); }
+    50% { transform: translateY(-5px) rotate(.65deg); }
 }
 @keyframes entrada-personagem-jogos {
     from { opacity: 0; transform: translateY(112%) scale(.94); }

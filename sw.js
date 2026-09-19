@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v215-layout-lojinha';
+const CACHE_NAME = 'semau-v216-visual-sorteio';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -26,6 +26,7 @@ const TELAO_OFFLINE_ASSETS = [
     './assets/svg/sticker-estrela.svg',
     './assets/img/telao-jogos-celular.png',
     './assets/img/telao-lojinha-cesta.png',
+    './assets/img/telao-sorteio-urna.png',
     './assets/patrocinadores/logifab.png',
     './assets/patrocinadores/voitto.png',
     './assets/patrocinadores/peanuts-bakery.png',
@@ -123,6 +124,7 @@ const assetsToCache = [
     './assets/svg/sticker-estrela.svg',
     './assets/img/telao-jogos-celular.png',
     './assets/img/telao-lojinha-cesta.png',
+    './assets/img/telao-sorteio-urna.png',
     './assets/svg/jean-geal.svg',
     './assets/svg/em-breve.svg',
     './assets/palestrantes/ethel-pinheiro.png',
