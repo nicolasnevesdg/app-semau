@@ -58,7 +58,34 @@ button { font-family: inherit; }
 .qr-moldura { padding: clamp(18px, 2vw, 30px); border-radius: 24px; background: #fff; }
 #qrcode-app-telao { line-height: 0; }
 #qrcode-app-telao img, #qrcode-app-telao canvas { width: clamp(210px, 22vw, 330px) !important; height: clamp(210px, 22vw, 330px) !important; }
-.jogos-celular-reserva { width: min(26vw, 360px); aspect-ratio: 9 / 16; flex: 0 0 auto; }
+.slide-jogos { width: min(1420px, 92vw); gap: clamp(22px, 3vw, 58px); }
+.jogos-personagem {
+    position: relative;
+    align-self: stretch;
+    width: min(34vw, 500px);
+    min-width: min(29vw, 410px);
+    flex: 0 0 auto;
+    pointer-events: none;
+    transform-origin: 50% 100%;
+    will-change: transform, opacity;
+}
+.jogos-personagem img {
+    position: absolute;
+    left: 50%;
+    bottom: calc(clamp(24px, 3vw, 54px) * -1 - 18px);
+    display: block;
+    width: auto;
+    height: min(78vh, 840px);
+    max-width: 39vw;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 24px 30px rgba(0,0,0,.2));
+    transform: translateX(-50%);
+    transform-origin: 50% 100%;
+    will-change: transform;
+}
+.slide-jogos.ativo .jogos-personagem { animation: entrada-personagem-jogos .58s cubic-bezier(.18,.9,.24,1.12) both; }
+.slide-jogos.ativo .jogos-personagem img { animation: balanco-personagem-jogos 5.2s .62s ease-in-out infinite; }
 .slide-sorteios .slide-coluna-texto { max-width: 950px; align-items: center; text-align: center; }
 .slide-sorteios .regras-sorteio { justify-content: center; }
 .regras-sorteio { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -73,6 +100,9 @@ button { font-family: inherit; }
     .slide-coluna-texto { align-items: center; text-align: center; }
     .lojinha-logo { width: min(470px, 64vw); object-position: center; }
     .produto-composicao { width: min(74vw, 560px); }
+    .slide-jogos { gap: clamp(14px, 2vw, 28px); }
+    .jogos-personagem { width: 34vw; min-width: 30vw; }
+    .jogos-personagem img { height: min(65vh, 720px); max-width: 42vw; }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
@@ -115,6 +145,15 @@ button { font-family: inherit; }
 @keyframes flutuar-cadeira {
     0%, 100% { transform: translateY(0) rotate(-12deg); }
     50% { transform: translateY(18px) rotate(-6deg); }
+}
+@keyframes entrada-personagem-jogos {
+    from { opacity: 0; transform: translateY(112%) scale(.94); }
+    70% { opacity: 1; }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes balanco-personagem-jogos {
+    0%, 100% { transform: translateX(-50%) rotate(-1.15deg); }
+    50% { transform: translateX(calc(-50% + 9px)) rotate(1.15deg); }
 }
 @keyframes flutuar-palmeira {
     0%, 100% { transform: translateY(0) rotate(-10deg); }

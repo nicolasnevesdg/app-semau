@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v212-escala-visual-patrocinadores';
+const CACHE_NAME = 'semau-v213-personagem-jogos';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -24,6 +24,7 @@ const TELAO_OFFLINE_ASSETS = [
     './assets/svg/sticker-selo.svg',
     './assets/svg/sticker-cadeira.svg',
     './assets/svg/sticker-estrela.svg',
+    './assets/img/telao-jogos-celular.png',
     './assets/lojinha-xvi/Camisa_01.png',
     './assets/lojinha-xvi/baralho/baralho-capa.jpg',
     './assets/lojinha-xvi/ima/ima-capa.jpg',
@@ -122,6 +123,7 @@ const assetsToCache = [
     './assets/svg/sticker-olhos-da-pele.svg',
     './assets/svg/sticker-azulejo.svg',
     './assets/svg/sticker-estrela.svg',
+    './assets/img/telao-jogos-celular.png',
     './assets/svg/jean-geal.svg',
     './assets/svg/em-breve.svg',
     './assets/palestrantes/ethel-pinheiro.png',

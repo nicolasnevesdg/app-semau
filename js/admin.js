@@ -503,7 +503,7 @@ botoesOficinaAdmin.forEach(botao => {
 // 4. O SORTEADOR
 // ==========================================
 const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
-const CACHE_TELAO_OFFLINE = 'semau-v203-patrocinadores-normalizados';
+const CACHE_TELAO_OFFLINE = 'semau-v204-personagem-jogos';
 const ARQUIVOS_TELAO_OFFLINE = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
@@ -514,6 +514,7 @@ const ARQUIVOS_TELAO_OFFLINE = [
     './assets/fonts/Onest-Regular.ttf', './assets/fonts/Onest-SemiBold.ttf', './assets/fonts/Onest-ExtraBold.ttf',
     './assets/svg/logo-cn-02.svg', './assets/svg/lojinha-xvi.svg', './assets/svg/sticker-palmeira.svg',
     './assets/svg/sticker-selo.svg', './assets/svg/sticker-cadeira.svg', './assets/svg/sticker-estrela.svg',
+    './assets/img/telao-jogos-celular.png',
     './assets/lojinha-xvi/Camisa_01.png', './assets/lojinha-xvi/baralho/baralho-capa.jpg', './assets/lojinha-xvi/ima/ima-capa.jpg',
     './assets/patrocinadores/logifab.png', './assets/patrocinadores/voitto.png', './assets/patrocinadores/peanuts-bakery.png',
     './assets/patrocinadores/choco-latte.png', './assets/patrocinadores/venus-artesa.png', './assets/patrocinadores/studio3-papelaria.png',
