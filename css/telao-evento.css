@@ -52,8 +52,26 @@ button { font-family: inherit; }
 .logo-telao-frame img { position: absolute; display: block; max-width: none; max-height: none; }
 
 .lojinha-logo { display: block; width: min(430px, 34vw); max-height: 132px; object-fit: contain; object-position: left center; }
-.produto-composicao { width: min(46vw, 760px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1vw, 18px); }
-.produto-composicao img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: clamp(16px, 1.5vw, 24px); }
+.slide-lojinha { width: min(1420px, 92vw); gap: clamp(28px, 4vw, 72px); }
+.lojinha-visual {
+    width: min(46vw, 720px);
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    transform-origin: 50% 65%;
+    will-change: transform, opacity;
+}
+.lojinha-cesta {
+    display: block;
+    width: 100%;
+    max-height: min(69vh, 720px);
+    object-fit: contain;
+    transform-origin: 50% 82%;
+    will-change: transform;
+}
+.slide-lojinha.ativo .lojinha-visual { animation: entrada-cesta-direita .68s cubic-bezier(.16,.9,.22,1.1) both; }
+.slide-lojinha.ativo .lojinha-cesta { animation: balanco-cesta-lojinha 5.8s .72s ease-in-out infinite; }
 
 .qr-moldura { padding: clamp(18px, 2vw, 30px); border-radius: 24px; background: #fff; }
 #qrcode-app-telao { line-height: 0; }
@@ -99,7 +117,8 @@ button { font-family: inherit; }
     .slide-lojinha, .slide-app, .slide-sorteios { flex-direction: column; }
     .slide-coluna-texto { align-items: center; text-align: center; }
     .lojinha-logo { width: min(470px, 64vw); object-position: center; }
-    .produto-composicao { width: min(74vw, 560px); }
+    .lojinha-visual { width: min(70vw, 600px); }
+    .lojinha-cesta { max-height: 38vh; }
     .slide-jogos { gap: clamp(14px, 2vw, 28px); }
     .jogos-personagem { width: 34vw; min-width: 30vw; }
     .jogos-personagem img { height: min(65vh, 720px); max-width: 42vw; }
@@ -145,6 +164,15 @@ button { font-family: inherit; }
 @keyframes flutuar-cadeira {
     0%, 100% { transform: translateY(0) rotate(-12deg); }
     50% { transform: translateY(18px) rotate(-6deg); }
+}
+@keyframes entrada-cesta-direita {
+    from { opacity: 0; transform: translateX(52vw) rotate(6deg) scale(.92); }
+    72% { opacity: 1; }
+    to { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+}
+@keyframes balanco-cesta-lojinha {
+    0%, 100% { transform: translateY(0) rotate(-.75deg); }
+    50% { transform: translateY(-5px) rotate(.75deg); }
 }
 @keyframes entrada-personagem-jogos {
     from { opacity: 0; transform: translateY(112%) scale(.94); }

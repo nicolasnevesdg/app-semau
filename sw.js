@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v213-personagem-jogos';
+const CACHE_NAME = 'semau-v214-cesta-lojinha';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -25,9 +25,7 @@ const TELAO_OFFLINE_ASSETS = [
     './assets/svg/sticker-cadeira.svg',
     './assets/svg/sticker-estrela.svg',
     './assets/img/telao-jogos-celular.png',
-    './assets/lojinha-xvi/Camisa_01.png',
-    './assets/lojinha-xvi/baralho/baralho-capa.jpg',
-    './assets/lojinha-xvi/ima/ima-capa.jpg',
+    './assets/img/telao-lojinha-cesta.png',
     './assets/patrocinadores/logifab.png',
     './assets/patrocinadores/voitto.png',
     './assets/patrocinadores/peanuts-bakery.png',
@@ -124,6 +122,7 @@ const assetsToCache = [
     './assets/svg/sticker-azulejo.svg',
     './assets/svg/sticker-estrela.svg',
     './assets/img/telao-jogos-celular.png',
+    './assets/img/telao-lojinha-cesta.png',
     './assets/svg/jean-geal.svg',
     './assets/svg/em-breve.svg',
     './assets/palestrantes/ethel-pinheiro.png',
