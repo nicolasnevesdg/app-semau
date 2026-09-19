@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v222-urna-recortada';
+const CACHE_NAME = 'semau-v223-layout-sorteio-equilibrado';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
