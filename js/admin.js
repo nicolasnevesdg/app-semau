@@ -503,7 +503,7 @@ botoesOficinaAdmin.forEach(botao => {
 // 4. O SORTEADOR
 // ==========================================
 const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
-const CACHE_TELAO_OFFLINE = 'semau-v205-cesta-lojinha';
+const CACHE_TELAO_OFFLINE = 'semau-v206-layout-lojinha';
 const ARQUIVOS_TELAO_OFFLINE = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',

@@ -52,9 +52,11 @@ button { font-family: inherit; }
 .logo-telao-frame img { position: absolute; display: block; max-width: none; max-height: none; }
 
 .lojinha-logo { display: block; width: min(430px, 34vw); max-height: 132px; object-fit: contain; object-position: left center; }
-.slide-lojinha { width: min(1420px, 92vw); gap: clamp(28px, 4vw, 72px); }
+.slide-lojinha { width: min(1280px, 88vw); gap: clamp(10px, 1vw, 18px); }
+.slide-lojinha .slide-coluna-texto { width: min(31vw, 500px); max-width: 500px; flex: 0 1 500px; gap: 18px; }
+.slide-lojinha .slide-texto { max-width: 470px; font-size: clamp(16px, 1.15vw, 21px); line-height: 1.4; }
 .lojinha-visual {
-    width: min(46vw, 720px);
+    width: min(44vw, 680px);
     flex: 0 0 auto;
     display: grid;
     place-items: center;
@@ -117,6 +119,7 @@ button { font-family: inherit; }
     .slide-lojinha, .slide-app, .slide-sorteios { flex-direction: column; }
     .slide-coluna-texto { align-items: center; text-align: center; }
     .lojinha-logo { width: min(470px, 64vw); object-position: center; }
+    .slide-lojinha .slide-coluna-texto { width: min(76vw, 500px); }
     .lojinha-visual { width: min(70vw, 600px); }
     .lojinha-cesta { max-height: 38vh; }
     .slide-jogos { gap: clamp(14px, 2vw, 28px); }

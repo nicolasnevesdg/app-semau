@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v214-cesta-lojinha';
+const CACHE_NAME = 'semau-v215-layout-lojinha';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
