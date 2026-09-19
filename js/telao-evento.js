@@ -22,15 +22,17 @@ const slides = new Map([...document.querySelectorAll('[data-slide]')].map(slide 
 const patrocinadoresContainer = document.getElementById('patrocinadores-telao');
 const btnPausar = document.getElementById('btn-pausar');
 let indice = 0;
+let indiceGrupoPatrocinadores = 0;
 let pausado = false;
 let temporizador = null;
 let bloqueioTela = null;
 let temporizadorCursor = null;
 
-function renderizarPatrocinadores(indiceRoteiro) {
-    const ocorrencia = roteiro.slice(0, indiceRoteiro + 1).filter(etapa => etapa.id === 'patrocinadores').length - 1;
-    const inicio = (ocorrencia % Math.ceil(patrocinadores.length / 3)) * 3;
+function renderizarPatrocinadores() {
+    const totalGrupos = Math.ceil(patrocinadores.length / 3);
+    const inicio = (indiceGrupoPatrocinadores % totalGrupos) * 3;
     const grupo = patrocinadores.slice(inicio, inicio + 3);
+    indiceGrupoPatrocinadores = (indiceGrupoPatrocinadores + 1) % totalGrupos;
     patrocinadoresContainer.classList.toggle('duas-marcas', grupo.length === 2);
     patrocinadoresContainer.replaceChildren(...grupo.map(([arquivo, nome]) => {
         const card = document.createElement('div');
@@ -52,7 +54,7 @@ function exibirSlide(novoIndice) {
         slide.hidden = !ativo;
         slide.classList.toggle('ativo', ativo);
     });
-    if (etapa.id === 'patrocinadores') renderizarPatrocinadores(indice);
+    if (etapa.id === 'patrocinadores') renderizarPatrocinadores();
     if (!pausado) temporizador = setTimeout(() => exibirSlide(indice + 1), etapa.duracao);
 }
 
