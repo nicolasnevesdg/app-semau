@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v216-visual-sorteio';
+const CACHE_NAME = 'semau-v221-posicao-sorteio-final';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
