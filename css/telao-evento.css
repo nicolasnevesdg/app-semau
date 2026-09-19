@@ -47,8 +47,9 @@ button { font-family: inherit; }
 .slide-patrocinadores { gap: clamp(14px, 2vh, 24px); }
 .slide-patrocinadores h2 { font-size: clamp(34px, 3.6vw, 58px); }
 .patrocinadores-telao { width: min(1200px, 80vw); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 2vw, 30px); }
-.marca-telao { min-height: clamp(240px, 31vh, 340px); display: grid; place-items: center; }
-.marca-telao img { width: 100%; height: 100%; max-width: 360px; max-height: clamp(230px, 29vh, 320px); object-fit: contain; }
+.marca-telao { min-width: 0; min-height: clamp(240px, 31vh, 340px); display: grid; place-items: center; }
+.logo-telao-frame { position: relative; overflow: hidden; display: block; flex: 0 0 auto; }
+.logo-telao-frame img { position: absolute; display: block; max-width: none; max-height: none; }
 
 .lojinha-logo { display: block; width: min(430px, 34vw); max-height: 132px; object-fit: contain; object-position: left center; }
 .produto-composicao { width: min(46vw, 760px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1vw, 18px); }
