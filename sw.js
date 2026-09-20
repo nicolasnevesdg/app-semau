@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v229-sombra-sorteio';
+const CACHE_NAME = 'semau-v230-foto-ana';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -139,6 +139,7 @@ const assetsToCache = [
     './assets/palestrantes/urbanas.png',
     './assets/palestrantes/julia.png',
     './assets/palestrantes/daniel.png',
+    './assets/palestrantes/ana.png',
     './assets/oficinas/diadorim.png',
     './assets/professores/sem-foto.png',
     './assets/professores/denise.png',
