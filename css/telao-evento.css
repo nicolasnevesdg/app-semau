@@ -95,8 +95,8 @@ button { font-family: inherit; }
     bottom: calc(clamp(24px, 3vw, 54px) * -1 - 18px);
     display: block;
     width: auto;
-    height: min(78vh, 840px);
-    max-width: 39vw;
+    height: min(86vh, 900px);
+    max-width: 43vw;
     object-fit: contain;
     object-position: center bottom;
     filter: drop-shadow(0 24px 30px rgba(0,0,0,.2));

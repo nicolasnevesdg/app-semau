@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v225-respiro-sorteio';
+const CACHE_NAME = 'semau-v226-escala-jogos';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
