@@ -58,7 +58,7 @@ button { font-family: inherit; }
 .slide-lojinha .slide-texto { max-width: 470px; font-size: clamp(16px, 1.15vw, 21px); line-height: 1.4; scale: 1.08; transform-origin: left center; }
 .slide-lojinha .slide-link { scale: 1.08; transform-origin: left center; }
 .lojinha-visual {
-    width: min(44vw, 680px);
+    width: min(49vw, 760px);
     flex: 0 0 auto;
     display: grid;
     place-items: center;

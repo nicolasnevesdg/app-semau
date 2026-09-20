@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v227-tipografia-lojinha';
+const CACHE_NAME = 'semau-v228-artes-telao-atualizadas';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
