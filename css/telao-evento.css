@@ -54,7 +54,9 @@ button { font-family: inherit; }
 .lojinha-logo { display: block; width: min(430px, 34vw); max-height: 132px; object-fit: contain; object-position: left center; }
 .slide-lojinha { width: min(1280px, 88vw); gap: clamp(10px, 1vw, 18px); }
 .slide-lojinha .slide-coluna-texto { width: min(31vw, 500px); max-width: 500px; flex: 0 1 500px; gap: 18px; }
-.slide-lojinha .slide-texto { max-width: 470px; font-size: clamp(16px, 1.15vw, 21px); line-height: 1.4; }
+.slide-lojinha .slide-etiqueta { scale: 1.08; transform-origin: left center; }
+.slide-lojinha .slide-texto { max-width: 470px; font-size: clamp(16px, 1.15vw, 21px); line-height: 1.4; scale: 1.08; transform-origin: left center; }
+.slide-lojinha .slide-link { scale: 1.08; transform-origin: left center; }
 .lojinha-visual {
     width: min(44vw, 680px);
     flex: 0 0 auto;
