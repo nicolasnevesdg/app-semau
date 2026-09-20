@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v231-urna-sem-sombra';
+const CACHE_NAME = 'semau-v232-exportacao-inscritos-completa';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',

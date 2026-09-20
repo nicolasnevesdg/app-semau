@@ -503,7 +503,7 @@ botoesOficinaAdmin.forEach(botao => {
 // 4. O SORTEADOR
 // ==========================================
 const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
-const CACHE_TELAO_OFFLINE = 'semau-v221-urna-sem-sombra';
+const CACHE_TELAO_OFFLINE = 'semau-v222-exportacao-inscritos-completa';
 const ARQUIVOS_TELAO_OFFLINE = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js',
@@ -1269,6 +1269,28 @@ const NOMES_MODALIDADES = {
     kit: 'Ingresso com kit'
 };
 
+const NOMES_ESCOLARIDADES = {
+    fundamental: 'Ensino fundamental',
+    medio: 'Ensino médio',
+    tecnico: 'Ensino técnico',
+    graduacao_incompleta: 'Graduação incompleta',
+    graduacao_completa: 'Graduação completa',
+    especializacao: 'Especialização / pós-graduação',
+    mestrado: 'Mestrado',
+    doutorado: 'Doutorado',
+    nao_informar: 'Prefere não informar'
+};
+
+const NOMES_ORIGENS_SEMAU = {
+    instagram: 'Instagram da SEMAU',
+    indicacao: 'Indicação de amigo(a) ou colega',
+    professor_instituicao: 'Professor(a) ou instituição de ensino',
+    outra_edicao: 'Já participou de outra edição',
+    parceiro: 'Parceiro, patrocinador ou apoiador',
+    pesquisa_internet: 'Pesquisa na internet',
+    outro: 'Outra forma'
+};
+
 function pedidoComCategoriaEfetiva(pedido = {}) {
     const ajusteValido = pedido.ajusteManualCategoriaAtivo === true &&
         ['primeiro', 'segundo', 'promocional'].includes(pedido.loteIngressoEfetivo) &&
@@ -1422,6 +1444,24 @@ function formatarDataRegistro(valor) {
     const data = typeof valor.toDate === 'function' ? valor.toDate() : new Date(valor);
     if (Number.isNaN(data.getTime())) return 'Não registrado';
     return data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function valorCadastro(dados, pedido, campo) {
+    const valorInscrito = dados?.[campo];
+    if (valorInscrito !== undefined && valorInscrito !== null && valorInscrito !== '') return valorInscrito;
+    return pedido?.[campo] ?? '';
+}
+
+function nomeDoStatusEmailIngresso(status) {
+    return ({
+        enviado: 'Enviado', enviando: 'Enviando', falhou: 'Falhou', desativado: 'Desativado'
+    })[String(status || '').toLowerCase()] || textoDisponivel(status, 'Não enviado');
+}
+
+function valorParaCsv(valor) {
+    let texto = String(valor ?? '');
+    if (/^[=+\-@]/.test(texto)) texto = `'${texto}`;
+    return `"${texto.replaceAll('"', '""')}"`;
 }
 
 function nomeDoLote(dados) {
@@ -1928,10 +1968,53 @@ async function carregarListaInscritos() {
             const porcentagem = Math.round((presencasConfirmadas / TURNOS_PRESENCA.length) * 100);
             const corPorcentagem = porcentagem >= 75 ? '#2ecc71' : '#e06d53';
             const oficinasFormatadas = dados.oficinas && dados.oficinas.length > 0 ? dados.oficinas.join(' | ') : 'Nenhuma';
-            
+            const oficinasComPresenca = Array.isArray(dados.oficinasPresenca) ? dados.oficinasPresenca.join(' | ') : '';
+            const semVinculoInformado = valorCadastro(dados, pedido, 'semVinculoAcademico');
+            const semVinculoAcademico = semVinculoInformado === true;
+            const possuiDadosAcademicos = ['instituicao', 'matricula', 'curso'].some(campo => Boolean(valorCadastro(dados, pedido, campo)));
+            const vinculoAcademico = semVinculoAcademico
+                ? 'Sem vínculo acadêmico'
+                : (semVinculoInformado === false || possuiDadosAcademicos ? 'Possui vínculo acadêmico' : 'Não informado');
+            const escolaridade = valorCadastro(dados, pedido, 'escolaridade');
+            const comoConheceu = valorCadastro(dados, pedido, 'comoConheceu');
+            const statusPagamento = pedido?.status || dados.statusPagamento || '';
+            const detalhePagamento = pedido?.paymentStatusDetail || dados.paymentStatusDetail || '';
+            const valorIngresso = pedido?.valor ?? dados.valor ?? '';
+            const criadoEm = dados.criadoEm || pedido?.criadoEm;
+            const atualizadoEm = dados.atualizadoEm || pedido?.atualizadoEm;
+
             dadosParaExcel.push({
-                "Nome Completo": dados.nome, "E-mail": dados.email, "Token": dados.token, "Pontos": pontos,
-                "Oficinas Inscritas": oficinasFormatadas, "Presença (%)": porcentagem + "%",
+                "ID da Inscrição": docSnap.id,
+                "ID do Pedido": dados.pedidoId || pedido?.id || docSnap.id,
+                "Nome Completo": valorCadastro(dados, pedido, 'nome'),
+                "E-mail": valorCadastro(dados, pedido, 'email'),
+                "Telefone": valorCadastro(dados, pedido, 'telefone'),
+                "Vínculo Acadêmico": vinculoAcademico,
+                "Instituição": valorCadastro(dados, pedido, 'instituicao'),
+                "Matrícula": valorCadastro(dados, pedido, 'matricula'),
+                "Curso": valorCadastro(dados, pedido, 'curso'),
+                "Período": valorCadastro(dados, pedido, 'periodo'),
+                "Escolaridade": NOMES_ESCOLARIDADES[escolaridade] || escolaridade,
+                "Profissão ou Área de Atuação": valorCadastro(dados, pedido, 'profissao'),
+                "Como Conheceu a SEMAU": NOMES_ORIGENS_SEMAU[comoConheceu] || comoConheceu,
+                "Lote": nomeDoLote(dadosAutoritativos),
+                "Modalidade": nomeDoTipo(dadosAutoritativos),
+                "Valor do Ingresso (R$)": valorIngresso,
+                "Status do Pagamento": nomeDoStatusPagamento(statusPagamento),
+                "Detalhe do Pagamento": detalhePagamento ? nomeDoDetalhePagamento(detalhePagamento) : '',
+                "Ingresso Ativo": dados.ingressoAtivo === false ? 'Não' : 'Sim',
+                "Token": dados.token,
+                "Status do E-mail do Ingresso": nomeDoStatusEmailIngresso(dados.emailIngressoStatus),
+                "E-mail Enviado em": dados.emailIngressoEnviadoEm ? formatarDataRegistro(dados.emailIngressoEnviadoEm) : '',
+                "Cadastro Criado em": criadoEm ? formatarDataRegistro(criadoEm) : '',
+                "Última Atualização": atualizadoEm ? formatarDataRegistro(atualizadoEm) : '',
+                "Pontos": pontos,
+                "Oficinas Inscritas": oficinasFormatadas,
+                "Oficinas com Presença": oficinasComPresenca,
+                "Total de Oficinas com Presença": Array.isArray(dados.oficinasPresenca) ? dados.oficinasPresenca.length : 0,
+                "Presenças Confirmadas": presencasConfirmadas,
+                "Total de Turnos": TURNOS_PRESENCA.length,
+                "Presença (%)": porcentagem + "%",
                 "21/Set (Manhã)": dados.d21_m ? "Presente" : "Falta", "21/Set (Tarde)": dados.d21_t ? "Presente" : "Falta",
                 "22/Set (Manhã)": dados.d22_m ? "Presente" : "Falta",
                 "23/Set (Manhã)": dados.d23_m ? "Presente" : "Falta", "23/Set (Tarde)": dados.d23_t ? "Presente" : "Falta",
@@ -1988,13 +2071,14 @@ async function carregarListaInscritos() {
 if (btnExportarExcel) {
     btnExportarExcel.addEventListener('click', () => {
         if (dadosParaExcel.length === 0) return alert("Não há dados para exportar.");
-        const cabecalhos = Object.keys(dadosParaExcel[0]).join(";");
-        const linhas = dadosParaExcel.map(linha => Object.values(linha).map(valor => `"${valor}"`).join(";")).join("\n");
+        const cabecalhos = Object.keys(dadosParaExcel[0]).map(valorParaCsv).join(";");
+        const linhas = dadosParaExcel.map(linha => Object.values(linha).map(valorParaCsv).join(";")).join("\n");
         const csvContent = "\uFEFF" + cabecalhos + "\n" + linhas;
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.setAttribute("href", URL.createObjectURL(blob));
-        link.setAttribute("download", "XVI_SEMAU_Relatorio.csv");
+        const dataArquivo = new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-');
+        link.setAttribute("download", `XVI_SEMAU_Inscritos_Completo_${dataArquivo}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
