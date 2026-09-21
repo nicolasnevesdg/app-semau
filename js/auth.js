@@ -1,6 +1,5 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { ABERTURA_LOTE_SOCIAL } from './ingressos-config.js?v=162';
 import {
     VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
@@ -23,13 +22,11 @@ const CONTA_COM_ACESSO_COMPLETO = 'admin@semauufrrj.com';
 let faseAtualDoEvento = null;
 let faseConfiguradaDoEvento = null;
 let acessoCompletoAtivo = false;
-const INICIO_EVENTO = Date.parse('2026-09-21T08:00:00-03:00');
-
 function sincronizarFaseAutomatica() {
-    const agora = Date.now();
-    faseAtualDoEvento = agora >= ABERTURA_LOTE_SOCIAL && agora < INICIO_EVENTO
-        ? 'inscricao'
-        : faseConfiguradaDoEvento;
+    const fasesValidas = ['cronograma', 'inscricao', 'credencial'];
+    faseAtualDoEvento = fasesValidas.includes(faseConfiguradaDoEvento)
+        ? faseConfiguradaDoEvento
+        : 'cronograma';
     atualizarBotoesDaFase();
 }
 

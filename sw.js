@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v232-exportacao-inscritos-completa';
+const CACHE_NAME = 'semau-v233-botao-home-configuravel';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -99,7 +99,7 @@ const assetsToCache = [
     './js/admin-status-evento.js',
     './js/compra.js',
     './js/pagamento-retorno.js',
-    './js/auth.js',
+    './js/auth-v233.js',
     './js/quiz.js',
     './js/questions.js',
     './js/ranking.js',
