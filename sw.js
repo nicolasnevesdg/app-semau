@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v233-botao-home-configuravel';
+const CACHE_NAME = 'semau-v234-animacoes-telao-estaveis';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -8,12 +8,12 @@ const TELAO_OFFLINE_ASSETS = [
     './telao-evento.html',
     './sorteio-telao.html',
     './css/global.css',
-    './css/telao-evento.css',
+    './css/telao-evento-v234.css',
     './css/sorteio-telao.css',
     './js/admin-v232.js',
     './js/firebase-config.js',
     './js/telao-evento.js',
-    './js/sorteio-telao.js',
+    './js/sorteio-telao-v234.js',
     './js/qrcode.min.js',
     './assets/fonts/Onest-Regular.ttf',
     './assets/fonts/Onest-SemiBold.ttf',
@@ -73,7 +73,7 @@ const assetsToCache = [
     './css/components.css',
     './css/views.css',
     './css/sorteio-telao.css',
-    './css/telao-evento.css',
+    './css/telao-evento-v234.css',
     './css/compra.css',
     './css/admin-cronograma.css',
     './css/admin-status-evento.css',
@@ -87,7 +87,7 @@ const assetsToCache = [
     './js/navigation.js',
     './js/store-config.js',
     './js/store-gallery.js',
-    './js/sorteio-telao.js',
+    './js/sorteio-telao-v234.js',
     './js/telao-evento.js',
     './js/qrcode.min.js',
     './js/admin-v232.js',
