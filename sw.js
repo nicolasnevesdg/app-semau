@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v236-cronograma-protegido';
+const CACHE_NAME = 'semau-v237-cronograma-separado';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -60,7 +60,7 @@ const assetsToCache = [
     './sorteio-telao.html',
     './telao-evento.html',
     './ingressos.html',
-    './admin-cronograma.html',
+    './gestao-cronograma.html',
     './admin-status-evento.html',
     './compra.html',
     './pagamento-falhou.html',
