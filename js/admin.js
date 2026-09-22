@@ -1,6 +1,7 @@
 import { app, db } from './firebase-config.js';
 import { collection, doc, addDoc, getDocs, updateDoc, query, where, arrayUnion, arrayRemove, setDoc, onSnapshot, deleteDoc, getDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
+import { criarPlanilhaSorteados } from './xlsx-export.js';
 import {
     VERSAO_CONTEUDO_CRONOGRAMA,
     PROGRAMACAO_AO_VIVO_PADRAO,
@@ -59,6 +60,8 @@ const btnAbrirTelaoEvento = document.getElementById('btn-abrir-telao-evento');
 const btnPrepararTelaoOffline = document.getElementById('btn-preparar-telao-offline');
 const statusTelaoOffline = document.getElementById('status-telao-offline');
 const statusTelao = document.getElementById('status-telao');
+const btnExportarSorteados = document.getElementById('btn-exportar-sorteados');
+const statusHistoricoSorteio = document.getElementById('status-historico-sorteio');
 
 let idAlunoSelecionado = null;
 let alunoCheckinAtual = null;
@@ -503,6 +506,8 @@ botoesOficinaAdmin.forEach(botao => {
 // 4. O SORTEADOR
 // ==========================================
 const CHAVE_BASE_SORTEIO_OFFLINE = 'semau-base-sorteio-offline-v1';
+const CHAVE_HISTORICO_SORTEIOS = 'semau-historico-sorteios-v1';
+const COLECAO_HISTORICO_SORTEIOS = 'historicoSorteios';
 const CACHE_TELAO_OFFLINE = 'semau-v222-exportacao-inscritos-completa';
 const ARQUIVOS_TELAO_OFFLINE = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -510,7 +515,7 @@ const ARQUIVOS_TELAO_OFFLINE = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js',
     './admin.html', './telao-evento.html', './sorteio-telao.html',
     './css/global.css', './css/telao-evento-v234.css', './css/sorteio-telao-v235.css',
-    './js/admin.js', './js/firebase-config.js', './js/telao-evento.js', './js/sorteio-telao-v235.js', './js/qrcode.min.js',
+    './js/admin.js', './js/firebase-config.js', './js/xlsx-export.js', './js/telao-evento.js', './js/sorteio-telao-v235.js', './js/qrcode.min.js',
     './assets/fonts/Onest-Regular.ttf', './assets/fonts/Onest-SemiBold.ttf', './assets/fonts/Onest-ExtraBold.ttf',
     './assets/svg/logo-cn-02.svg', './assets/svg/lojinha-xvi.svg', './assets/svg/sticker-palmeira.svg',
     './assets/svg/sticker-selo.svg', './assets/svg/sticker-cadeira.svg', './assets/svg/sticker-estrela.svg',
@@ -571,11 +576,146 @@ function atualizarParticipanteNaBaseSorteioOffline(dadosAluno) {
     salvarBaseSorteioOffline(base);
 }
 
-function nomesElegiveisNaBase(base, turno) {
+function participantesElegiveisNaBase(base, turno) {
     if (!base) return [];
     return base.participantes
-        .filter(participante => turno === 'qualquer' ? participante.turnos.length : participante.turnos.includes(turno))
-        .map(participante => participante.nome);
+        .filter(participante => turno === 'qualquer' ? participante.turnos.length : participante.turnos.includes(turno));
+}
+
+function carregarHistoricoSorteiosLocal() {
+    try {
+        const historico = JSON.parse(localStorage.getItem(CHAVE_HISTORICO_SORTEIOS) || '[]');
+        return Array.isArray(historico) ? historico.filter(item => item?.id && item?.nome) : [];
+    } catch (_) {
+        return [];
+    }
+}
+
+function salvarHistoricoSorteiosLocal(historico) {
+    try {
+        localStorage.setItem(CHAVE_HISTORICO_SORTEIOS, JSON.stringify(historico));
+        atualizarStatusHistoricoSorteio(historico.length);
+        return true;
+    } catch (error) {
+        console.warn('Não foi possível guardar o histórico do sorteio neste dispositivo.', error);
+        if (statusHistoricoSorteio) statusHistoricoSorteio.textContent = 'O histórico local não pôde ser atualizado; tentando salvar on-line.';
+        return false;
+    }
+}
+
+function atualizarStatusHistoricoSorteio(totalLocal = carregarHistoricoSorteiosLocal().length) {
+    if (!statusHistoricoSorteio) return;
+    if (!totalLocal) {
+        statusHistoricoSorteio.textContent = 'Os próximos nomes sorteados ficarão guardados para exportação.';
+        return;
+    }
+    statusHistoricoSorteio.textContent = `${totalLocal} ${totalLocal === 1 ? 'nome salvo' : 'nomes salvos'} neste dispositivo. O Excel também reúne o histórico on-line.`;
+}
+
+function gerarIdSorteio() {
+    if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+    return `sorteio-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function dadosDoRegistroSorteio(registro) {
+    return {
+        nome: String(registro.nome || '').trim(),
+        turno: String(registro.turno || 'qualquer'),
+        turnoTexto: String(registro.turnoTexto || ''),
+        sorteadoEmMs: Number(registro.sorteadoEmMs) || Date.now(),
+        sorteadoEmIso: String(registro.sorteadoEmIso || new Date().toISOString()),
+        origem: String(registro.origem || 'online'),
+        registradoEmServidor: serverTimestamp()
+    };
+}
+
+async function sincronizarRegistroSorteio(registro) {
+    if (!navigator.onLine) return false;
+    await setDoc(doc(db, COLECAO_HISTORICO_SORTEIOS, registro.id), dadosDoRegistroSorteio(registro), { merge: true });
+    return true;
+}
+
+async function sincronizarHistoricoSorteiosLocal() {
+    if (!navigator.onLine) return;
+    const historico = carregarHistoricoSorteiosLocal();
+    let alterou = false;
+    for (const registro of historico.filter(item => item.sincronizado !== true)) {
+        try {
+            await sincronizarRegistroSorteio(registro);
+            registro.sincronizado = true;
+            alterou = true;
+        } catch (error) {
+            console.warn('O histórico local do sorteio será sincronizado depois.', error);
+            break;
+        }
+    }
+    if (alterou) salvarHistoricoSorteiosLocal(historico);
+}
+
+function registrarSorteado(nome, turno, turnoTexto, usandoBaseOffline) {
+    const agora = new Date();
+    const registro = {
+        id: gerarIdSorteio(),
+        nome: String(nome || '').trim(),
+        turno: String(turno || 'qualquer'),
+        turnoTexto: String(turnoTexto || ''),
+        sorteadoEmMs: agora.getTime(),
+        sorteadoEmIso: agora.toISOString(),
+        origem: usandoBaseOffline ? 'offline' : 'online',
+        sincronizado: false
+    };
+    const historico = carregarHistoricoSorteiosLocal();
+    historico.push(registro);
+    salvarHistoricoSorteiosLocal(historico);
+    sincronizarRegistroSorteio(registro)
+        .then(sincronizado => {
+            if (!sincronizado) return;
+            const atualizado = carregarHistoricoSorteiosLocal();
+            const item = atualizado.find(entrada => entrada.id === registro.id);
+            if (item) item.sincronizado = true;
+            salvarHistoricoSorteiosLocal(atualizado);
+        })
+        .catch(error => {
+            console.warn('Sorteio salvo neste dispositivo; a sincronização será refeita quando houver internet.', error);
+        });
+    return registro;
+}
+
+function mesclarHistoricosSorteios(...listas) {
+    const registrosPorId = new Map();
+    listas.flat().forEach(registro => {
+        if (!registro?.id || !registro?.nome) return;
+        registrosPorId.set(registro.id, { ...registrosPorId.get(registro.id), ...registro });
+    });
+    return [...registrosPorId.values()].sort((a, b) => (Number(a.sorteadoEmMs) || 0) - (Number(b.sorteadoEmMs) || 0));
+}
+
+async function carregarHistoricoSorteiosParaExportacao() {
+    const historicoLocal = carregarHistoricoSorteiosLocal();
+    let historicoOnline = [];
+    if (navigator.onLine) {
+        try {
+            const snapshot = await Promise.race([
+                getDocs(collection(db, COLECAO_HISTORICO_SORTEIOS)),
+                new Promise((_, rejeitar) => setTimeout(() => rejeitar(new Error('Tempo excedido ao carregar o histórico.')), 7000))
+            ]);
+            historicoOnline = snapshot.docs.map(documento => ({ id: documento.id, ...documento.data() }));
+        } catch (error) {
+            console.warn('Exportando apenas o histórico disponível neste dispositivo.', error);
+        }
+    }
+    return mesclarHistoricosSorteios(historicoOnline, historicoLocal);
+}
+
+function baixarArquivo(blob, nomeArquivo) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nomeArquivo;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function consultarInscritosComLimite(tempoMaximo = 6000) {
@@ -721,6 +861,34 @@ if (btnAbrirTelaoEvento) {
 
 const selectSorteioTurno = document.getElementById('select-sorteio-turno');
 
+atualizarStatusHistoricoSorteio();
+sincronizarHistoricoSorteiosLocal();
+window.addEventListener('online', sincronizarHistoricoSorteiosLocal);
+
+if (btnExportarSorteados) {
+    btnExportarSorteados.addEventListener('click', async () => {
+        const textoOriginal = btnExportarSorteados.innerHTML;
+        btnExportarSorteados.disabled = true;
+        btnExportarSorteados.innerHTML = '<i class="ph-bold ph-hourglass-high"></i> Preparando Excel...';
+        try {
+            const historico = await carregarHistoricoSorteiosParaExportacao();
+            if (!historico.length) {
+                alert('Ainda não há nomes sorteados para exportar.');
+                return;
+            }
+            const arquivo = criarPlanilhaSorteados(historico);
+            const dataArquivo = new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-');
+            baixarArquivo(arquivo, `XVI_SEMAU_Historico_Sorteios_${dataArquivo}.xlsx`);
+        } catch (error) {
+            console.error('Erro ao exportar o histórico de sorteios:', error);
+            alert('Não foi possível gerar o Excel dos sorteados. Tente novamente.');
+        } finally {
+            btnExportarSorteados.disabled = false;
+            btnExportarSorteados.innerHTML = textoOriginal;
+        }
+    });
+}
+
 if (btnAdminSortear) {
     btnAdminSortear.addEventListener('click', async () => {
         sorteioResultado.innerHTML = '<p style="color: #888; font-size: 14px;"><i class="ph-bold ph-hourglass-high"></i> Misturando os nomes...</p>';
@@ -740,21 +908,24 @@ if (btnAdminSortear) {
                 usandoBaseOffline = Boolean(baseSorteio);
                 if (!baseSorteio) throw erroRede;
             }
-            const listaSorteaveis = nomesElegiveisNaBase(baseSorteio, turnoEscolhido);
+            const participantesSorteaveis = participantesElegiveisNaBase(baseSorteio, turnoEscolhido);
+            const listaSorteaveis = participantesSorteaveis.map(participante => participante.nome);
             
             if (listaSorteaveis.length === 0) {
                 sorteioResultado.innerHTML = `<div style="background: #fffaf9; color: #e06d53; padding: 16px; border-radius: 12px; border: 1px solid #ffebeb; font-weight: 600; font-size: 14px;"><i class="ph-bold ph-warning-circle"></i> Ninguém com presença confirmada neste turno!</div>`;
                 return;
             }
             
-            const ganhador = listaSorteaveis[Math.floor(Math.random() * listaSorteaveis.length)];
+            const participanteGanhador = participantesSorteaveis[Math.floor(Math.random() * participantesSorteaveis.length)];
+            const ganhador = participanteGanhador.nome;
             const turnoTexto = selectSorteioTurno?.selectedOptions[0]?.textContent || '';
+            registrarSorteado(ganhador, turnoEscolhido, turnoTexto, usandoBaseOffline);
             publicarNoTelao({ tipo: 'sortear', nomes: listaSorteaveis, ganhador, turno: turnoTexto });
             sorteioResultado.innerHTML = `
                 <div style="background: #f2fbf5; padding: 24px; border-radius: 16px; border: 1px solid #c3ebd2; margin-top: 10px;">
                     ${usandoBaseOffline ? '<p style="margin:0 0 10px;color:#8a6816;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;"><i class="ph-bold ph-cloud-slash"></i> Sorteio realizado com a base offline salva</p>' : ''}
                     <p style="font-size: 12px; color: #27ae60; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;"><i class="ph-bold ph-confetti"></i> Ganhador(a)</p>
-                    <strong style="font-size: 24px; color: var(--cor-primaria); font-weight: 800; word-break: break-word; line-height: 1.2;">${ganhador}</strong>
+                    <strong style="font-size: 24px; color: var(--cor-primaria); font-weight: 800; word-break: break-word; line-height: 1.2;">${escaparHtml(ganhador)}</strong>
                 </div>
             `;
             

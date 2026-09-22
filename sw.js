@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v237-cronograma-separado';
+const CACHE_NAME = 'semau-v238-historico-sorteios';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
@@ -12,6 +12,7 @@ const TELAO_OFFLINE_ASSETS = [
     './css/sorteio-telao-v235.css',
     './js/admin-v232.js',
     './js/firebase-config.js',
+    './js/xlsx-export.js',
     './js/telao-evento.js',
     './js/sorteio-telao-v235.js',
     './js/qrcode.min.js',
@@ -92,6 +93,7 @@ const assetsToCache = [
     './js/qrcode.min.js',
     './js/admin-v232.js',
     './js/firebase-config.js',
+    './js/xlsx-export.js',
     './js/ingressos.js',
     './js/ingressos-config.js',
     './js/programacao-ao-vivo-config.js',
