@@ -1,5 +1,5 @@
 import { db } from './firebase-config.js';
-import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, query, runTransaction, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     DIAS_EVENTO,
     TIPOS_ATIVIDADE_AO_VIVO,
@@ -10,13 +10,16 @@ import {
     normalizarAtividade,
     normalizarProgramacao,
     temProgramacaoValida
-} from './programacao-ao-vivo-config.js?v=20260906-1';
+} from './programacao-ao-vivo-config.js?v=20260921-1';
 
 const docCronogramaRef = doc(db, 'configuracoes', 'cronogramaAoVivo');
 const EMAIL_CONTA_ADMINISTRATIVA = 'admin@semauufrrj.com';
+const HASH_SENHA_CRONOGRAMA = 'aa586c48e60a09a2fab381e17ec3675c3298b24c2af9906b90104d037d8e1410';
 const overlayLogin = document.getElementById('admin-login-overlay');
 const formLogin = document.getElementById('form-admin-login');
+const campoCredencialAdministrativa = document.getElementById('admin-credencial-campo');
 const inputSenha = document.getElementById('admin-senha-input');
+const inputSenhaCronograma = document.getElementById('cronograma-senha-input');
 const btnLogin = document.getElementById('btn-admin-login');
 const btnLogout = document.getElementById('btn-admin-logout');
 const tabsDias = document.getElementById('cronograma-dias');
@@ -34,6 +37,26 @@ let programacaoEditavel = clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
 let diaAtivo = DIAS_EVENTO[0].chave;
 let alteracoesPendentes = false;
 let editorInicializado = false;
+let atualizacaoCarregadaMs = null;
+let carregamentoSeguro = false;
+
+async function gerarHash(texto) {
+    const bytes = new TextEncoder().encode(texto);
+    const hash = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function senhaCronogramaValida(senha) {
+    return gerarHash(String(senha || '').trim()).then(hash => hash === HASH_SENHA_CRONOGRAMA);
+}
+
+async function confirmarSenhaParaPublicar() {
+    const senha = window.prompt('Digite a senha exclusiva do cronograma para confirmar a publicação:');
+    if (senha === null) return false;
+    if (await senhaCronogramaValida(senha)) return true;
+    window.alert('Senha exclusiva do cronograma incorreta. Nada foi publicado.');
+    return false;
+}
 
 function mostrarStatus(mensagem, tipo = 'info', esconderDepois = false) {
     editorStatus.textContent = mensagem;
@@ -277,29 +300,44 @@ function validarProgramacaoParaSalvar() {
 }
 
 async function carregarProgramacao() {
+    carregamentoSeguro = false;
+    btnSalvar.disabled = true;
+    btnAdicionar.disabled = true;
+    btnRestaurar.disabled = true;
     mostrarStatus('Carregando a programação salva…', 'info');
     try {
         const snapshot = await getDoc(docCronogramaRef);
         const dados = snapshot.data();
         const remota = normalizarProgramacao(dados?.programacao);
-        programacaoEditavel = dados?.versaoConteudo === VERSAO_CONTEUDO_CRONOGRAMA && temProgramacaoValida(remota)
-            ? remota
-            : clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
+        if (!snapshot.exists() || dados?.versaoConteudo !== VERSAO_CONTEUDO_CRONOGRAMA || !temProgramacaoValida(remota)) {
+            throw new Error('CRONOGRAMA_REMOTO_INVALIDO');
+        }
+        programacaoEditavel = remota;
+        atualizacaoCarregadaMs = dados?.atualizadoEm?.toMillis?.() ?? null;
+        carregamentoSeguro = true;
+        btnSalvar.disabled = false;
+        btnAdicionar.disabled = false;
+        btnRestaurar.disabled = false;
         renderizarTabs();
         renderizarDia();
         marcarSalvo();
         mostrarStatus(formatarAtualizacao(snapshot.data()?.atualizadoEm), 'sucesso', true);
     } catch (error) {
         console.error(error);
-        programacaoEditavel = clonarProgramacao(PROGRAMACAO_AO_VIVO_PADRAO);
-        renderizarTabs();
-        renderizarDia();
-        alteracoesStatus.textContent = 'Programação original aberta';
-        mostrarStatus('Não foi possível carregar a versão salva. A programação original foi aberta sem publicar alterações.', 'erro');
+        tabsDias.innerHTML = '';
+        listaAtividades.innerHTML = '<div class="atividades-vazio"><i class="ph-bold ph-warning" style="font-size: 28px;"></i><p>O cronograma salvo não pôde ser carregado com segurança. Recarregue a página antes de editar.</p></div>';
+        alteracoesStatus.textContent = 'Publicação bloqueada por segurança';
+        mostrarStatus('O editor foi bloqueado para impedir que uma programação padrão substitua os dados salvos.', 'erro');
     }
 }
 
 async function salvarProgramacao() {
+    if (!carregamentoSeguro) {
+        mostrarStatus('Publicação bloqueada: recarregue o cronograma antes de salvar.', 'erro');
+        return;
+    }
+    if (!await confirmarSenhaParaPublicar()) return;
+
     let validada;
     try {
         validada = validarProgramacaoParaSalvar();
@@ -313,11 +351,20 @@ async function salvarProgramacao() {
     btnSalvar.innerHTML = '<i class="ph-bold ph-spinner-gap"></i> Publicando…';
     mostrarStatus('Publicando a nova programação…', 'info');
     try {
-        await setDoc(docCronogramaRef, {
-            programacao: validada,
-            versaoConteudo: VERSAO_CONTEUDO_CRONOGRAMA,
-            atualizadoEm: serverTimestamp()
-        }, { merge: true });
+        await runTransaction(db, async transacao => {
+            const snapshotAtual = await transacao.get(docCronogramaRef);
+            const atualizacaoAtualMs = snapshotAtual.data()?.atualizadoEm?.toMillis?.() ?? null;
+            if (!snapshotAtual.exists() || atualizacaoAtualMs !== atualizacaoCarregadaMs) {
+                throw new Error('CRONOGRAMA_DESATUALIZADO');
+            }
+            transacao.set(docCronogramaRef, {
+                programacao: validada,
+                versaoConteudo: VERSAO_CONTEUDO_CRONOGRAMA,
+                atualizadoEm: serverTimestamp()
+            }, { merge: true });
+        });
+        const snapshotPublicado = await getDoc(docCronogramaRef);
+        atualizacaoCarregadaMs = snapshotPublicado.data()?.atualizadoEm?.toMillis?.() ?? null;
         programacaoEditavel = clonarProgramacao(validada);
         renderizarTabs();
         renderizarDia();
@@ -325,9 +372,16 @@ async function salvarProgramacao() {
         mostrarStatus('Programação publicada. Quem estiver no site receberá a mudança automaticamente.', 'sucesso', true);
     } catch (error) {
         console.error(error);
-        mostrarStatus('Não foi possível publicar. Confira sua conexão e tente novamente.', 'erro');
+        if (error?.message === 'CRONOGRAMA_DESATUALIZADO') {
+            carregamentoSeguro = false;
+            btnAdicionar.disabled = true;
+            btnRestaurar.disabled = true;
+            mostrarStatus('Outra aba publicou alterações depois que esta página foi aberta. Recarregue antes de continuar; nada foi substituído.', 'erro');
+        } else {
+            mostrarStatus('Não foi possível publicar. Confira sua conexão e tente novamente.', 'erro');
+        }
     } finally {
-        btnSalvar.disabled = false;
+        btnSalvar.disabled = !carregamentoSeguro;
         btnSalvar.innerHTML = textoOriginal;
     }
 }
@@ -357,17 +411,24 @@ async function credencialAdministrativaValida(credencial) {
 formLogin.addEventListener('submit', async evento => {
     evento.preventDefault();
     const senha = inputSenha.value.trim();
-    if (!senha) return;
+    const senhaCronograma = inputSenhaCronograma.value.trim();
+    const adminJaAutenticado = sessionStorage.getItem('adminLogado') === 'true';
+    if ((!adminJaAutenticado && !senha) || !senhaCronograma) return;
     btnLogin.disabled = true;
     btnLogin.textContent = 'Verificando…';
     try {
-        if (await credencialAdministrativaValida(senha)) {
+        const [adminValido, cronogramaValido] = await Promise.all([
+            adminJaAutenticado ? Promise.resolve(true) : credencialAdministrativaValida(senha),
+            senhaCronogramaValida(senhaCronograma)
+        ]);
+        if (adminValido && cronogramaValido) {
             sessionStorage.setItem('adminLogado', 'true');
             liberarEditor();
         } else {
-            window.alert('Senha ou token administrativo incorreto.');
+            window.alert(cronogramaValido ? 'Senha ou token administrativo incorreto.' : 'Senha exclusiva do cronograma incorreta.');
             inputSenha.value = '';
-            inputSenha.focus();
+            inputSenhaCronograma.value = '';
+            (cronogramaValido ? inputSenha : inputSenhaCronograma).focus();
         }
     } catch (error) {
         console.error(error);
@@ -416,4 +477,10 @@ window.addEventListener('beforeunload', evento => {
     evento.returnValue = '';
 });
 
-if (sessionStorage.getItem('adminLogado') === 'true') liberarEditor();
+if (sessionStorage.getItem('adminLogado') === 'true') {
+    campoCredencialAdministrativa.hidden = true;
+    inputSenha.required = false;
+    inputSenhaCronograma.focus();
+} else {
+    inputSenha.required = true;
+}

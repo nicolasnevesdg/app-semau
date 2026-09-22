@@ -6,18 +6,23 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Editor do cronograma ao vivo — XVI SEMAU</title>
     <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/admin-cronograma.css?v=156">
+    <link rel="stylesheet" href="css/admin-cronograma.css?v=20260921-1">
 </head>
 <body>
     <div id="admin-login-overlay" class="login-overlay">
         <form id="form-admin-login" class="login-card">
             <div class="login-icone"><i class="ph-bold ph-lock-key"></i></div>
             <p class="editor-sobretitulo">Organização</p>
-            <h1>Acesso ao cronograma</h1>
-            <p>Use a senha do painel ou o token da conta administrativa.</p>
-            <label for="admin-senha-input">Senha ou token administrativo</label>
-            <input type="password" id="admin-senha-input" autocomplete="current-password" required>
-            <button type="submit" id="btn-admin-login" class="botao botao-primario">Acessar editor</button>
+            <h1>Desbloquear cronograma</h1>
+            <p>Esta área tem uma senha própria para evitar alterações e publicações acidentais.</p>
+            <div id="admin-credencial-campo">
+                <label for="admin-senha-input">Senha ou token administrativo</label>
+                <input type="password" id="admin-senha-input" autocomplete="current-password">
+            </div>
+            <label for="cronograma-senha-input">Senha exclusiva do cronograma</label>
+            <input type="password" id="cronograma-senha-input" inputmode="numeric" autocomplete="off" maxlength="6" pattern="[0-9]{6}" required>
+            <p class="login-aviso"><i class="ph-bold ph-shield-check"></i> A senha será solicitada novamente ao publicar.</p>
+            <button type="submit" id="btn-admin-login" class="botao botao-primario">Desbloquear editor</button>
         </form>
     </div>
 
@@ -70,11 +75,11 @@
                 <strong id="alteracoes-status">Nenhuma alteração pendente</strong>
                 <span>Revise os horários antes de publicar.</span>
             </div>
-            <button type="button" id="btn-salvar-cronograma" class="botao botao-primario"><i class="ph-bold ph-floppy-disk"></i> Salvar e publicar</button>
+            <button type="button" id="btn-salvar-cronograma" class="botao botao-primario" disabled><i class="ph-bold ph-floppy-disk"></i> Salvar e publicar</button>
         </div>
     </main>
 
     <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
-    <script type="module" src="js/admin-cronograma.js?v=20260906-1"></script>
+    <script type="module" src="js/admin-cronograma.js?v=20260921-1"></script>
 </body>
 </html>

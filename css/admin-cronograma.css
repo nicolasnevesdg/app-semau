@@ -66,6 +66,21 @@ button, a { -webkit-tap-highlight-color: transparent; }
     outline: none;
 }
 .login-card input:focus { border-color: var(--editor-verde); box-shadow: 0 0 0 4px rgba(49, 91, 76, .12); }
+.login-aviso {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px !important;
+    padding: 10px 12px;
+    border-radius: 11px;
+    color: #4d6256 !important;
+    background: #eef5f0;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4 !important;
+}
+.login-aviso i { flex: 0 0 auto; color: var(--editor-verde); font-size: 18px; }
+.login-card .botao { width: 100%; }
 
 .editor-shell { width: min(100% - 32px, 980px); margin: 0 auto; padding: 34px 0 130px; }
 .editor-cabecalho { margin-bottom: 26px; }
@@ -198,6 +213,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     font-weight: 800;
     cursor: pointer;
 }
+.adicionar-botao:disabled { opacity: .5; cursor: not-allowed; }
 .atividades-vazio { padding: 34px 20px; border: 1px dashed var(--editor-borda); border-radius: 16px; color: var(--editor-suave); text-align: center; }
 
 .editor-ajuda { display: flex; gap: 13px; margin: 18px 0; padding: 18px; border-radius: 16px; color: #4c5a51; background: #e9eee7; }

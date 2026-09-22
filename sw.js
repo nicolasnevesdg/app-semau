@@ -1,4 +1,4 @@
-const CACHE_NAME = 'semau-v235-nomes-sorteio-responsivos';
+const CACHE_NAME = 'semau-v236-cronograma-protegido';
 
 const TELAO_OFFLINE_ASSETS = [
     'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
